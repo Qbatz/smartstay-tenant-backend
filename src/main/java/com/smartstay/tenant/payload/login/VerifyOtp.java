@@ -7,6 +7,10 @@ import jakarta.validation.constraints.NotNull;
 public record VerifyOtp(
         @NotBlank
         String mobileNo,
+
+        @NotBlank
+        String serialNo,
+
         @NotNull
         @NotEmpty
         Integer otp

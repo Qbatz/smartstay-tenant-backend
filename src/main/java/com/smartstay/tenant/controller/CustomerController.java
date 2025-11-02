@@ -16,8 +16,4 @@ public class CustomerController {
     @Autowired
     CustomerService customerService;
 
-    @PostMapping("/verify-access-token")
-    public ResponseEntity<?> verifyAccessToken() {
-        return customerService.verifyToken();
-    }
 }

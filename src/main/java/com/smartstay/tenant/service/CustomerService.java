@@ -3,9 +3,11 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.CustomersOtp;
 import com.smartstay.tenant.payload.login.Login;
+import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
+import com.smartstay.tenant.response.VerifyOtpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,25 +89,40 @@ public class CustomerService {
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", customers.getFirst().getMobile());
         claims.put("email", customers.getFirst().getEmailId());
+        claims.put("serialNo", verifyOtp.serialNo());
         claims.put("customerId", customers.getFirst().getCustomerId());
         String token = jwtService.generateToken(customers.getFirst().getMobile(), claims);
         customersOtpRepository.delete(customersOtp);
-        return new ResponseEntity<>(token, HttpStatus.OK);
+        Customers customers1 = customers.getFirst();
+        customers1.setMobSerialNo(verifyOtp.serialNo());
+        customersRepository.save(customers1);
+        return new ResponseEntity<>(new VerifyOtpResponse(
+                customers.getFirst().getCustomerId(),
+                token
+        ), HttpStatus.OK);
     }
 
-
-    public ResponseEntity<Object> verifyToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.isAuthenticated()) {
-            List<Customers> customers = customersRepository.findByMobile(authentication.getName());
-            if (customers == null || customers.isEmpty()) {
-                return new ResponseEntity<>("Failed", HttpStatus.BAD_REQUEST);
-            }
-
-            return new ResponseEntity<>("Sucess", HttpStatus.OK);
+    public ResponseEntity<?> tokenLogin(TokenLogin tokenLogin) {
+        List<Customers> customers = customersRepository.findByMobile(tokenLogin.mobileNo());
+        if (customers == null || customers.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found. Please register first.");
         }
-        return new ResponseEntity<>("Invalid Token", HttpStatus.BAD_REQUEST);
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("mobile", customers.getFirst().getMobile());
+        claims.put("email", customers.getFirst().getEmailId());
+        claims.put("serialNo", tokenLogin.serialNo());
+        claims.put("customerId", customers.getFirst().getCustomerId());
+        String token = jwtService.generateToken(customers.getFirst().getMobile(), claims);
+        Customers customers1 = customers.getFirst();
+        customers1.setMobSerialNo(tokenLogin.serialNo());
+        customersRepository.save(customers1);
+        return new ResponseEntity<>(new VerifyOtpResponse(
+                customers.getFirst().getCustomerId(),
+                token
+        ), HttpStatus.OK);
     }
+
+
 
 
     private int generateSixDigitOtp() {

@@ -1,6 +1,7 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.login.Login;
+import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.service.CustomerService;
 import jakarta.validation.Valid;
@@ -26,6 +27,11 @@ public class UserController {
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtp verifyOtp) {
         return customerService.verifyOtp(verifyOtp);
+    }
+
+    @PostMapping("/token-login")
+    public ResponseEntity<?> tokenLogin(@RequestBody TokenLogin tokenLogin) {
+        return customerService.tokenLogin(tokenLogin);
     }
 
 
