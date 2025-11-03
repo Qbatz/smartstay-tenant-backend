@@ -19,8 +19,8 @@ public class MyUserDetailService implements UserDetailsService {
     CustomerRepository customerRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String mobileNo) throws UsernameNotFoundException {
-        List<Customers> customers = customerRepository.findByMobile(mobileNo);
+    public UserDetails loadUserByUsername(String customerId) throws UsernameNotFoundException {
+        List<Customers> customers = customerRepository.findByCustomerId(customerId);
 
         if (customers == null || customers.isEmpty()) {
             return null;

@@ -25,4 +25,5 @@ public class CustomersOtp {
     private Date updatedAt;
     private String createdBy;
     private Date expiryAt;
+    private boolean isVerified;
 }
