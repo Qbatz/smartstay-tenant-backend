@@ -28,7 +28,7 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public String getUsername() {
-        return customers.getMobile();
+        return customers.getCustomerId();
     }
 
     public Customers getCustomers() {
