@@ -1,6 +1,6 @@
 package com.smartstay.tenant.controller;
 
-import com.smartstay.tenant.service.CustomerService;
+import com.smartstay.tenant.service.HostelService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -12,20 +12,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("v2/customer")
-@SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
+@RequestMapping("v2/hostels")
+@SecurityScheme(
+        name = "Authorization",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        scheme = "bearer"
+)
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
-public class CustomerController {
+public class HostelController {
 
     @Autowired
-    CustomerService customerService;
+    private HostelService hostelService;
 
 
-    @GetMapping("/customer-details")
-    public ResponseEntity<?> customerDetails() {
-        return customerService.getCustomerDetails();
+    @GetMapping("/allHostels")
+    public ResponseEntity<?> getHostels() {
+        return hostelService.getHostels();
     }
+
+
+
 
 
 }
