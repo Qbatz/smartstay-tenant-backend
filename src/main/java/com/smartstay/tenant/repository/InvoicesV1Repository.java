@@ -11,18 +11,6 @@ import java.util.List;
 
 public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> {
 
-    @Query("SELECT ii.invoiceItem AS invoiceItem, " +
-            "ii.amount AS amount, " +
-            "COALESCE(t.paidAt, i.invoiceGeneratedDate) AS paidDate, " +
-            "COALESCE(t.paidAmount, 0) AS paidAmount " +
-            "FROM InvoicesV1 i " +
-            "JOIN i.invoiceItems ii " +
-            "LEFT JOIN TransactionV1 t ON i.invoiceId = t.invoiceId " +
-            "WHERE i.customerId = :customerId " +
-            "AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate")
-    List<InvoiceItems> findInvoiceItemsWithTransactionsByCustomerAndDateRange(
-            @Param("customerId") String customerId,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
-    );
+    @Query("SELECT ii.invoiceItem AS invoiceItem, " + "ii.amount AS amount, " + "COALESCE(t.paidAt, i.invoiceGeneratedDate) AS paidDate, " + "COALESCE(t.paidAmount, 0) AS paidAmount " + "FROM InvoicesV1 i " + "JOIN i.invoiceItems ii " + "LEFT JOIN TransactionV1 t ON i.invoiceId = t.invoiceId " + "WHERE i.customerId = :customerId " + "AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate")
+    List<InvoiceItems> findInvoiceItemsWithTransactionsByCustomerAndDateRange(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }

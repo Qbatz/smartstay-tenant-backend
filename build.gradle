@@ -16,7 +16,7 @@ java {
 }
 
 bootWar {
-	archiveBaseName = 'tenant'
+	archiveBaseName = 'ROOT'
 }
 
 bootJar {
