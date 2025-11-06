@@ -1,9 +1,6 @@
 package com.smartstay.tenant.dao;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,5 +40,11 @@ public class HostelV1 {
 
     @OneToMany(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HostelImages> additionalImages;
+
+    @OneToMany(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<BillingRules> billingRulesList;
+
+    @OneToOne(mappedBy = "hostel", cascade = CascadeType.ALL)
+    private ElectricityConfig electricityConfig;
 
 }

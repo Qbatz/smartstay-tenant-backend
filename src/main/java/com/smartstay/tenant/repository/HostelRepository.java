@@ -1,10 +1,13 @@
 package com.smartstay.tenant.repository;
 
 import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dto.InvoiceWithItemsDTO;
 import com.smartstay.tenant.response.customer.CustomerHostels;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.Date;
 import java.util.List;
 
 public interface HostelRepository extends JpaRepository<HostelV1, String> {
@@ -25,4 +28,5 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
                         WHERE c.customer_id = :customerId and h.hostel_id = c.hostel_id
     """, nativeQuery = true)
     List<CustomerHostels> findHostels(String customerId);
+
 }

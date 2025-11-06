@@ -1,13 +1,12 @@
 package com.smartstay.tenant.response.hostel;
 
+import com.smartstay.tenant.dto.ComplaintDTO;
+
+import java.util.List;
+
 public record HostelDetails(
-        String hostelId,
-        String hostelName,
-        String houseNo,
-        String street,
-        String landmark,
-        int pincode,
-        String city,
-        String state
+       List<InvoiceItems> previousMonthBills,
+       List<InvoiceItems> currentMonthBills,
+       List<ComplaintDTO> complaints
 ) {
 }
