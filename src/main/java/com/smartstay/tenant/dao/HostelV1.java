@@ -35,9 +35,6 @@ public class HostelV1 {
     private Date createdAt;
     private Date updatedAt;
 
-    @OneToMany(mappedBy = "hostel", cascade = CascadeType.ALL)
-    private List<Subscription> subscription;
-
     @OneToMany(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HostelImages> additionalImages;
 

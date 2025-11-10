@@ -6,6 +6,7 @@ import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,11 @@ public class UserController {
     @PostMapping("/token-login")
     public ResponseEntity<?> tokenLogin(@RequestBody TokenLogin tokenLogin) {
         return userService.tokenLogin(tokenLogin);
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> testMessage() {
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
 
