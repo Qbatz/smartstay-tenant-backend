@@ -13,28 +13,16 @@ import java.util.Date;
 @NoArgsConstructor
 public class Subscription {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private String subscriptionId;
-    private String planName;
-    private String planCode;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long subscriptionId;
     private String subscriptionNumber;
-    private String status;
-    private int total;
-    private int subTotal;
-    private int gst;
-    private int planAmount;
-    private int discount;
-    private int discountAmount;
-    private String currentStatus;
-    private Date createdAt;
+    private String hostelId;
+    private String planCode;
+    private String planName;
+    private Date planStartsAt;
+    private Date planEndsAt;
     private Date activatedAt;
-    private Date trialStartsAt;
-    private Date trialEndsAt;
-    private int trialRemainingDays;
-    private Date nextBillingAt;
-
-    @OneToOne
-    @JoinColumn(name = "hostel_id")
-    private HostelV1 hostel;
+    private Double paidAmount;
+    private Double planAmount;
+    private Date createdAt;
 }
