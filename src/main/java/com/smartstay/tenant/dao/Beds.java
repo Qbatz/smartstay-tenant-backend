@@ -14,27 +14,22 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class  ComplaintsV1 {
+public class Beds {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer complaintId;
-    private String customerId;
-    private Integer complaintTypeId;
-    private Integer floorId;
-    private Integer roomId;
     private Integer bedId;
-    private String status;
-    private Date complaintDate;
-    private String description;
-    private Date createdAt;
-    private Date updatedAt;
-    private String createdBy;
-    private String parentId;
-    private String hostelId;
-    private String assigneeId;
-    private Date assignedDate;
+    private String bedName;
     private Boolean isActive;
     private Boolean isDeleted;
-    private String complaintImageUrl;
+    private Date createdAt;
+    private Date updatedAt;
+    private String parentId;
+    private Integer roomId;
+    private String hostelId;
+    private boolean isBooked;
+    private double rentAmount;
+    private String status;
+    private String currentStatus;
+    private Date freeFrom;
 }

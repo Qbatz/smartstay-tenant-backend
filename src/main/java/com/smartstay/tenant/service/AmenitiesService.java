@@ -1,0 +1,64 @@
+package com.smartstay.tenant.service;
+
+
+import com.smartstay.tenant.Utils.Utils;
+import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.repository.AmentityRepository;
+import com.smartstay.tenant.repository.CustomerAmenityRepository;
+import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AmenitiesService {
+    @Autowired
+    AmentityRepository amenityRepository;
+    @Autowired
+    CustomerAmenityRepository customerAmenityRepository;
+    @Autowired
+    private Authentication authentication;
+    @Autowired
+    private CustomerService customerService;
+    @Autowired
+    private UserHostelService userHostelService;
+
+    public ResponseEntity<?> getAllAssignedAmenities(String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        List<AmenityInfoProjection> amenitiesV1List = amenityRepository.findCurrentlyAssignedAmenities(hostelId, customerId);
+        if (amenitiesV1List != null) {
+            return new ResponseEntity<>(amenitiesV1List, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
+    }
+
+
+    public ResponseEntity<?> getAllUnAssignedAmenities(String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        List<AmenityInfoProjection> amenitiesV1List = amenityRepository.findUnassignedAmenities(hostelId, customerId);
+        if (amenitiesV1List != null) {
+            return new ResponseEntity<>(amenitiesV1List, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
+    }
+
+}

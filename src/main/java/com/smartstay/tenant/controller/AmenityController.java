@@ -1,6 +1,6 @@
 package com.smartstay.tenant.controller;
 
-import com.smartstay.tenant.service.HostelService;
+import com.smartstay.tenant.service.AmenitiesService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -9,24 +9,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v2/hostels")
+@RequestMapping("tenant/amenity")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
-public class HostelController {
+public class AmenityController {
 
     @Autowired
-    private HostelService hostelService;
+    private AmenitiesService amenitiesService;
 
-
-    @GetMapping("/allHostels")
-    public ResponseEntity<?> getHostels() {
-        return hostelService.getHostels();
+    @GetMapping("/assigned-amenities/{hostelId}")
+    public ResponseEntity<?> getAllAssignedAmenities(@PathVariable("hostelId") String hostelId) {
+        return amenitiesService.getAllAssignedAmenities(hostelId);
     }
 
-    @GetMapping("/details/{hostelId}")
-    public ResponseEntity<?> getHostelDetails(@PathVariable String hostelId) {
-        return hostelService.getHostelDetails(hostelId);
+    @GetMapping("/unassigned-amenities/{hostelId}")
+    public ResponseEntity<?> getAllUnAssignedAmenities(@PathVariable("hostelId") String hostelId) {
+        return amenitiesService.getAllUnAssignedAmenities(hostelId);
     }
 
 

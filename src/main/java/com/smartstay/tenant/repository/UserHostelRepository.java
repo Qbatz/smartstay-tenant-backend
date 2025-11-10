@@ -1,0 +1,23 @@
+package com.smartstay.tenant.repository;
+
+import com.smartstay.tenant.dao.UserHostel;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface UserHostelRepository extends JpaRepository<UserHostel, Integer> {
+    List<UserHostel> findByUserId(String userId);
+
+    UserHostel findByUserIdAndHostelId(String userId, String hostelId);
+
+    List<UserHostel> findAllByHostelId(String hostelId);
+
+    List<UserHostel> findAllByParentIdAndUserId(String parentId, String userId);
+
+    @Query(value = "select * from user_hostel where parent_id=:parentId group by user_id", nativeQuery = true)
+    List<UserHostel> findAllUserFromParentId(String parentId);
+
+}
