@@ -26,6 +26,7 @@ public final class Utils {
     public static final String CUSTOMER_NOT_FOUND = "Customer not found.";
     public static final String COMPLAINTS_NOT_FOUND = "Complaints not found.";
     public static final String HOSTEL_NOT_FOUND = "Hostel not found.";
+    public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
 
     public static final String CREATED = "Created Successfully";
@@ -75,6 +76,13 @@ public final class Utils {
         } catch (ParseException e) {
             throw new RuntimeException("Invalid date format");
         }
+    }
+
+    public static String dateToString(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return new SimpleDateFormat(OUTPUT_DATE_FORMAT).format(date);
     }
 
 

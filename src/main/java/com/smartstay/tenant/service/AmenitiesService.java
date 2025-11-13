@@ -5,6 +5,7 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
+import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,23 @@ public class AmenitiesService {
         List<AmenityInfoProjection> amenitiesV1List = amenityRepository.findUnassignedAmenities(hostelId, customerId);
         if (amenitiesV1List != null) {
             return new ResponseEntity<>(amenitiesV1List, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
+    }
+
+    public ResponseEntity<?> getAmenityByAmenityId(String hostelId, String amenityId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        AmenityDetails amenityInfo = amenityRepository.findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
+        if (amenityInfo != null) {
+            return new ResponseEntity<>(amenityInfo, HttpStatus.OK);
         }
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }

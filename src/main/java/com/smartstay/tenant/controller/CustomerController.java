@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("v2/customer")
+@RequestMapping("v2/tenant/customer")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -22,7 +22,7 @@ public class CustomerController {
     CustomerService customerService;
 
 
-    @GetMapping("/customer-details")
+    @GetMapping("/details")
     public ResponseEntity<?> customerDetails() {
         return customerService.getCustomerDetails();
     }

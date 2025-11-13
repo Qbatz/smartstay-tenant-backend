@@ -18,4 +18,7 @@ public class CustomerDetails {
     private String city;
     private String state;
     private String profilePic;
+    private String joiningDate;
+    private CustomerKycDetails kycDetails;
 }
+

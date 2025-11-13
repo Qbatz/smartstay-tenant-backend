@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("tenant/amenity")
+@RequestMapping("v2/tenant/amenity")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -21,6 +21,14 @@ public class AmenityController {
     @GetMapping("/assigned-amenities/{hostelId}")
     public ResponseEntity<?> getAllAssignedAmenities(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAllAssignedAmenities(hostelId);
+    }
+
+    @GetMapping("/{hostelId}/{amenityId}")
+    public ResponseEntity<?> getAmenityById(
+            @PathVariable String hostelId,
+            @PathVariable String amenityId
+    ) {
+        return amenitiesService.getAmenityByAmenityId(hostelId, amenityId);
     }
 
     @GetMapping("/unassigned-amenities/{hostelId}")

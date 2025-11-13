@@ -6,18 +6,19 @@ import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.ComplaintDTO;
+import com.smartstay.tenant.dto.ComplaintDetails;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.repository.ComplaintsV1Repository;
 import com.smartstay.tenant.response.complaints.AddComplaints;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ComplaintService {
@@ -35,16 +36,34 @@ public class ComplaintService {
     @Autowired
     private CustomerService customerService;
 
-    @Autowired
-    private HostelService hostelService;
-
     public ComplaintService(ComplaintsV1Repository complaintsV1Repository) {
         this.complaintsV1Repository = complaintsV1Repository;
     }
 
     public List<ComplaintDTO> getComplaints(String hostelId, String customerId) {
-        return complaintsV1Repository.findComplaintsByHostelAndCustomer(hostelId, customerId);
+        return complaintsV1Repository.findComplaintsByHostelAndCustomer(hostelId, customerId, PageRequest.of(0, 5));
     }
+
+    public ResponseEntity<?> getComplaintById(String hostelId, Integer complaintId) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        ComplaintDetails complaint = complaintsV1Repository.getComplaintById(hostelId, customerId, complaintId);
+
+        if (complaint == null) {
+            return new ResponseEntity<>(Utils.COMPLAINT_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(complaint, HttpStatus.OK);
+    }
+
 
     public ResponseEntity<?> getComplaintList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -61,11 +80,12 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(complaints, HttpStatus.OK);
-
     }
 
 
-    public ResponseEntity<?> addComplaint(MultipartFile complaintImage, AddComplaints request) {
+
+
+    public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
         }
@@ -82,51 +102,19 @@ public class ComplaintService {
 
 
         ComplaintsV1 complaint = new ComplaintsV1();
-        Floors floors = null;
         if (request.floorId() != null) {
-            floors = hostelService.findByFloorIdAndHostelId(request.floorId(), request.hostelId());
-            if (floors == null) {
-                return new ResponseEntity<>("Floor not found in this hostel.", HttpStatus.BAD_REQUEST);
-            }
             complaint.setFloorId(request.floorId());
         } else {
             complaint.setFloorId(0);
         }
 
-        Rooms rooms = null;
         if (request.roomId() != null) {
-            rooms = hostelService.findByRoomIdAndParentIdAndHostelId(request.roomId(), hostelV1.getParentId(), request.hostelId());
-            if (rooms == null) {
-                return new ResponseEntity<>("Room not found in this hostel.", HttpStatus.BAD_REQUEST);
-            }
-            if (floors != null) {
-                Rooms roomInFloor = hostelService.findByRoomIdAndParentIdAndHostelIdAndFloorId(request.roomId(), hostelV1.getParentId(), request.hostelId(), request.floorId());
-                if (roomInFloor == null) {
-                    return new ResponseEntity<>("This room is not linked to the given floor.", HttpStatus.BAD_REQUEST);
-                }
-            }
             complaint.setRoomId(request.roomId());
         } else {
             complaint.setRoomId(0);
         }
 
         if (request.bedId() != null) {
-            Beds bed = hostelService.findByBedIdAndParentIdAndHostelId(request.bedId(), hostelV1.getParentId(), request.hostelId());
-            if (bed == null) {
-                return new ResponseEntity<>("Bed not found in this hostel.", HttpStatus.BAD_REQUEST);
-            }
-            if (rooms != null) {
-                Beds bedInRoom = hostelService.findByBedIdAndRoomIdAndParentId(request.bedId(), rooms.getRoomId(), hostelV1.getParentId());
-                if (bedInRoom == null) {
-                    return new ResponseEntity<>("This bed is not linked to the given room.", HttpStatus.BAD_REQUEST);
-                }
-            }
-            if (floors != null && rooms != null) {
-                Beds bedInFloorRoom = hostelService.findByBedIdAndRoomIdAndParentId(request.bedId(), rooms.getRoomId(), hostelV1.getParentId());
-                if (bedInFloorRoom == null) {
-                    return new ResponseEntity<>("This bed is not linked to the given floor and room combination.", HttpStatus.BAD_REQUEST);
-                }
-            }
             complaint.setBedId(request.bedId());
 
         } else {
@@ -156,9 +144,21 @@ public class ComplaintService {
         complaint.setStatus("PENDING");
         complaint.setIsDeleted(false);
 
-        if (complaintImage != null) {
-            String complaintUrl = uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFile(complaintImage), "Complaint-Images");
-            complaint.setComplaintImageUrl(complaintUrl);
+
+        List<String> listImageUrls = new ArrayList<>();
+        if (complaintImages != null && !complaintImages.isEmpty()) {
+            listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFile(multipartFile), "CustomerComplaint-Images")).toList();
+        }
+        if (!listImageUrls.isEmpty()) {
+            List<ComplaintImages> complaintImagesList = listImageUrls.stream().map(item -> {
+                ComplaintImages complaintImages1 = new ComplaintImages();
+                complaintImages1.setCreatedBy(customerId);
+                complaintImages1.setImageUrl(item);
+                complaintImages1.setComplaints(complaint);
+                return complaintImages1;
+            }).toList();
+
+            complaint.setAdditionalImages(complaintImagesList);
         }
 
         complaintRepository.save(complaint);
