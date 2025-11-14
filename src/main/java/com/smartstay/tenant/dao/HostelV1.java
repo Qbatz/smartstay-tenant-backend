@@ -34,6 +34,11 @@ public class HostelV1 {
     private String createdBy;
     private Date createdAt;
     private Date updatedAt;
+    private boolean isActive;
+    private boolean isDeleted;
+
+    @OneToOne(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private HostelPlan hostelPlan;
 
     @OneToMany(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HostelImages> additionalImages;

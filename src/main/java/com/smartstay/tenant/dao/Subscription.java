@@ -6,8 +6,6 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Getter
-@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,5 +22,9 @@ public class Subscription {
     private Date activatedAt;
     private Double paidAmount;
     private Double planAmount;
+    private Double discount;
+    private Double discountAmount;
+    private Date nextBillingAt;
     private Date createdAt;
+
 }
