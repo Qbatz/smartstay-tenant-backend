@@ -8,26 +8,40 @@ import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.payload.complaint.AddComplaintComment;
+import com.smartstay.tenant.repository.ComplaintCommentsRepository;
+import com.smartstay.tenant.repository.ComplaintImagesRepository;
 import com.smartstay.tenant.repository.ComplaintsV1Repository;
 import com.smartstay.tenant.response.complaints.AddComplaints;
+import com.smartstay.tenant.response.complaints.ComplaintComment;
+import com.smartstay.tenant.response.complaints.ComplaintImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class ComplaintService {
 
-    private final ComplaintsV1Repository complaintsV1Repository;
+
     @Autowired
     private UploadFileToS3 uploadToS3;
     @Autowired
-    private ComplaintsV1Repository complaintRepository;
+    private ComplaintsV1Repository complaintsV1Repository;
+
+    @Autowired
+    private ComplaintImagesRepository complaintImagesRepository;
+
+    @Autowired
+    private ComplaintCommentsRepository commentsRepository;
 
 
     @Autowired
@@ -36,9 +50,6 @@ public class ComplaintService {
     @Autowired
     private CustomerService customerService;
 
-    public ComplaintService(ComplaintsV1Repository complaintsV1Repository) {
-        this.complaintsV1Repository = complaintsV1Repository;
-    }
 
     public List<ComplaintDTO> getComplaints(String hostelId, String customerId) {
         return complaintsV1Repository.findComplaintsByHostelAndCustomer(hostelId, customerId, PageRequest.of(0, 5));
@@ -60,8 +71,32 @@ public class ComplaintService {
         if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
+        List<ComplaintImage> images =
+                complaintsV1Repository.findImagesByComplaintId(complaintId);
 
-        return new ResponseEntity<>(complaint, HttpStatus.OK);
+        List<ComplaintComment> comments =
+                complaintsV1Repository.findCommentsByComplaintId(complaintId);
+
+        ComplaintDetails complaintDetails = new ComplaintDetails(
+                complaint.complaintId(),
+                complaint.complaintTypeName(),
+                complaint.complaintDate(),
+                complaint.description(),
+                complaint.status(),
+                complaint.assigneeName(),
+                complaint.floorName(),
+                complaint.roomName(),
+                complaint.bedName(),
+                complaint.customerName(),
+                complaint.assignedDate(),
+                complaint.createdBy(),
+                complaint.hostelName(),
+                complaint.assigneeMobileNumber(),
+                images,
+                comments
+        );
+
+        return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
     }
 
 
@@ -81,8 +116,6 @@ public class ComplaintService {
         }
         return new ResponseEntity<>(complaints, HttpStatus.OK);
     }
-
-
 
 
     public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request) {
@@ -161,8 +194,98 @@ public class ComplaintService {
             complaint.setAdditionalImages(complaintImagesList);
         }
 
-        complaintRepository.save(complaint);
+        complaintsV1Repository.save(complaint);
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
+
+
+    public ResponseEntity<?> deleteComplaint(Integer complaintId, String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        ComplaintsV1 complaint = complaintsV1Repository.findById(complaintId).orElse(null);
+        if (complaint == null) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+        complaint.setUpdatedAt(new Date());
+        complaint.setIsDeleted(true);
+        complaint.setIsActive(false);
+        complaintsV1Repository.save(complaint);
+        return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<?> addComplaintComments(@RequestBody AddComplaintComment request, int complaintId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, request.hostelId())) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        Customers customers = customerService.getCustomerById(customerId);
+        ComplaintsV1 complaintExist = complaintsV1Repository.findByComplaintIdAndCustomerId(complaintId, request.hostelId());
+        if (complaintExist == null) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        ComplaintComments complaintComments = new ComplaintComments();
+        complaintComments.setCommentDate(new Date());
+        complaintComments.setComplaint(complaintExist);
+        complaintComments.setComment(request.message());
+        complaintComments.setIsActive(true);
+        complaintComments.setCreatedBy(customerId);
+        complaintComments.setUserName(customers.getFirstName() + " " + customers.getLastName());
+        complaintComments.setCreatedAt(new Date());
+        commentsRepository.save(complaintComments);
+
+        return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<?> deactivateComplaintImage(Integer complaintId, Integer imageId, String hostelId) {
+        try {
+            if (!authentication.isAuthenticated()) {
+                return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+            }
+            String customerId = authentication.getName();
+            if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+                return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            }
+
+            ComplaintsV1 complaint = complaintsV1Repository
+                    .findByComplaintIdAndHostelIdAndIsDeletedFalse(complaintId, hostelId);
+            if (complaint == null) {
+                return new ResponseEntity<>(Utils.COMPLAINT_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            }
+
+            ComplaintImages image = complaintImagesRepository
+                    .findByIdAndComplaintIdAndIsDeletedFalse(imageId, complaintId);
+            if (image == null) {
+                return new ResponseEntity<>(Utils.COMPLAINT_IMAGE_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            }
+            image.setIsActive(false);
+            image.setIsDeleted(true);
+            image.setUpdatedAt(new Date());
+            complaintImagesRepository.save(image);
+
+            return ResponseEntity.ok(Utils.DELETED);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to deactivate complaint image.");
+        }
+    }
+
+
+
 }

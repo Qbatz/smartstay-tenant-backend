@@ -1,11 +1,13 @@
 package com.smartstay.tenant.controller;
 
 
+import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.response.complaints.AddComplaints;
 import com.smartstay.tenant.service.ComplaintService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,4 +44,30 @@ public class ComplaintsController {
     public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart AddComplaints payloads) {
         return complaintsService.addComplaint(complaintImages, payloads);
     }
+
+    @DeleteMapping("/delete-complaint/{complaintId}/{hostelId}")
+    public ResponseEntity<?> deleteComplaint(@PathVariable("complaintId") Integer complaintId,@PathVariable String hostelId) {
+        return complaintsService.deleteComplaint(complaintId,hostelId);
+    }
+
+    @DeleteMapping("/delete-complaintImage/{complaintId}/{hostelId}")
+    public ResponseEntity<?> deleteComplaintImage(@PathVariable("complaintId") Integer complaintId,@PathVariable String hostelId) {
+        return complaintsService.deleteComplaint(complaintId,hostelId);
+    }
+
+    @PostMapping("/add-comment/{complaintId}")
+    public ResponseEntity<?> addComplaintComments(@PathVariable("complaintId") int complaintId,@Valid @RequestBody AddComplaintComment comment) {
+        return complaintsService.addComplaintComments(comment,complaintId);
+    }
+
+    @DeleteMapping("/complaint-image/{complaintId}/{imageId}/{hostelId}")
+    public ResponseEntity<?> deactivateComplaintImage(
+            @PathVariable Integer complaintId,
+            @PathVariable Integer imageId,
+            @PathVariable String hostelId
+    ) {
+        return complaintsService.deactivateComplaintImage(complaintId, imageId, hostelId);
+    }
+
+
 }
