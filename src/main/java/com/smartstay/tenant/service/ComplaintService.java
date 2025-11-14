@@ -118,17 +118,19 @@ public class ComplaintService {
     }
 
 
-    public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request) {
+
+
+    public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request, String hostelId) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
         }
         String customerId = authentication.getName();
 
-        if (!customerService.existsByCustomerIdAndHostelId(customerId, request.hostelId())) {
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        HostelV1 hostelV1 = customerService.findByCustomerIdAndHostelId(customerId, request.hostelId());
+        HostelV1 hostelV1 = customerService.findByCustomerIdAndHostelId(customerId, hostelId);
         if (hostelV1 == null) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
@@ -156,7 +158,7 @@ public class ComplaintService {
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
 
 
-        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(request.hostelId(), request.customerId(), currentStatus);
+        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, request.customerId(), currentStatus);
         if (!customerExist) {
             return new ResponseEntity<>("Customer not found.", HttpStatus.BAD_REQUEST);
         }
@@ -172,7 +174,7 @@ public class ComplaintService {
         complaint.setUpdatedAt(new Date());
         complaint.setCreatedBy(customerId);
         complaint.setParentId(hostelV1.getParentId());
-        complaint.setHostelId(request.hostelId());
+        complaint.setHostelId(hostelId);
         complaint.setIsActive(true);
         complaint.setStatus("PENDING");
         complaint.setIsDeleted(false);
