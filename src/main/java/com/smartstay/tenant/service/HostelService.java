@@ -2,10 +2,16 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.BillingRules;
+import com.smartstay.tenant.dao.Floors;
+import com.smartstay.tenant.dao.Rooms;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
+import com.smartstay.tenant.repository.BedsRepository;
+import com.smartstay.tenant.repository.FloorRepository;
 import com.smartstay.tenant.repository.HostelRepository;
+import com.smartstay.tenant.repository.RoomRepository;
 import com.smartstay.tenant.response.customer.CustomerHostels;
 import com.smartstay.tenant.response.hostel.HostelDetails;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
@@ -40,6 +46,19 @@ public class HostelService {
     @Autowired
     private Authentication authentication;
 
+    @Autowired
+    private UserHostelService userHostelService;
+
+
+    @Autowired
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private FloorRepository floorRepository;
+
+    @Autowired
+    private BedsRepository bedsRepository;
+
     public ResponseEntity<?> getHostels() {
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -56,7 +75,7 @@ public class HostelService {
         }
         String customerId = authentication.getName();
         BillingDates previousBillingDates = getBillStartDate(hostelId, Utils.getFirstDayOfPreviousMonth());
-        BillingDates currentBillingDates = getBillStartDate(hostelId, new Date());
+        BillingDates currentBillingDates = getCurrentBillStartAndEndDates(hostelId);
         List<InvoiceItems> previousMonthInvoices = invoiceService.getInvoicesWithItems(customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
 
         List<InvoiceItems> currentMonthInvoices = invoiceService.getInvoicesWithItems(customerId, currentBillingDates.currentBillStartDate(), currentBillingDates.currentBillEndDate());
@@ -97,6 +116,26 @@ public class HostelService {
         Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
 
         return new BillingDates(calendar.getTime(), findEndDate);
+    }
+
+    Beds findByBedIdAndParentIdAndHostelId(Integer bedId, String parentId, String hostelId) {
+        return bedsRepository.findByBedIdAndParentIdAndHostelId(bedId, parentId, hostelId);
+    }
+
+    Floors findByFloorIdAndHostelId(Integer floorId, String hostelId) {
+        return floorRepository.findByFloorIdAndHostelId(floorId, hostelId);
+    }
+
+    Rooms findByRoomIdAndParentIdAndHostelId(Integer roomId, String parentId, String hostelId) {
+        return roomRepository.findByRoomIdAndParentIdAndHostelId(roomId, parentId, hostelId);
+    }
+
+    Rooms findByRoomIdAndParentIdAndHostelIdAndFloorId(int roomId, String parentId, String hostelId, int floorId) {
+        return roomRepository.findByRoomIdAndParentIdAndHostelIdAndFloorId(roomId, parentId, hostelId, floorId);
+    }
+
+    Beds findByBedIdAndRoomIdAndParentId(Integer bedId,int roomId, String parentId) {
+        return bedsRepository.findByBedIdAndRoomIdAndParentId(bedId, roomId, parentId);
     }
 
 
