@@ -27,5 +27,4 @@ public class Subscription {
     private Date nextBillingAt;
     private Date createdAt;
 
-
 }
