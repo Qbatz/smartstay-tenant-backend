@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("v2/tenant/complaints")
+@RequestMapping("v2/complaints")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -24,7 +24,7 @@ public class ComplaintsController {
     private ComplaintService complaintsService;
 
 
-    @GetMapping("/complaint-list/{hostelId}")
+    @GetMapping("/{hostelId}")
     public ResponseEntity<?> getAllComplaints(@PathVariable String hostelId) {
         return complaintsService.getComplaintList(hostelId);
     }
@@ -38,8 +38,8 @@ public class ComplaintsController {
     }
 
 
-    @PostMapping("/add-complaint")
-    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart AddComplaints payloads) {
-        return complaintsService.addComplaint(complaintImages, payloads);
+    @PostMapping("/{hostelId}")
+    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
+        return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
 }
