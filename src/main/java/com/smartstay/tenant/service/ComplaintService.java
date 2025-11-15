@@ -14,6 +14,7 @@ import com.smartstay.tenant.repository.ComplaintImagesRepository;
 import com.smartstay.tenant.repository.ComplaintsV1Repository;
 import com.smartstay.tenant.response.complaints.AddComplaints;
 import com.smartstay.tenant.response.complaints.ComplaintComment;
+import com.smartstay.tenant.response.complaints.ComplaintDetailsResponse;
 import com.smartstay.tenant.response.complaints.ComplaintImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -72,12 +73,12 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.COMPLAINT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
         List<ComplaintImage> images =
-                complaintsV1Repository.findImagesByComplaintId(complaintId);
+                complaintImagesRepository.findImagesByComplaintId(complaintId);
 
         List<ComplaintComment> comments =
-                complaintsV1Repository.findCommentsByComplaintId(complaintId);
+                commentsRepository.findCommentsByComplaintId(complaintId);
 
-        ComplaintDetails complaintDetails = new ComplaintDetails(
+        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(
                 complaint.complaintId(),
                 complaint.complaintTypeName(),
                 complaint.complaintDate(),
@@ -237,7 +238,7 @@ public class ComplaintService {
         }
 
         Customers customers = customerService.getCustomerById(customerId);
-        ComplaintsV1 complaintExist = complaintsV1Repository.findByComplaintIdAndCustomerId(complaintId, request.hostelId());
+        ComplaintsV1 complaintExist = complaintsV1Repository.findByComplaintIdAndCustomerIdAndHostelId(complaintId,customerId, request.hostelId());
         if (complaintExist == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }

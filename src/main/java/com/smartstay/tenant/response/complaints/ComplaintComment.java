@@ -10,6 +10,6 @@ public record ComplaintComment(
         String comment,
         String userName,
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm", timezone = "Asia/Kolkata")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Kolkata")
         Date commentDate
 ) {}

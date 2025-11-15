@@ -2,6 +2,6 @@ package com.smartstay.tenant.response.complaints;
 
 
 public record ComplaintImage(
-        Integer imageId,
+        Integer id,
         String imageUrl
 ) {}

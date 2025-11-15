@@ -50,11 +50,6 @@ public class ComplaintsController {
         return complaintsService.deleteComplaint(complaintId,hostelId);
     }
 
-    @DeleteMapping("/delete-complaintImage/{complaintId}/{hostelId}")
-    public ResponseEntity<?> deleteComplaintImage(@PathVariable("complaintId") Integer complaintId,@PathVariable String hostelId) {
-        return complaintsService.deleteComplaint(complaintId,hostelId);
-    }
-
     @PostMapping("/add-comment/{complaintId}")
     public ResponseEntity<?> addComplaintComments(@PathVariable("complaintId") int complaintId,@Valid @RequestBody AddComplaintComment comment) {
         return complaintsService.addComplaintComments(comment,complaintId);

@@ -1,7 +1,6 @@
 package com.smartstay.tenant.repository;
 
 
-import com.smartstay.tenant.dao.ComplaintImages;
 import com.smartstay.tenant.dao.ComplaintsV1;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
@@ -55,7 +54,7 @@ public interface ComplaintsV1Repository extends JpaRepository<ComplaintsV1, Inte
                     c.assignedDate,
                     c.createdBy,
                     h.hostelName,
-                    u.mobileNo,
+                    u.mobileNo
                 )
                 FROM ComplaintsV1 c
                 JOIN ComplaintTypeV1 ct ON c.complaintTypeId = ct.complaintTypeId
@@ -73,18 +72,11 @@ public interface ComplaintsV1Repository extends JpaRepository<ComplaintsV1, Inte
             """)
     ComplaintDetails getComplaintById(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("complaintId") Integer complaintId);
 
-    @Query("SELECT new com.smartstay.tenant.dto.ComplaintImage(i.imageId, i.imageUrl) " + "FROM ComplaintImages i WHERE i.complaints.complaintId = :complaintId")
-    List<ComplaintImage> findImagesByComplaintId(@Param("complaintId") Integer complaintId);
 
-    @Query("SELECT new com.smartstay.tenant.dto.ComplaintComment(" + "c.commentId, c.comment, c.userName, c.commentDate) " + "FROM ComplaintComments c " + "WHERE c.complaint.complaintId = :complaintId " + "AND c.isActive = true ORDER BY c.createdAt ASC")
-    List<ComplaintComment> findCommentsByComplaintId(@Param("complaintId") Integer complaintId);
-
-
-    ComplaintsV1 findByComplaintIdAndCustomerId(int complaintId, String customerId);
+    ComplaintsV1 findByComplaintIdAndCustomerIdAndHostelId(int complaintId, String customerId, String hostelId);
 
 
     ComplaintsV1 findByComplaintIdAndHostelIdAndIsDeletedFalse(Integer complaintId, String hostelId);
-
 
 
 }

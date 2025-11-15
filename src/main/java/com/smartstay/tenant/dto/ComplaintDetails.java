@@ -27,9 +27,6 @@ public record ComplaintDetails(
 
         String createdBy,
         String hostelName,
-        String assigneeMobileNumber,
-
-        List<ComplaintImage> images,
-        List<ComplaintComment> comments
+        String assigneeMobileNumber
 ) {}
 
