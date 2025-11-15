@@ -46,6 +46,10 @@ public class CustomerService {
         return customersRepository.existsByCustomerIdAndHostelId(customerId, hostelId);
     }
 
+    Customers getCustomerById(String customerId){
+        return customersRepository.findById(customerId).orElse(null);
+    }
+
     boolean existsByHostelIdAndCustomerIdAndStatusesIn(String hostelId, String customerId, List<String> statuses){
         return customersRepository.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, statuses);
     }

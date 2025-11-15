@@ -17,9 +17,6 @@ public record AddComplaints(
         @NotBlank(message = "Complaint date is mandatory")
         String complaintDate,
 
-        String description,
-
-        @NotBlank(message = "Hostel ID is mandatory")
-        String hostelId
+        String description
 ) {
 }

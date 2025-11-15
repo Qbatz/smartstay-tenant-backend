@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v2/tenant/hostels")
+@RequestMapping("v2/hostels")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -19,7 +19,7 @@ public class HostelController {
     private HostelService hostelService;
 
 
-    @GetMapping("/allHostels")
+    @GetMapping("")
     public ResponseEntity<?> getHostels() {
         return hostelService.getHostels();
     }
