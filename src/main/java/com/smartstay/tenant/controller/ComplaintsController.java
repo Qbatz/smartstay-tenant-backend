@@ -27,14 +27,17 @@ public class ComplaintsController {
 
 
     @GetMapping("/{hostelId}")
-    public ResponseEntity<?> getAllComplaints(@PathVariable String hostelId) {
-        return complaintsService.getComplaintList(hostelId);
+    public ResponseEntity<?> getAllComplaints(@PathVariable String hostelId,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int size) {
+        return complaintsService.getComplaintList(hostelId, page, size);
     }
 
     @GetMapping("/{hostelId}/{complaintId}")
     public ResponseEntity<?> getComplaintById(
             @PathVariable String hostelId,
             @PathVariable Integer complaintId
+
     ) {
         return complaintsService.getComplaintById(hostelId, complaintId);
     }

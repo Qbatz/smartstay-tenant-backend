@@ -26,4 +26,5 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             """, nativeQuery = true)
     List<CustomerHostels> findHostels(String customerId);
 
+
 }

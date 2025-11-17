@@ -15,8 +15,6 @@ public interface CustomerRepository extends JpaRepository<Customers, String> {
 
     boolean existsByCustomerIdAndHostelId(String customerId, String hostelId);
 
-    HostelV1 findByCustomerIdAndHostelId(String customerId, String hostelId);
-
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
             "FROM Customers c " +
             "WHERE c.hostelId = :hostelId " +

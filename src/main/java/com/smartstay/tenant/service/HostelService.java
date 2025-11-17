@@ -2,10 +2,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.Beds;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.Floors;
-import com.smartstay.tenant.dao.Rooms;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.repository.BedsRepository;
@@ -137,6 +134,7 @@ public class HostelService {
     Beds findByBedIdAndRoomIdAndParentId(Integer bedId,int roomId, String parentId) {
         return bedsRepository.findByBedIdAndRoomIdAndParentId(bedId, roomId, parentId);
     }
+
 
 
 }

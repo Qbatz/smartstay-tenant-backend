@@ -7,6 +7,8 @@ public record EditCustomer(
         String street,
         String landmark,
         String city,
-        String state
+        String state,
+        String dob,
+        String gender
 ) {
 }
