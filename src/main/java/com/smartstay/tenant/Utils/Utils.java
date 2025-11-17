@@ -33,6 +33,9 @@ public final class Utils {
     public static final String CREATED = "Created Successfully";
     public static final String DELETED = "Deleted Successfully";
 
+    public static final String PAYLOADS_REQUIRED = "Payloads required";
+    public static final String UPDATED = "Updated Successfully";
+
     public static final Date findLastDate(Integer cycleStartDay, Date date) {
         LocalDate today = date.toInstant()
                 .atZone(ZoneId.systemDefault())

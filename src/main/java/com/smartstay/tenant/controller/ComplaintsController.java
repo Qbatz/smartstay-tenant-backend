@@ -41,7 +41,7 @@ public class ComplaintsController {
 
 
     @PostMapping("/{hostelId}")
-    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
+    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,  @RequestPart(value = "payloads", required = false) AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
 

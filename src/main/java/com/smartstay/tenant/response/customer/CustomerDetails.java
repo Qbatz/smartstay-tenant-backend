@@ -20,5 +20,6 @@ public class CustomerDetails {
     private String profilePic;
     private String joiningDate;
     private CustomerKycDetails kycDetails;
+    private CustomersBookingDetails customersBookingDetails;
 }
 
