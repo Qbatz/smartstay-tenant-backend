@@ -2,7 +2,7 @@ package com.smartstay.tenant.response;
 
 public record VerifyOtpResponse(
 
-        String customerId,
+        String kycStatus,
         String accessToken
 ) {
 }

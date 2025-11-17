@@ -8,6 +8,7 @@ import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
+import com.smartstay.tenant.response.VerifyOtpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,7 +100,7 @@ public class UserService {
         customers1.setMobSerialNo(verifyOtp.serialNo());
         customersRepository.save(customers1);
         return new ResponseEntity<>(
-                token
+                new VerifyOtpResponse(customers1.getKycStatus(), token)
                 , HttpStatus.OK);
     }
 

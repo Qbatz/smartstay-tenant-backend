@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v2/tenant/amenity")
+@RequestMapping("v2/amenities")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -18,20 +18,20 @@ public class AmenityController {
     @Autowired
     private AmenitiesService amenitiesService;
 
-    @GetMapping("/assigned-amenities/{hostelId}")
+    @GetMapping("/assigned/{hostelId}")
     public ResponseEntity<?> getAllAssignedAmenities(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAllAssignedAmenities(hostelId);
     }
 
     @GetMapping("/{hostelId}/{amenityId}")
     public ResponseEntity<?> getAmenityById(
-            @PathVariable String hostelId,
-            @PathVariable String amenityId
+            @PathVariable("hostelId") String hostelId,
+            @PathVariable("amenityId") String amenityId
     ) {
         return amenitiesService.getAmenityByAmenityId(hostelId, amenityId);
     }
 
-    @GetMapping("/unassigned-amenities/{hostelId}")
+    @GetMapping("/unassigned/{hostelId}")
     public ResponseEntity<?> getAllUnAssignedAmenities(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAllUnAssignedAmenities(hostelId);
     }

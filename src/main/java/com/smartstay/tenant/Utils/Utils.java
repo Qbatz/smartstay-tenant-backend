@@ -25,12 +25,16 @@ public final class Utils {
 
     public static final String CUSTOMER_NOT_FOUND = "Customer not found.";
     public static final String COMPLAINTS_NOT_FOUND = "Complaints not found.";
+    public static final String COMPLAINT_IMAGE_NOT_FOUND = "Complaint image not found.";
     public static final String HOSTEL_NOT_FOUND = "Hostel not found.";
     public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
 
     public static final String CREATED = "Created Successfully";
     public static final String DELETED = "Deleted Successfully";
+
+    public static final String PAYLOADS_REQUIRED = "Payloads required";
+    public static final String UPDATED = "Updated Successfully";
 
     public static final Date findLastDate(Integer cycleStartDay, Date date) {
         LocalDate today = date.toInstant()
