@@ -35,6 +35,7 @@ public final class Utils {
 
     public static final String PAYLOADS_REQUIRED = "Payloads required";
     public static final String UPDATED = "Updated Successfully";
+    public static final String INVOICE_ITEMS_NOT_FOUND = "Invoice items not found.";
 
     public static final Date findLastDate(Integer cycleStartDay, Date date) {
         LocalDate today = date.toInstant()
