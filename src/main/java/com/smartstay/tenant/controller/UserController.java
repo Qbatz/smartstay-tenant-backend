@@ -34,10 +34,4 @@ public class UserController {
         return userService.tokenLogin(tokenLogin);
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<?> testMessage() {
-        return new ResponseEntity<>("success", HttpStatus.OK);
-    }
-
-
 }
