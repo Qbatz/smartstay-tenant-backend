@@ -1,25 +1,34 @@
 package com.smartstay.tenant.response.customer;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartstay.tenant.dto.BookingDetailsDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class CustomerDetails {
-    private String customerId;
-    private String firstName;
-    private String lastName;
-    private String houseNo;
-    private String street;
-    private String landmark;
-    private int pincode;
-    private String city;
-    private String state;
-    private String profilePic;
-    private String joiningDate;
-    private CustomerKycDetails kycDetails;
-    private CustomersBookingDetails customersBookingDetails;
-}
+import java.util.Date;
+
+
+public record CustomerDetails(
+
+        String customerId,
+        String firstName,
+        String lastName,
+        String houseNo,
+        String street,
+        String landmark,
+        int pincode,
+        String city,
+        String state,
+        String profilePic,
+
+        @JsonFormat(pattern = "dd/MM/yyyy")
+        Date dateOfBirth,
+
+        String gender,
+
+        CustomerKycDetails kyc,
+
+        BookingDetailsDto bookingDetails
+) {}
 

@@ -8,17 +8,18 @@ public interface CustomersBookingDetails {
     Integer getFloorId();
     Double getRentAmount();
     Double getBookingAmount();
+
     Date getCheckoutDate();
     Date getRequestedCheckoutDate();
     Date getLeavingDate();
     Date getNoticeDate();
+    Date getJoiningDate();
+    Date getExpectedJoiningDate();
+
     String getBookingId();
     String getCurrentStatus();
     String getReasonForLeaving();
-    Date getExpecteJoiningDate();
-    Date getJoiningDate();
-    String getFirstName();
-    String getLastName();
+
     String getRoomName();
     String getFloorName();
     String getBedName();

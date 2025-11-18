@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("v2/tenants")
+@RequestMapping("v2/tenant/customer")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -28,7 +28,7 @@ public class CustomerController {
     }
 
     @PostMapping("/update-profile")
-    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo, @RequestPart(value = "profilePic", required = false) MultipartFile file) {
+    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo, @RequestPart(value = "profilePic") MultipartFile file) {
         return customerService.updateCustomerInfo(customerInfo, file);
     }
 

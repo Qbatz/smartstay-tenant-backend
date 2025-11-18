@@ -100,7 +100,7 @@ public class UserService {
         customers1.setMobSerialNo(verifyOtp.serialNo());
         customersRepository.save(customers1);
         return new ResponseEntity<>(
-                new VerifyOtpResponse(customers1.getKycStatus(), token)
+                token
                 , HttpStatus.OK);
     }
 

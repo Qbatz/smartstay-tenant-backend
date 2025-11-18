@@ -6,6 +6,7 @@ import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.response.customer.EditCustomer;
@@ -43,10 +44,6 @@ public class CustomerService {
         }
         return new ResponseEntity<>(new CustomerMapper().toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
 
-    }
-
-    HostelV1 findByCustomerIdAndHostelId(String customerId, String hostelId) {
-        return customersRepository.findByCustomerIdAndHostelId(customerId, hostelId);
     }
 
 
@@ -103,6 +100,13 @@ public class CustomerService {
             }
             if (updateInfo.state() != null && !updateInfo.state().equalsIgnoreCase("")) {
                 customers.setState(updateInfo.state());
+            }
+            if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")){
+                customers.setDateOfBirth(Utils.stringToDate(updateInfo.dob(),Utils.USER_INPUT_DATE_FORMAT));
+            }
+            if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")){
+                Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
+                customers.setGender(gender.getLabel());
             }
 
             customersRepository.save(customers);

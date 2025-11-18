@@ -19,8 +19,7 @@ public interface BookingsRepository extends JpaRepository<BookingsV1, String> {
             bookingv1.rent_amount as rentAmount, bookingv1.leaving_date as leavingDate, bookingv1.notice_date as requestedCheckoutDate, 
             bookingv1.notice_date as noticeDate,  bookingv1.joining_date as joiningDate, bookingv1.booking_id as bookingId, 
             bookingv1.current_status as currentStatus, bookingv1.reason_for_leaving as reasonForLeaving, 
-            bookingv1.expected_joining_date as expectedJoiningDate, usr.first_name as firstName, 
-            usr.last_name as lastName, room.room_name as roomName, flr.floor_name as floorName, 
+            bookingv1.expected_joining_date as expectedJoiningDate, room.room_name as roomName, flr.floor_name as floorName, 
             bed.bed_name as bedName  FROM bookingsv1 bookingv1 
             left outer join users usr on usr.user_id=bookingv1.created_by 
             left outer join rooms room on room.room_id=bookingv1.room_id 

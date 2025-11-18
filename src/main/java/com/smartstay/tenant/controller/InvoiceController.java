@@ -1,6 +1,7 @@
 package com.smartstay.tenant.controller;
 
-import com.smartstay.tenant.service.HostelService;
+
+import com.smartstay.tenant.service.InvoiceService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -9,25 +10,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v2/tenant/hostels")
+@RequestMapping("v2/tenant/invoices")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
-public class HostelController {
+public class InvoiceController {
 
     @Autowired
-    private HostelService hostelService;
+    private InvoiceService invoiceService;
 
-
-    @GetMapping("")
-    public ResponseEntity<?> getHostels() {
-        return hostelService.getHostels();
-    }
 
     @GetMapping("/{hostelId}")
-    public ResponseEntity<?> getHostelDetails(@PathVariable String hostelId) {
-        return hostelService.getHostelDetails(hostelId);
+    public ResponseEntity<?> getInvoicesList(@PathVariable String hostelId) {
+        return invoiceService.getInvoiceList(hostelId);
     }
-
-
 }
