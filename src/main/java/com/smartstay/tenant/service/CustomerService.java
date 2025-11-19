@@ -102,7 +102,8 @@ public class CustomerService {
                 customers.setState(updateInfo.state());
             }
             if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")){
-                customers.setDateOfBirth(Utils.stringToDate(updateInfo.dob(),Utils.USER_INPUT_DATE_FORMAT));
+                String formattedDate = updateInfo.dob().replace("/", "-");
+                customers.setDateOfBirth(Utils.stringToDate(formattedDate,Utils.USER_INPUT_DATE_FORMAT));
             }
             if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")){
                 Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
