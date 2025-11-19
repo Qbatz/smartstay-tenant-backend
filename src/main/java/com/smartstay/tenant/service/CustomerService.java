@@ -74,7 +74,7 @@ public class CustomerService {
 
             String profileImage = null;
             if (file != null) {
-                profileImage = uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFile(file), "customer/profile");
+                profileImage = uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(file), "customer/profile");
                 customers.setProfilePic(profileImage);
             }
 
