@@ -111,6 +111,7 @@ public class ComplaintService {
 
 
     public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request, String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
@@ -119,6 +120,7 @@ public class ComplaintService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
 
         ComplaintsV1 complaint = new ComplaintsV1();
         if (request.floorId() != null) {
