@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("v2/tenant/complaints")
+@RequestMapping("v2/complaints")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -48,21 +48,21 @@ public class ComplaintsController {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
 
-    @DeleteMapping("/delete-complaint/{complaintId}/{hostelId}")
-    public ResponseEntity<?> deleteComplaint(@PathVariable("complaintId") Integer complaintId,@PathVariable String hostelId) {
+    @DeleteMapping("/{hostelId}/{complaintId}")
+    public ResponseEntity<?> deleteComplaint(@PathVariable("complaintId") Integer complaintId,@PathVariable("hostelId") String hostelId) {
         return complaintsService.deleteComplaint(complaintId,hostelId);
     }
 
-    @PostMapping("/add-comment/{complaintId}")
+    @PostMapping("/comment/{complaintId}")
     public ResponseEntity<?> addComplaintComments(@PathVariable("complaintId") int complaintId,@Valid @RequestBody AddComplaintComment comment) {
         return complaintsService.addComplaintComments(comment,complaintId);
     }
 
-    @DeleteMapping("/complaint-image/{complaintId}/{imageId}/{hostelId}")
+    @DeleteMapping("/image/{complaintId}/{hostelId}/{imageId}")
     public ResponseEntity<?> deactivateComplaintImage(
-            @PathVariable Integer complaintId,
-            @PathVariable Integer imageId,
-            @PathVariable String hostelId
+            @PathVariable("complaintId") Integer complaintId,
+            @PathVariable("imageId") Integer imageId,
+            @PathVariable("hostelId") String hostelId
     ) {
         return complaintsService.deactivateComplaintImage(complaintId, imageId, hostelId);
     }
