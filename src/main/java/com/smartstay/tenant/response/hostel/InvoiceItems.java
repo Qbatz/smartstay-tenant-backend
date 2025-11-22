@@ -1,13 +1,27 @@
 package com.smartstay.tenant.response.hostel;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import java.util.Date;
 
-public interface InvoiceItems {
-    String getInvoiceItem();
+@Data
+@AllArgsConstructor
+public class InvoiceItems {
+    private String invoiceId;
+    private String invoiceNumber;
+    private String invoiceType;
 
-    Double getAmount();
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date generatedDate;
 
-    Date getPaidDate();
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date dueDate;
 
-    Double getPaidAmount();
+    private String itemType;
+    private Double totalAmount;
+    private Double totalPaid;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date lastPaidDate;
 }

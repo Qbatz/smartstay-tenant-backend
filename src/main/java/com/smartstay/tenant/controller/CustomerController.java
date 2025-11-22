@@ -28,7 +28,7 @@ public class CustomerController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo, @RequestPart(value = "profilePic") MultipartFile file) {
+    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo, @RequestPart(value = "profilePic",required = false) MultipartFile file) {
         return customerService.updateCustomerInfo(customerInfo, file);
     }
 
