@@ -1,9 +1,11 @@
 package com.smartstay.tenant.controller;
 
+import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.service.AmenitiesService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +37,13 @@ public class AmenityController {
     public ResponseEntity<?> getAllUnAssignedAmenities(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAllUnAssignedAmenities(hostelId);
     }
+
+    @PostMapping("/request-amenity/{hostelId}")
+    public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId, @Valid @RequestBody NotificationRequest amenityRequest) {
+        return amenitiesService.createAmenityRequest(hostelId, amenityRequest);
+    }
+
+
 
 
 }

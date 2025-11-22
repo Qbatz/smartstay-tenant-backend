@@ -25,8 +25,11 @@ public final class Utils {
 
     public static final String CUSTOMER_NOT_FOUND = "Customer not found.";
     public static final String COMPLAINTS_NOT_FOUND = "Complaints not found.";
+    public static final String NOTIFICATION_NOT_FOUND = "Notifications not found.";
     public static final String COMPLAINT_IMAGE_NOT_FOUND = "Complaint image not found.";
     public static final String HOSTEL_NOT_FOUND = "Hostel not found.";
+    public static final String REQUEST_ALREADY_EXISTS = "Request already exists.";
+    public static final String REQUEST_SENT_SUCCESSFULLY = "Request sent successfully.";
     public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
 
