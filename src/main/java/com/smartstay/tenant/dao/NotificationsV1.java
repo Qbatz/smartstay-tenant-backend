@@ -29,6 +29,7 @@ public class NotificationsV1 {
     private Date createdAt;
     private Date updatedAt;
     private boolean isActive;
+    private boolean isRead;
     private String hostelId;
     private String createdBy;
     private boolean isDeleted;

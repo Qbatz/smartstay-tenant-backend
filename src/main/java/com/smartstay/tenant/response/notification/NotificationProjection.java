@@ -8,4 +8,5 @@ public interface NotificationProjection {
     String getStatus();
     String getNotificationType();
     String getCreatedDate();
+    boolean getIsRead();
 }

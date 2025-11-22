@@ -8,6 +8,7 @@ import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
+import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.NotificationRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
@@ -70,6 +71,19 @@ public class NotificationService {
         return new ResponseEntity<>(notifications, HttpStatus.OK);
     }
 
+    public ResponseEntity<?> markAsRead(String hostelId, MarkAsReadRequest request) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        String data = markAsRead(request.notificationIds(), hostelId);
+        return new ResponseEntity<>(data, HttpStatus.OK);
+    }
+
 
     public void createNotificationForBedChange(String userId, String hostelId, NotificationRequest request) {
 
@@ -91,6 +105,7 @@ public class NotificationService {
         notification.setCreatedBy(userId);
         notification.setStatus(RequestStatus.OPEN.name());
         notification.setActive(true);
+        notification.setRead(false);
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
@@ -117,6 +132,7 @@ public class NotificationService {
         notification.setCreatedBy(userId);
         notification.setStatus(RequestStatus.OPEN.name());
         notification.setActive(true);
+        notification.setRead(false);
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
@@ -132,5 +148,11 @@ public class NotificationService {
                 statusList
         );
         return existingRequest != null;
+    }
+
+
+    public String markAsRead(List<Long> notificationIds, String hostelId) {
+        int updatedCount = notificationRepository.markNotificationsAsRead(notificationIds, hostelId);
+        return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 }
