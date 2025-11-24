@@ -164,7 +164,7 @@ public class ComplaintService {
 
         List<String> listImageUrls = new ArrayList<>();
         if (complaintImages != null && !complaintImages.isEmpty()) {
-            listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFile(multipartFile), "CustomerComplaint-Images")).toList();
+            listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile), "CustomerComplaint-Images")).toList();
         }
         if (!listImageUrls.isEmpty()) {
             List<ComplaintImages> complaintImagesList = listImageUrls.stream().map(item -> {
