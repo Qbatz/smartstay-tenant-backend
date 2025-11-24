@@ -29,6 +29,7 @@ public final class Utils {
     public static final String COMPLAINT_IMAGE_NOT_FOUND = "Complaint image not found.";
     public static final String HOSTEL_NOT_FOUND = "Hostel not found.";
     public static final String REQUEST_ALREADY_EXISTS = "Request already exists.";
+    public static final String PENDING_REQUEST_EXISTS = "Request already exists.";
     public static final String REQUEST_SENT_SUCCESSFULLY = "Request sent successfully.";
     public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
@@ -93,6 +94,27 @@ public final class Utils {
         return new SimpleDateFormat(OUTPUT_DATE_FORMAT).format(date);
     }
 
+
+    public static Date convertStringToDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            sdf.setLenient(false);
+            return sdf.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Date addDaysToDate(Date date, int noOfDays) {
+        return Date.from(date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+                .plusDays(noOfDays)
+                .atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
 
 
 }

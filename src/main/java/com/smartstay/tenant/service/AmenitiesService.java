@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
@@ -19,6 +20,9 @@ import java.util.List;
 public class AmenitiesService {
     @Autowired
     AmentityRepository amenityRepository;
+
+    @Autowired
+    AmenityRequestService amenityRequestService;
 
     @Autowired
     NotificationService notificationService;
@@ -83,7 +87,7 @@ public class AmenitiesService {
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }
 
-    public ResponseEntity<?> createAmenityRequest(String hostelId, NotificationRequest request) {
+    public ResponseEntity<?> createAmenityRequest(String hostelId,String amenityId, RequestAmenity request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
@@ -96,8 +100,20 @@ public class AmenitiesService {
         if (exists) {
             return new ResponseEntity<>(Utils.REQUEST_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
         }
-        notificationService.createNotificationForAmenity(customerId, hostelId, request);
+        if (amenityRequestService.existsPendingRequest(customerId, amenityId)) {
+            return new ResponseEntity<>("Already requested. Please wait for approval.", HttpStatus.BAD_REQUEST);
+        }
+
+        Long count = amenityRepository.isAmenityAlreadyAssigned(customerId, amenityId);
+        if (count != null && count > 0) {
+            return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
+        }
+
+        notificationService.createNotificationForAmenity(customerId, hostelId, request,amenityId);
+        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
+
+
 
 }
