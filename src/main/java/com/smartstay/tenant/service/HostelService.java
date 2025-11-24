@@ -90,7 +90,6 @@ public class HostelService {
         if (billingRules != null) {
             billStartDate = billingRules.getBillingStartDate();
         }
-
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, billStartDate);
 

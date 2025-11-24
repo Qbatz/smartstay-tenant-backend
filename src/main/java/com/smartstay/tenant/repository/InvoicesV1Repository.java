@@ -16,6 +16,36 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoiceItems> findInvoiceItemsWithTransactionsByCustomerAndDateRange(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
     @Query("""
+            SELECT new com.smartstay.tenant.response.hostel.InvoiceItems(
+                   i.invoiceId,
+                   i.invoiceNumber,
+                   i.invoiceType,
+                   i.invoiceGeneratedDate,
+                   i.invoiceDueDate,
+                   ii.invoiceItem,
+                   SUM(ii.amount),
+                   SUM(COALESCE(t.paidAmount, 0)),
+                   MAX(COALESCE(t.paidAt, i.invoiceGeneratedDate))
+            )
+            FROM InvoicesV1 i
+            JOIN i.invoiceItems ii
+            LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
+            WHERE i.customerId = :customerId
+              AND ii.invoiceItem IN (:itemTypes)
+              AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate
+            GROUP BY 
+                   i.invoiceId,
+                   i.invoiceNumber,
+                   i.invoiceType,
+                   i.invoiceGeneratedDate,
+                   i.invoiceDueDate,
+                   ii.invoiceItem
+            ORDER BY i.invoiceGeneratedDate DESC
+            """)
+    List<InvoiceItems> getInvoiceItemDetails(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("itemTypes") List<String> itemTypes);
+
+
+    @Query("""
             SELECT new com.smartstay.tenant.dto.InvoiceItemResponseDTO(
                i.invoiceId,
                i.invoiceType,

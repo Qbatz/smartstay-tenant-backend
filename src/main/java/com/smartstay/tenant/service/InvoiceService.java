@@ -5,6 +5,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.InvoiceItemResponseDTO;
+import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.hostel.HostelDetails;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
@@ -31,7 +32,7 @@ public class InvoiceService {
 
 
     public List<InvoiceItems> getInvoicesWithItems(String customerId, Date startDate, Date endDate) {
-        return invoicesV1Repository.findInvoiceItemsWithTransactionsByCustomerAndDateRange(customerId, startDate, endDate);
+        return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
 
     public ResponseEntity<?> getInvoiceList(String hostelId) {

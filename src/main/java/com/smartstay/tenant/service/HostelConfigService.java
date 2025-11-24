@@ -46,7 +46,7 @@ public class HostelConfigService {
     }
 
     public BillingRules getCurrentMonthTemplate(String hostelId) {
-        return billingRuleRepository.findLatestBillingRule(hostelId, new Date());
+       return billingRuleRepository.findLatestBillingRule(hostelId, new Date());
     }
 
     public BillingDates getBillingRuleByDateAndHostelId(String hostelId, Date dateJoiningDate) {
