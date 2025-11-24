@@ -8,6 +8,8 @@ import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
+import com.smartstay.tenant.payload.amenity.RequestAmenity;
+import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.NotificationRepository;
@@ -85,7 +87,7 @@ public class NotificationService {
     }
 
 
-    public void createNotificationForBedChange(String userId, String hostelId, NotificationRequest request) {
+    public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         NotificationsV1 notification = new NotificationsV1();
         notification.setUserId(userId);
@@ -109,10 +111,13 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
+        if (request.bedId() != null) {
+            notification.setSourceId(String.valueOf(request.bedId()));
+        }
         notificationRepository.save(notification);
     }
 
-    public void createNotificationForAmenity(String userId, String hostelId, NotificationRequest request) {
+    public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
 
         NotificationsV1 notification = new NotificationsV1();
         notification.setUserId(userId);
@@ -134,6 +139,7 @@ public class NotificationService {
         notification.setActive(true);
         notification.setRead(false);
         notification.setDeleted(false);
+        notification.setAmenityId(amenityId);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notificationRepository.save(notification);

@@ -1,6 +1,7 @@
 package com.smartstay.tenant.controller;
 
 
+import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.service.BedsService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -22,7 +23,7 @@ public class BedController {
     private BedsService bedsService;
 
     @PostMapping("/request-bedChange/{hostelId}")
-    public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId, @Valid @RequestBody NotificationRequest request) {
+    public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId, @Valid @RequestBody BedChangePayload request) {
         return bedsService.requestBedChange(hostelId, request);
     }
 }

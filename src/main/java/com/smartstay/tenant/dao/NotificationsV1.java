@@ -33,5 +33,7 @@ public class NotificationsV1 {
     private String hostelId;
     private String createdBy;
     private boolean isDeleted;
+    private String amenityId;
+    private String sourceId;
 
 }
