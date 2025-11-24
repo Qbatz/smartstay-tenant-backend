@@ -24,4 +24,9 @@ public class InvoiceController {
     public ResponseEntity<?> getInvoicesList(@PathVariable String hostelId) {
         return invoiceService.getInvoiceList(hostelId);
     }
+
+    @GetMapping("/{hostelId}/{invoiceId}")
+    public ResponseEntity<?> getInvoiceById(@PathVariable String hostelId, @PathVariable String invoiceId) {
+        return invoiceService.getInvoicesById(hostelId,invoiceId);
+    }
 }

@@ -50,4 +50,20 @@ public class InvoiceService {
         return new ResponseEntity<>(invoiceItems, HttpStatus.OK);
 
     }
+
+    public ResponseEntity<?> getInvoicesById(String hostelId, String invoiceId) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        List<InvoiceItemResponseDTO> invoiceItems = invoicesV1Repository.getInvoiceDetails(invoiceId,hostelId, customerId);
+        if (invoiceItems.isEmpty()){
+            return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(invoiceItems, HttpStatus.OK);
+
+    }
 }

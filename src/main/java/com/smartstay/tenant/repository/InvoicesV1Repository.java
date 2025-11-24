@@ -66,4 +66,30 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoiceItemResponseDTO> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
 
 
+    @Query("""
+        SELECT new com.smartstay.tenant.dto.InvoiceItemResponseDTO(
+           i.invoiceId,
+           i.invoiceType,
+           i.invoiceNumber,
+           ii.amount,
+           i.paymentStatus,
+           i.invoiceDueDate,
+           i.invoiceGeneratedDate,
+           ii.invoiceItem
+        )
+        FROM InvoicesV1 i
+        LEFT JOIN i.invoiceItems ii
+        WHERE i.invoiceId = :invoiceId
+          AND i.hostelId = :hostelId
+          AND i.customerId = :customerId
+          AND i.isCancelled = false
+        ORDER BY i.invoiceGeneratedDate DESC
+        """)
+    List<InvoiceItemResponseDTO> getInvoiceDetails(
+            @Param("invoiceId") String invoiceId,
+            @Param("hostelId") String hostelId,
+            @Param("customerId") String customerId);
+
+
+
 }
