@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
-public class HostelController {
+public class DashboardController {
 
     @Autowired
     private HostelService hostelService;
@@ -24,7 +24,7 @@ public class HostelController {
         return hostelService.getHostels();
     }
 
-    @GetMapping("/{hostelId}")
+    @GetMapping("my-stay-view/{hostelId}")
     public ResponseEntity<?> getHostelDetails(@PathVariable String hostelId) {
         return hostelService.getHostelDetails(hostelId);
     }

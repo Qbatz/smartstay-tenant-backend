@@ -4,11 +4,12 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
-import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
+import com.smartstay.tenant.response.amenity.AmenitiesStatusResponse;
 import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
+import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,36 @@ public class AmenitiesService {
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }
 
+    public ResponseEntity<?> getAllAmenities(String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        List<AmenityInfoProjection> assigned = amenityRepository.findCurrentlyAssignedAmenities(hostelId, customerId);
+        List<AmenityInfoProjection> unassigned = amenityRepository.findUnassignedAmenities(hostelId, customerId);
+
+        AmenitiesStatusResponse response = new AmenitiesStatusResponse(assigned != null ? assigned : List.of(), unassigned != null ? unassigned : List.of());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> getAmenityRequest(String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        List<AmenityRequestResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
+
+        return new ResponseEntity<>(requests, HttpStatus.OK);
+    }
+
 
     public ResponseEntity<?> getAllUnAssignedAmenities(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -87,7 +118,7 @@ public class AmenitiesService {
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }
 
-    public ResponseEntity<?> createAmenityRequest(String hostelId,String amenityId, RequestAmenity request) {
+    public ResponseEntity<?> createAmenityRequest(String hostelId, String amenityId, RequestAmenity request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
@@ -96,7 +127,7 @@ public class AmenitiesService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        boolean exists = notificationService.checkRequestExists(customerId, hostelId, com.smartstay.tenant.ennum.RequestType.AMENITY_REQUEST);
+        boolean exists = notificationService.checkRequestExists(customerId, hostelId, com.smartstay.tenant.ennum.RequestType.AMENITY_REQUEST,amenityId);
         if (exists) {
             return new ResponseEntity<>(Utils.REQUEST_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
         }
@@ -109,11 +140,10 @@ public class AmenitiesService {
             return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
         }
 
-        notificationService.createNotificationForAmenity(customerId, hostelId, request,amenityId);
+        notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
         amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
-
 
 
 }

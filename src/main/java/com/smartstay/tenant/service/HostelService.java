@@ -10,6 +10,7 @@ import com.smartstay.tenant.repository.FloorRepository;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.RoomRepository;
 import com.smartstay.tenant.response.customer.CustomerHostels;
+import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.HostelDetails;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,9 +74,8 @@ public class HostelService {
         String customerId = authentication.getName();
         BillingDates previousBillingDates = getBillStartDate(hostelId, Utils.getFirstDayOfPreviousMonth());
         BillingDates currentBillingDates = getCurrentBillStartAndEndDates(hostelId);
-        List<InvoiceItems> previousMonthInvoices = invoiceService.getInvoicesWithItems(customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
-
-        List<InvoiceItems> currentMonthInvoices = invoiceService.getInvoicesWithItems(customerId, currentBillingDates.currentBillStartDate(), currentBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(customerId, currentBillingDates.currentBillStartDate(), currentBillingDates.currentBillEndDate());
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
         HostelDetails hostelDetails = new HostelDetails(previousMonthInvoices, currentMonthInvoices, complaints);

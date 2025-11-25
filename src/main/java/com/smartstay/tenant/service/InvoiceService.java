@@ -7,9 +7,12 @@ import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.InvoiceItemResponseDTO;
 import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
+import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.HostelDetails;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,17 @@ public class InvoiceService {
     public List<InvoiceItems> getInvoicesWithItems(String customerId, Date startDate, Date endDate) {
         return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
+
+    public InvoiceSummaryResponse getLatestInvoiceSummary(String customerId, Date startDate, Date endDate) {
+        Pageable limitOne = PageRequest.of(0, 1);
+
+        return invoicesV1Repository
+                .getInvoiceSummary(customerId, startDate, endDate, limitOne)
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
+
 
     public ResponseEntity<?> getInvoiceList(String hostelId) {
         if (!authentication.isAuthenticated()) {

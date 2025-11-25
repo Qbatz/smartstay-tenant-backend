@@ -9,6 +9,7 @@ import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmenityRequestRepository;
 import com.smartstay.tenant.repository.BillingRuleRepository;
+import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +59,10 @@ public class AmenityRequestService {
 
     public boolean existsPendingRequest(String customerId, String amenityId) {
         return amenityRequestRepository.existsPendingRequest(customerId, amenityId, List.of(RequestStatus.OPEN.name(), RequestStatus.INPROGRESS.name()));
+    }
+
+    public List<AmenityRequestResponse> getRequests(String customerId, String hostelId) {
+        return amenityRequestRepository.findRequestsForCustomer(customerId, hostelId);
     }
 
 

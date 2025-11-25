@@ -21,9 +21,9 @@ public class AmenityController {
     @Autowired
     private AmenitiesService amenitiesService;
 
-    @GetMapping("/assigned/{hostelId}")
-    public ResponseEntity<?> getAllAssignedAmenities(@PathVariable("hostelId") String hostelId) {
-        return amenitiesService.getAllAssignedAmenities(hostelId);
+    @GetMapping("/{hostelId}")
+    public ResponseEntity<?> getAllAmenities(@PathVariable("hostelId") String hostelId) {
+        return amenitiesService.getAllAmenities(hostelId);
     }
 
     @GetMapping("/{hostelId}/{amenityId}")
@@ -34,14 +34,14 @@ public class AmenityController {
         return amenitiesService.getAmenityByAmenityId(hostelId, amenityId);
     }
 
-    @GetMapping("/unassigned/{hostelId}")
-    public ResponseEntity<?> getAllUnAssignedAmenities(@PathVariable("hostelId") String hostelId) {
-        return amenitiesService.getAllUnAssignedAmenities(hostelId);
-    }
-
     @PostMapping("/request-amenity/{hostelId}/{amenityId}")
     public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId,@PathVariable("amenityId") String amenityId, @Valid @RequestBody RequestAmenity amenityRequest) {
         return amenitiesService.createAmenityRequest(hostelId,amenityId, amenityRequest);
+    }
+
+    @GetMapping("all-requests/{hostelId}")
+    public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId) {
+        return amenitiesService.getAmenityRequest(hostelId);
     }
 
 
