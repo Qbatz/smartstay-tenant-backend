@@ -26,4 +26,9 @@ public class BedController {
     public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId, @Valid @RequestBody BedChangePayload request) {
         return bedsService.requestBedChange(hostelId, request);
     }
+
+    @GetMapping("all-requests/{hostelId}")
+    public ResponseEntity<?> getBedRequests(@PathVariable("hostelId") String hostelId) {
+        return bedsService.getBedRequests(hostelId);
+    }
 }

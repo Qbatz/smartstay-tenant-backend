@@ -37,6 +37,11 @@ public class NotificationController {
         return notificationService.markAsRead(hostelId, request);
     }
 
+    @DeleteMapping("/{hostelId}/{notificationId}")
+    public ResponseEntity<?> deleteNotification(@PathVariable("hostelId") String hostelId, @PathVariable("notificationId")Long notificationId) {
+        return notificationService.deleteNotification(hostelId, notificationId);
+    }
+
 
 
 }

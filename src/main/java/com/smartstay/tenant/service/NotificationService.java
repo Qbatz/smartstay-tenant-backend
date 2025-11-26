@@ -4,20 +4,15 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.NotificationsV1;
-import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
-import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.NotificationRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -65,7 +60,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        NotificationProjection notifications = notificationRepository.getNotificationById(hostelId,notificationId);
+        NotificationProjection notifications = notificationRepository.getNotificationById(hostelId, notificationId);
 
         if (notifications == null) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -84,6 +79,26 @@ public class NotificationService {
         }
         String data = markAsRead(request.notificationIds(), hostelId);
         return new ResponseEntity<>(data, HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<?> deleteNotification(String hostelId, long id) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        NotificationsV1 notification = notificationRepository.findByIdAndIsDeletedFalse(id).orElse(null);
+        if (notification == null || !notification.getHostelId().equals(hostelId)) {
+            return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        notification.setDeleted(true);
+        notification.setUpdatedAt(new Date());
+        notificationRepository.save(notification);
+        return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
 
 
@@ -145,14 +160,19 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    public boolean checkRequestExists(String userId, String hostelId, RequestType requestType) {
+    public boolean checkRequestExists(String userId, String hostelId, RequestType requestType, String sourceId) {
         List<String> statusList = Arrays.asList(RequestStatus.PENDING.name(), RequestStatus.OPEN.name());
-        NotificationsV1 existingRequest = notificationRepository.findExistingRequest(
-                userId,
-                requestType.name(),
-                hostelId,
-                statusList
-        );
+
+        NotificationsV1 existingRequest;
+
+        if (sourceId == null || sourceId.trim().isEmpty()) {
+            existingRequest = notificationRepository.findExistingRequestNoSource(userId, requestType.name(), hostelId, statusList);
+        } else {
+            existingRequest = notificationRepository.findExistingRequestWithSource(userId, requestType.name(), hostelId, statusList, sourceId);
+        }
+
+        System.out.println("Existing Request: " + existingRequest);
+
         return existingRequest != null;
     }
 
