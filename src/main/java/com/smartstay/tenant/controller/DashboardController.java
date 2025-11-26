@@ -24,7 +24,7 @@ public class DashboardController {
         return hostelService.getHostels();
     }
 
-    @GetMapping("my-stay-view/{hostelId}")
+    @GetMapping("/{hostelId}")
     public ResponseEntity<?> getHostelDetails(@PathVariable String hostelId) {
         return hostelService.getHostelDetails(hostelId);
     }
