@@ -39,7 +39,7 @@ public class TransactionService {
         }
         List<TransactionDto> transactionDtos = getTransactionInfoByCustomerId(customerId,hostelId);
         if (transactionDtos.isEmpty()){
-            return new ResponseEntity<>(Utils.PAYMENTS_NOT_FOUND, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(Utils.PAYMENTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(transactionDtos, HttpStatus.OK);
 
