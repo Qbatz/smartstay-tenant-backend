@@ -101,7 +101,7 @@ public class InvoiceService {
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoiceId);
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), invoice.getInvoiceType(), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts);
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts);
     }
 
 }

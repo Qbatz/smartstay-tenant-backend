@@ -59,16 +59,11 @@ public class TransactionService {
 
         for (ReceiptDTO r : receipts) {
             if (r.getPaymentMode() != null) {
-                r.setPaymentMode(capitalize(r.getPaymentMode()));
+                r.setPaymentMode(Utils.capitalize(r.getPaymentMode()));
             }
         }
 
         return receipts;
-    }
-
-    private String capitalize(String value) {
-        if (value == null || value.isEmpty()) return value;
-        return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
     }
 
 
