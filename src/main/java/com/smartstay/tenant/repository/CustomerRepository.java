@@ -11,7 +11,7 @@ import java.util.List;
 public interface CustomerRepository extends JpaRepository<Customers, String> {
 
     List<Customers> findByMobile(String customerId);
-    List<Customers> findByCustomerId(String customerId);
+    Customers findByCustomerId(String customerId);
 
     boolean existsByCustomerIdAndHostelId(String customerId, String hostelId);
 

@@ -20,11 +20,7 @@ public class MyUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String customerId) throws UsernameNotFoundException {
-        List<Customers> customers = customerRepository.findByCustomerId(customerId);
-
-        if (customers == null || customers.isEmpty()) {
-            return null;
-        }
-        return new UserPrinciple(customers.getFirst());
+        Customers customers = customerRepository.findByCustomerId(customerId);
+        return new UserPrinciple(customers);
     }
 }

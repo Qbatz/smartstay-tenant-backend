@@ -164,9 +164,9 @@ public class NotificationService {
         NotificationsV1 existingRequest;
 
         if (sourceId == null || sourceId.trim().isEmpty()) {
-            existingRequest = notificationRepository.findExistingRequestNoSource(userId, requestType.name(), hostelId, statusList);
+            existingRequest = notificationRepository.findExistingRequestNoSource(userId, requestType.name(), hostelId);
         } else {
-            existingRequest = notificationRepository.findExistingRequestWithSource(userId, requestType.name(), hostelId, statusList, sourceId);
+            existingRequest = notificationRepository.findExistingRequestWithSource(userId, requestType.name(), hostelId, sourceId);
         }
 
         System.out.println("Existing Request: " + existingRequest);
