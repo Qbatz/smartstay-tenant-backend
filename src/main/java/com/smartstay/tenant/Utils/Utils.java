@@ -40,6 +40,7 @@ public final class Utils {
     public static final String PAYLOADS_REQUIRED = "Payloads required";
     public static final String UPDATED = "Updated Successfully";
     public static final String INVOICE_ITEMS_NOT_FOUND = "Invoice items not found.";
+    public static final String INVOICE_NOT_FOUND = "Invoice not found.";
     public static final String PAYMENTS_NOT_FOUND = "Payments not found.";
 
     public static final Date findLastDate(Integer cycleStartDay, Date date) {
@@ -115,6 +116,11 @@ public final class Utils {
                 .toLocalDate()
                 .plusDays(noOfDays)
                 .atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
+    public static String capitalize(String value) {
+        if (value == null || value.isEmpty()) return value;
+        return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
     }
 
 

@@ -1,4 +1,4 @@
-package com.smartstay.tenant.dto;
+package com.smartstay.tenant.dto.invoice;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
@@ -14,14 +14,12 @@ public class InvoiceItemResponseDTO {
     private String invoiceType;
     private String invoiceNumber;
     private Double amount;
-    private String status;
-
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date invoiceDueDate;
-
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date invoiceGeneratedDate;
-
-    private String itemType;
+    private Double paidAmount;
+    private Double dueAmount;
+    private String status;
 }
 

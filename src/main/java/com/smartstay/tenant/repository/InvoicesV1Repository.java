@@ -1,7 +1,8 @@
 package com.smartstay.tenant.repository;
 
 import com.smartstay.tenant.dao.InvoicesV1;
-import com.smartstay.tenant.dto.InvoiceItemResponseDTO;
+import com.smartstay.tenant.dto.invoice.InvoiceItemDTO;
+import com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +14,6 @@ import java.util.Date;
 import java.util.List;
 
 public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> {
-
-    @Query("SELECT ii.invoiceItem AS invoiceItem, " + "ii.amount AS amount, " + "COALESCE(t.paidAt, i.invoiceGeneratedDate) AS paidDate, " + "COALESCE(t.paidAmount, 0) AS paidAmount " + "FROM InvoicesV1 i " + "JOIN i.invoiceItems ii " + "LEFT JOIN TransactionV1 t ON i.invoiceId = t.invoiceId " + "WHERE i.customerId = :customerId " + "AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate")
-    List<InvoiceItems> findInvoiceItemsWithTransactionsByCustomerAndDateRange(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
     @Query("""
             SELECT new com.smartstay.tenant.response.hostel.InvoiceItems(
@@ -48,49 +46,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
 
 
     @Query("""
-            SELECT new com.smartstay.tenant.dto.InvoiceItemResponseDTO(
-               i.invoiceId,
-               i.invoiceType,
-               i.invoiceNumber,
-               ii.amount,
-               i.paymentStatus,
-               i.invoiceDueDate,
-               i.invoiceGeneratedDate,
-               ii.invoiceItem
-            )
-            FROM InvoicesV1 i
-            LEFT JOIN i.invoiceItems ii
-            WHERE i.hostelId = :hostelId
-              AND i.customerId = :customerId
-              AND i.isCancelled = false
-            ORDER BY i.invoiceGeneratedDate DESC
-            """)
-    List<InvoiceItemResponseDTO> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
-
-
-    @Query("""
-            SELECT new com.smartstay.tenant.dto.InvoiceItemResponseDTO(
-               i.invoiceId,
-               i.invoiceType,
-               i.invoiceNumber,
-               ii.amount,
-               i.paymentStatus,
-               i.invoiceDueDate,
-               i.invoiceGeneratedDate,
-               ii.invoiceItem
-            )
-            FROM InvoicesV1 i
-            LEFT JOIN i.invoiceItems ii
-            WHERE i.invoiceId = :invoiceId
-              AND i.hostelId = :hostelId
-              AND i.customerId = :customerId
-              AND i.isCancelled = false
-            ORDER BY i.invoiceGeneratedDate DESC
-            """)
-    List<InvoiceItemResponseDTO> getInvoiceDetails(@Param("invoiceId") String invoiceId, @Param("hostelId") String hostelId, @Param("customerId") String customerId);
-
-
-    @Query("""
                 SELECT new com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse(
                     SUM(CASE WHEN ii.invoiceItem = 'RENT' THEN ii.amount ELSE 0 END),
                     SUM(CASE WHEN ii.invoiceItem = 'EB' THEN ii.amount ELSE 0 END),
@@ -117,5 +72,49 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoiceSummaryResponse> getInvoiceSummary(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
 
+
+    @Query("""
+                SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO(
+                    i.invoiceId,
+                    i.invoiceType,
+                    i.invoiceNumber,
+                    i.totalAmount,                             
+                    i.invoiceDueDate,
+                    i.invoiceGeneratedDate,                         
+                    COALESCE(SUM(t.paidAmount), 0.0),       
+                    i.totalAmount - COALESCE(SUM(t.paidAmount), 0.0),  
+                    CASE 
+                        WHEN i.totalAmount - COALESCE(SUM(t.paidAmount), 0) = 0 THEN 'Paid'
+                        WHEN COALESCE(SUM(t.paidAmount), 0) = 0 THEN 'Pending'
+                        ELSE 'Partially Paid'
+                    END
+                )
+                FROM InvoicesV1 i
+                LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
+                WHERE i.hostelId = :hostelId
+                  AND i.customerId = :customerId
+                  AND i.isCancelled = false
+                GROUP BY i.invoiceId
+                ORDER BY i.invoiceGeneratedDate DESC
+            """)
+    List<InvoiceItemResponseDTO> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
+
+    @Query("""
+                SELECT i 
+                FROM InvoicesV1 i
+                WHERE i.invoiceId = :invoiceId
+                  AND i.customerId = :customerId
+                  AND i.isCancelled = false
+            """)
+    InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId, @Param("customerId") String customerId);
+
+
+    @Query("""
+                SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
+                FROM InvoiceItems ii
+                WHERE ii.invoice.invoiceId = :invoiceId
+                  AND (ii.invoiceItem IS NULL OR ii.invoiceItem <> 'EB')
+            """)
+    List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 
 }
