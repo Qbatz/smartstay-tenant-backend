@@ -16,24 +16,22 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotificationsV1 {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private String userId;
     private String notificationType;
+    //requested user id
+    private String userId;
+    private String hostelId;
     private String description;
-    private String status;
+    private String sourceId;
     private String title;
     private String userType;
     private Date createdAt;
     private Date updatedAt;
     private boolean isActive;
     private boolean isRead;
-    private String hostelId;
     private String createdBy;
     private boolean isDeleted;
-    private String amenityId;
-    private String sourceId;
 
 }
