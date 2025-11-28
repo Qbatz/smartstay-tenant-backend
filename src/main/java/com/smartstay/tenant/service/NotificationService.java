@@ -120,7 +120,6 @@ public class NotificationService {
         notification.setUserType(UserType.TENANT.name());
         notification.setHostelId(hostelId);
         notification.setCreatedBy(userId);
-        notification.setStatus(RequestStatus.OPEN.name());
         notification.setActive(true);
         notification.setRead(false);
         notification.setDeleted(false);
@@ -150,11 +149,10 @@ public class NotificationService {
         notification.setUserType(UserType.TENANT.name());
         notification.setHostelId(hostelId);
         notification.setCreatedBy(userId);
-        notification.setStatus(RequestStatus.OPEN.name());
+        notification.setSourceId(amenityId);
         notification.setActive(true);
         notification.setRead(false);
         notification.setDeleted(false);
-        notification.setAmenityId(amenityId);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notificationRepository.save(notification);
