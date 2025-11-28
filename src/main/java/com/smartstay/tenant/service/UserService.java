@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.CustomersOtp;
+import com.smartstay.tenant.dao.UserConfig;
 import com.smartstay.tenant.payload.login.Login;
 import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
@@ -33,6 +34,10 @@ public class UserService {
 
     @Autowired
     CustomersOtpRepository customersOtpRepository;
+
+
+    @Autowired
+    UserConfigService userConfigService;
 
     public CustomersOtp getOtpByMobile(String customerId) {
         return customersOtpRepository.findByCustomerId(customerId);
@@ -86,11 +91,6 @@ public class UserService {
         if (customersOtp.getOtp() != verifyOtp.otp()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP. Please check and try again.");
         }
-
-        HashMap<String, Object> claims = new HashMap<>();
-        claims.put("mobile", customers.getFirst().getMobile());
-        claims.put("serialNo", verifyOtp.serialNo());
-        String token = jwtService.generateToken(customers.getFirst().getCustomerId(), claims);
         customersOtp.setVerified(true);
         customersOtp.setOtp(0);
         customersOtp.setUpdatedAt(new Date());
@@ -99,8 +99,9 @@ public class UserService {
         Customers customers1 = customers.getFirst();
         customers1.setMobSerialNo(verifyOtp.serialNo());
         customersRepository.save(customers1);
+        boolean isMpinSet = isMpinSet(customers1.getCustomerId());
         return new ResponseEntity<>(
-                token
+                new VerifyOtpResponse(customers1.getCustomerId(),isMpinSet)
                 , HttpStatus.OK);
     }
 
@@ -123,6 +124,11 @@ public class UserService {
         return new ResponseEntity<>(
                 token
                 , HttpStatus.OK);
+    }
+
+    public boolean isMpinSet(String userId) {
+        UserConfig config = userConfigService.getUserConfigByUserId(userId);
+        return config != null && config.getMPin() != null && !config.getMPin().isEmpty();
     }
 
     private int generateSixDigitOtp() {

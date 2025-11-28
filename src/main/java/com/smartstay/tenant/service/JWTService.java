@@ -23,6 +23,9 @@ public class JWTService {
     @Value("${JWT_SECRET}")
     private String secretKey;
 
+    public static final long TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000; // 30 days
+
+
     public JWTService() {
 //        secretKey = generateSecretKey();
     }
@@ -38,7 +41,7 @@ public class JWTService {
     }
 
     public String generateToken(String username, Map<String, Object> claims) {
-        return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 480)).signWith(getKey(), SignatureAlgorithm.HS256).compact();
+        return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY)).signWith(getKey(), SignatureAlgorithm.HS256).compact();
 
     }
 

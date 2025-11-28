@@ -35,23 +35,21 @@ public interface NotificationRepository extends JpaRepository<NotificationsV1, S
                 WHERE n.userId = :userId
                   AND n.notificationType = :type
                   AND n.hostelId = :hostelId
-                  AND n.status IN (:statusList)
                   AND n.isDeleted = false
                   AND n.isActive = true
                   AND n.sourceId = :sourceId
             """)
-    NotificationsV1 findExistingRequestWithSource(@Param("userId") String userId, @Param("type") String notificationType, @Param("hostelId") String hostelId, @Param("statusList") List<String> statusList, @Param("sourceId") String sourceId);
+    NotificationsV1 findExistingRequestWithSource(@Param("userId") String userId, @Param("type") String notificationType, @Param("hostelId") String hostelId, @Param("sourceId") String sourceId);
 
     @Query("""
                 SELECT n FROM NotificationsV1 n
                 WHERE n.userId = :userId
                   AND n.notificationType = :type
                   AND n.hostelId = :hostelId
-                  AND n.status IN (:statusList)
                   AND n.isDeleted = false
                   AND n.isActive = true
             """)
-    NotificationsV1 findExistingRequestNoSource(@Param("userId") String userId, @Param("type") String notificationType, @Param("hostelId") String hostelId, @Param("statusList") List<String> statusList);
+    NotificationsV1 findExistingRequestNoSource(@Param("userId") String userId, @Param("type") String notificationType, @Param("hostelId") String hostelId);
 
 
     Optional<NotificationsV1> findByIdAndIsDeletedFalse(Long id);
