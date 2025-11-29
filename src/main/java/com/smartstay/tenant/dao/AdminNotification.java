@@ -1,0 +1,34 @@
+package com.smartstay.tenant.dao;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.Data;
+
+import java.util.Date;
+
+
+@Entity
+@Data
+public class AdminNotification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    private String notificationType;
+    //requested user id
+    private String userId;
+    private String hostelId;
+    private String description;
+    private String sourceId;
+    private String title;
+    private String userType;
+    private Date createdAt;
+    private Date updatedAt;
+    private boolean isActive;
+    private boolean isRead;
+    private String createdBy;
+    private boolean isDeleted;
+
+}

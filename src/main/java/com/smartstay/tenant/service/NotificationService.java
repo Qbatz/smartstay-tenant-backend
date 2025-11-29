@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.AdminNotification;
 import com.smartstay.tenant.dao.NotificationsV1;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.RequestType;
@@ -33,6 +34,9 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private AdminNotificationService adminNotificationService;
 
     public ResponseEntity<?> getNotificationList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -104,7 +108,7 @@ public class NotificationService {
 
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
-        NotificationsV1 notification = new NotificationsV1();
+        AdminNotification notification = new AdminNotification();
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.CHANGE_BED.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -128,12 +132,12 @@ public class NotificationService {
         if (request.bedId() != null) {
             notification.setSourceId(String.valueOf(request.bedId()));
         }
-        notificationRepository.save(notification);
+        adminNotificationService.saveAdminNotification(notification);
     }
 
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
 
-        NotificationsV1 notification = new NotificationsV1();
+        AdminNotification notification = new AdminNotification();
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.AMENITY_REQUEST.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -155,7 +159,7 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
-        notificationRepository.save(notification);
+        adminNotificationService.saveAdminNotification(notification);
     }
 
     public boolean checkRequestExists(String userId, String hostelId, RequestType requestType, String sourceId) {
