@@ -2,6 +2,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.ComplaintTypeV1;
 import com.smartstay.tenant.repository.ComplaintTypeV1Repository;
 import com.smartstay.tenant.response.complaints.ComplaintTypeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +40,9 @@ public class ComplaintTypeService {
             return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(complaintTypeResponses, HttpStatus.OK);
+    }
+
+    public ComplaintTypeV1 getComplaintTypeById(Integer complaintTypeId, String hostelId) {
+        return complaintTypeV1Repository.findByComplaintTypeIdAndHostelId(complaintTypeId,hostelId);
     }
 }

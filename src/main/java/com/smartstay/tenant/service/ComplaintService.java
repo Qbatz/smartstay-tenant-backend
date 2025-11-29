@@ -7,12 +7,11 @@ import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
+import com.smartstay.tenant.ennum.CommentSource;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
-import com.smartstay.tenant.repository.ComplaintCommentsRepository;
-import com.smartstay.tenant.repository.ComplaintImagesRepository;
-import com.smartstay.tenant.repository.ComplaintsV1Repository;
-import com.smartstay.tenant.repository.HostelRepository;
+import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
+import com.smartstay.tenant.repository.*;
 import com.smartstay.tenant.response.complaints.AddComplaints;
 import com.smartstay.tenant.response.complaints.ComplaintComment;
 import com.smartstay.tenant.response.complaints.ComplaintDetailsResponse;
@@ -56,6 +55,16 @@ public class ComplaintService {
 
     @Autowired
     private HostelRepository hostelRepository;
+
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private ComplaintTypeService complaintTypeService;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
 
     public List<ComplaintDTO> getComplaints(String hostelId, String customerId) {
@@ -149,6 +158,14 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(
+                request.complaintTypeId(),
+                hostelId
+        );
+        if (complaintTypeV1 == null) {
+            return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
         complaint.setCustomerId(customerId);
         complaint.setComplaintTypeId(request.complaintTypeId());
         complaint.setComplaintDate(new Date());
@@ -181,13 +198,21 @@ public class ComplaintService {
             complaint.setAdditionalImages(complaintImagesList);
         }
 
-        complaintsV1Repository.save(complaint);
+        ComplaintsV1 savedComplaint = complaintsV1Repository.save(complaint);
+        notificationService.createNotificationForComplaint(
+                customerId,
+                hostelId,
+                savedComplaint.getComplaintId().toString(),
+                complaintTypeV1.getComplaintTypeName(),
+                request.description()
+
+        );
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
 
 
-    public ResponseEntity<?> deleteComplaint(Integer complaintId, String hostelId) {
+    public ResponseEntity<?> deleteComplaint(Integer complaintId, String hostelId, DeleteComplaintRequest request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
         }
@@ -206,6 +231,18 @@ public class ComplaintService {
         complaint.setIsDeleted(true);
         complaint.setIsActive(false);
         complaintsV1Repository.save(complaint);
+
+        if (request.message() != null){
+            Comments comments = new Comments();
+            comments.setComment(request.message());
+            comments.setSource(CommentSource.COMPLAINT.name());
+            comments.setSourceId(complaintId.toString());
+            comments.setCreatedAt(new Date());
+            comments.setIsActive(true);
+            comments.setIsDeleted(false);
+            comments.setUserId(customerId);
+            commentRepository.save(comments);
+        }
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
 
