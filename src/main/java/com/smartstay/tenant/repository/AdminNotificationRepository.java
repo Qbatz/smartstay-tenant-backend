@@ -1,7 +1,29 @@
 package com.smartstay.tenant.repository;
 
-import com.smartstay.tenant.dao.AdminNotification;
+import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.response.notification.NotificationProjection;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface AdminNotificationRepository extends JpaRepository<AdminNotification, Long> {
+import java.util.List;
+import java.util.Optional;
+
+public interface AdminNotificationRepository extends JpaRepository<AdminNotifications, Long> {
+
+    @Query(value = "SELECT " + "id, " + "CONCAT(UCASE(LEFT(title, 1)), LCASE(SUBSTRING(title, 2))) AS title, " + "description, " + "CONCAT(UCASE(LEFT(status, 1)), LCASE(SUBSTRING(status, 2))) AS status, " + "CONCAT(UCASE(LEFT(notification_type, 1)), LCASE(SUBSTRING(notification_type, 2))) AS notificationType, " + "DATE_FORMAT(created_at, '%d/%m/%Y') AS createdDate, " + "is_read " + "FROM adminnotifications " + "WHERE hostel_id = :hostelId AND is_deleted = false AND is_active = true " + "ORDER BY created_at DESC", nativeQuery = true)
+    List<NotificationProjection> getActiveNotifications(@Param("hostelId") String hostelId);
+
+    @Query(value = "SELECT " + "id, " + "CONCAT(UCASE(LEFT(title, 1)), LCASE(SUBSTRING(title, 2))) AS title, " + "description, " + "CONCAT(UCASE(LEFT(status, 1)), LCASE(SUBSTRING(status, 2))) AS status, " + "CONCAT(UCASE(LEFT(notification_type, 1)), LCASE(SUBSTRING(notification_type, 2))) AS notificationType, " + "DATE_FORMAT(created_at, '%d/%m/%Y') AS createdDate, " + "is_read " + "FROM adminnotifications " + "WHERE hostel_id = :hostelId AND id=:id AND is_deleted = false AND is_active = true " + "ORDER BY created_at DESC", nativeQuery = true)
+    NotificationProjection getNotificationById(@Param("hostelId") String hostelId, @Param("id") long id);
+
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE AdminNotifications n SET n.isRead = true, n.updatedAt = CURRENT_TIMESTAMP " + "WHERE n.id IN :notificationIds AND n.hostelId = :hostelId AND n.isDeleted = false AND n.isActive = true")
+    int markNotificationsAsRead(@Param("notificationIds") List<Long> notificationIds, @Param("hostelId") String hostelId);
+
+    Optional<AdminNotifications> findByIdAndIsDeletedFalse(Long id);
 }
