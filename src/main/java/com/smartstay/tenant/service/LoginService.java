@@ -3,9 +3,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.CustomersOtp;
 import com.smartstay.tenant.dao.UserConfig;
-import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.UpdateMpin;
 import com.smartstay.tenant.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 
 @Service
 public class LoginService {
@@ -44,7 +41,7 @@ public class LoginService {
             userConfig = new UserConfig();
             userConfig.setUserId(updateMpin.userId());
             userConfig.setMPin(updateMpin.newMpin());
-        }else  {
+        } else {
             userConfig.setMPin(updateMpin.newMpin());
         }
         userConfigService.saveUserConfig(userConfig);
@@ -52,9 +49,7 @@ public class LoginService {
         claims.put("mobile", customers.getMobile());
         claims.put("mPin", updateMpin.newMpin());
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
-        return new ResponseEntity<>(
-                token
-                , HttpStatus.OK);
+        return new ResponseEntity<>(token, HttpStatus.OK);
 
     }
 
@@ -72,9 +67,7 @@ public class LoginService {
         claims.put("mobile", customers.getMobile());
         claims.put("mPin", updateMpin.newMpin());
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
-        return new ResponseEntity<>(
-                token
-                , HttpStatus.OK);
+        return new ResponseEntity<>(token, HttpStatus.OK);
     }
 
 
