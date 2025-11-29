@@ -36,23 +36,6 @@ public class AmenitiesService {
     @Autowired
     private UserHostelService userHostelService;
 
-    public ResponseEntity<?> getAllAssignedAmenities(String hostelId) {
-        if (!authentication.isAuthenticated()) {
-            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
-        }
-        String customerId = authentication.getName();
-
-        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
-            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
-        }
-
-        List<AmenityInfoProjection> amenitiesV1List = amenityRepository.findCurrentlyAssignedAmenities(hostelId, customerId);
-        if (amenitiesV1List != null) {
-            return new ResponseEntity<>(amenitiesV1List, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
-    }
-
     public ResponseEntity<?> getAllAmenities(String hostelId) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -83,24 +66,6 @@ public class AmenitiesService {
         return new ResponseEntity<>(requests, HttpStatus.OK);
     }
 
-
-    public ResponseEntity<?> getAllUnAssignedAmenities(String hostelId) {
-        if (!authentication.isAuthenticated()) {
-            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
-        }
-        String customerId = authentication.getName();
-
-        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
-            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
-        }
-
-        List<AmenityInfoProjection> amenitiesV1List = amenityRepository.findUnassignedAmenities(hostelId, customerId);
-        if (amenitiesV1List != null) {
-            return new ResponseEntity<>(amenitiesV1List, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
-    }
-
     public ResponseEntity<?> getAmenityByAmenityId(String hostelId, String amenityId) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -127,19 +92,14 @@ public class AmenitiesService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        boolean exists = notificationService.checkRequestExists(customerId, hostelId, com.smartstay.tenant.ennum.RequestType.AMENITY_REQUEST,amenityId);
-        if (exists) {
-            return new ResponseEntity<>(Utils.REQUEST_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
-        }
+
         if (amenityRequestService.existsPendingRequest(customerId, amenityId)) {
             return new ResponseEntity<>("Already requested. Please wait for approval.", HttpStatus.BAD_REQUEST);
         }
-
         Long count = amenityRepository.isAmenityAlreadyAssigned(customerId, amenityId);
         if (count != null && count > 0) {
             return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
         }
-
         notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
         amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);

@@ -42,15 +42,6 @@ public class BedsService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        boolean exists = notificationService.checkRequestExists(
-                customerId,
-                hostelId,
-                RequestType.CHANGE_BED,
-                request.bedId() != null ? String.valueOf(request.bedId()) : null
-        );
-        if (exists) {
-            return new ResponseEntity<>(Utils.REQUEST_ALREADY_EXISTS, HttpStatus.BAD_REQUEST);
-        }
         boolean requested = bedChangeRequestService.existsPendingRequest(customerId, hostelId);
         if (requested) {
             return new ResponseEntity<>(Utils.PENDING_REQUEST_EXISTS, HttpStatus.BAD_REQUEST);
