@@ -29,9 +29,6 @@ public class UserController {
         return userService.verifyOtp(verifyOtp);
     }
 
-    @PostMapping("/token-login")
-    public ResponseEntity<?> tokenLogin(@RequestBody TokenLogin tokenLogin) {
-        return userService.tokenLogin(tokenLogin);
-    }
+
 
 }

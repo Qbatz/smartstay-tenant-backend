@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CustomersOtpRepository extends JpaRepository<CustomersOtp, String> {
-    CustomersOtp findByCustomerId(String customerId);
+    CustomersOtp findByXuid(String xuid);
 }

@@ -1,6 +1,7 @@
 package com.smartstay.tenant.service;
 
 
+import com.smartstay.tenant.dao.CustomerCredentials;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.CustomersOtp;
 import com.smartstay.tenant.dao.UserConfig;
@@ -39,14 +40,17 @@ public class UserService {
     @Autowired
     UserConfigService userConfigService;
 
-    public CustomersOtp getOtpByMobile(String customerId) {
-        return customersOtpRepository.findByCustomerId(customerId);
+    @Autowired
+    CustomerCredentialsService customerCredentialsService;
+
+    public CustomersOtp getOtpByMobile(String xUuid) {
+        return customersOtpRepository.findByXuid(xUuid);
     }
 
     public ResponseEntity<?> login(Login login) {
-        List<Customers> customers = customersRepository.findByMobile(login.mobile());
-        if (customers != null && !customers.isEmpty()) {
-            CustomersOtp customersOtp = getOtpByMobile(customers.getFirst().getCustomerId());
+        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByMobile(login.mobile());
+        if (credentials != null) {
+            CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
             Date now = new Date();
             Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
             if (customersOtp != null) {
@@ -58,7 +62,7 @@ public class UserService {
 
             } else {
                 customersOtp = new CustomersOtp();
-                customersOtp.setCustomerId(customers.getFirst().getCustomerId());
+                customersOtp.setXuid(credentials.getXuid());
                 customersOtp.setOtp(generateSixDigitOtp());
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setCreatedAt(new Date());
@@ -74,12 +78,12 @@ public class UserService {
     }
 
     public ResponseEntity<?> verifyOtp(VerifyOtp verifyOtp) {
-        List<Customers> customers = customersRepository.findByMobile(verifyOtp.mobileNo());
-        if (customers == null || customers.isEmpty()) {
+        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByMobile(verifyOtp.mobileNo());
+        if (credentials == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found. Please register first.");
         }
 
-        CustomersOtp customersOtp = getOtpByMobile(customers.getFirst().getCustomerId());
+        CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
         if (customersOtp == null || customersOtp.getOtp() == 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No OTP generated for this mobile number. Please request a new OTP.");
         }
@@ -96,39 +100,9 @@ public class UserService {
         customersOtp.setUpdatedAt(new Date());
         customersOtp.setExpiryAt(null);
         customersOtpRepository.save(customersOtp);
-        Customers customers1 = customers.getFirst();
-        customers1.setMobSerialNo(verifyOtp.serialNo());
-        customersRepository.save(customers1);
-        boolean isMpinSet = isMpinSet(customers1.getCustomerId());
         return new ResponseEntity<>(
-                new VerifyOtpResponse(customers1.getCustomerId(),isMpinSet)
+                new VerifyOtpResponse(credentials.getXuid(), credentials.isPinVerified())
                 , HttpStatus.OK);
-    }
-
-    public ResponseEntity<?> tokenLogin(TokenLogin tokenLogin) {
-        List<Customers> customers = customersRepository.findByMobile(tokenLogin.mobileNo());
-        if (customers == null || customers.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found. Please register first.");
-        }
-        CustomersOtp customersOtp = getOtpByMobile(customers.getFirst().getCustomerId());
-        if (customersOtp == null || !customersOtp.isVerified()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Mobile number not verified. Please verify your mobile number first.");
-        }
-        HashMap<String, Object> claims = new HashMap<>();
-        claims.put("mobile", customers.getFirst().getMobile());
-        claims.put("serialNo", tokenLogin.serialNo());
-        String token = jwtService.generateToken(customers.getFirst().getCustomerId(), claims);
-        Customers customers1 = customers.getFirst();
-        customers1.setMobSerialNo(tokenLogin.serialNo());
-        customersRepository.save(customers1);
-        return new ResponseEntity<>(
-                token
-                , HttpStatus.OK);
-    }
-
-    public boolean isMpinSet(String userId) {
-        UserConfig config = userConfigService.getUserConfigByUserId(userId);
-        return config != null && config.getMPin() != null && !config.getMPin().isEmpty();
     }
 
     private int generateSixDigitOtp() {

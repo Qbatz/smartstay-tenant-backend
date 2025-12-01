@@ -8,9 +8,6 @@ public record VerifyOtp(
         @NotBlank
         String mobileNo,
 
-        @NotBlank
-        String serialNo,
-
         @NotNull
         @NotEmpty
         Integer otp
