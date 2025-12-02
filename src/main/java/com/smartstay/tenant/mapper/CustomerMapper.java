@@ -14,6 +14,19 @@ public class CustomerMapper {
 
         BookingDetailsDto bookingDto = null;
 
+        StringBuilder initials = new StringBuilder();
+        if (c.getFirstName() != null) {
+            initials.append(c.getFirstName().toUpperCase().charAt(0));
+        }
+        if (c.getLastName() != null && !c.getLastName().trim().equalsIgnoreCase("")) {
+            initials.append(c.getLastName().toUpperCase().charAt(0));
+        }
+        else {
+            if (c.getFirstName() != null && c.getFirstName().length() > 1) {
+                initials.append(c.getFirstName().toUpperCase().charAt(1));
+            }
+        }
+
         if (b != null) {
             bookingDto = new BookingDetailsDto(
                     b.getBedId(),
@@ -47,6 +60,7 @@ public class CustomerMapper {
                 c.getCity(),
                 c.getState(),
                 c.getProfilePic(),
+                initials.toString(),
                 c.getDateOfBirth(),
                 c.getGender(),
 

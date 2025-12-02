@@ -1,6 +1,8 @@
 package com.smartstay.tenant.controller;
 
+import com.smartstay.tenant.payload.login.RequestToken;
 import com.smartstay.tenant.payload.login.UpdateMpin;
+import com.smartstay.tenant.payload.login.VerifyMpin;
 import com.smartstay.tenant.service.LoginService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,14 +23,19 @@ public class LoginController {
     LoginService loginService;
 
 
+    @PostMapping("/request-token")
+    public ResponseEntity<?> requestToken(@Valid @RequestBody RequestToken requestToken) {
+        return loginService.requestToken(requestToken);
+    }
+
     @PostMapping("/set-Mpin")
     public ResponseEntity<?> setMpin(@Valid @RequestBody UpdateMpin updateMpin) {
         return loginService.updateMpin(updateMpin);
     }
 
     @PostMapping("/verify-Mpin")
-    public ResponseEntity<?> verifyMpin(@Valid @RequestBody UpdateMpin updateMpin) {
-        return loginService.verifyMpin(updateMpin);
+    public ResponseEntity<?> verifyMpin(@Valid @RequestBody VerifyMpin verifyMpin) {
+        return loginService.verifyMpin(verifyMpin);
     }
 
 

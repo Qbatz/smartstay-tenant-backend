@@ -24,14 +24,17 @@ public class UserController {
         return userService.login(login);
     }
 
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@Valid @RequestBody Login login) {
+        return userService.login(login);
+    }
+
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtp verifyOtp) {
         return userService.verifyOtp(verifyOtp);
     }
 
-    @PostMapping("/token-login")
-    public ResponseEntity<?> tokenLogin(@RequestBody TokenLogin tokenLogin) {
-        return userService.tokenLogin(tokenLogin);
-    }
+
 
 }
