@@ -40,7 +40,7 @@ public class CustomerService {
         String customerId = authentication.getName();
         Customers customers = customersRepository.findById(customerId).orElse(null);
         if (customers == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
         return new ResponseEntity<>(new CustomerMapper().toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
 

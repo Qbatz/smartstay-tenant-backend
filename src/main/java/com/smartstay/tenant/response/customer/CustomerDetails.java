@@ -22,6 +22,8 @@ public record CustomerDetails(
         String state,
         String profilePic,
 
+        String initials,
+
         @JsonFormat(pattern = "dd/MM/yyyy")
         Date dateOfBirth,
 
