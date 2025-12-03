@@ -44,7 +44,6 @@ public class InvoiceService {
 
     public InvoiceSummaryResponse getLatestInvoiceSummary(String customerId, Date startDate, Date endDate) {
         Pageable limitOne = PageRequest.of(0, 1);
-
         return invoicesV1Repository.getInvoiceSummary(customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
     }
 

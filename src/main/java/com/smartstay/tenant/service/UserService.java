@@ -11,6 +11,7 @@ import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
 import com.smartstay.tenant.response.VerifyOtpResponse;
+import com.smartstay.tenant.response.login.VerifyMobileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +69,31 @@ public class UserService {
                 customersOtp.setCreatedAt(new Date());
                 customersOtp.setVerified(false);
                 customersOtpRepository.save(customersOtp);
+            }
+
+            return new ResponseEntity<>(new VerifyMobileResponse(
+                    credentials.getXuid(), customersOtp.getOtp()
+            ), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+    }
+
+
+    public ResponseEntity<?> resendOtp(String xuid) {
+        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
+        if (credentials != null) {
+            CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
+            Date now = new Date();
+            Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
+            if (customersOtp != null && !customersOtp.isVerified()) {
+                customersOtp.setExpiryAt(expiryAt);
+                customersOtp.setUpdatedAt(new Date());
+                customersOtpRepository.save(customersOtp);
+
+            } else {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
             return new ResponseEntity<>(customersOtp.getOtp(), HttpStatus.OK);

@@ -24,9 +24,9 @@ public class UserController {
         return userService.login(login);
     }
 
-    @PostMapping("/resend-otp")
-    public ResponseEntity<?> resendOtp(@Valid @RequestBody Login login) {
-        return userService.login(login);
+    @PostMapping("/resend-otp/{xuid}")
+    public ResponseEntity<?> resendOtp(@PathVariable String xuid) {
+        return userService.resendOtp(xuid);
     }
 
 

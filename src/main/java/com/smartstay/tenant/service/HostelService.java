@@ -13,14 +13,20 @@ import com.smartstay.tenant.response.customer.CustomerHostels;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.HostelDetails;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
+import com.smartstay.tenant.response.hostel.InvoiceSummary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.TextStyle;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class HostelService {
@@ -77,11 +83,52 @@ public class HostelService {
         InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
         InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(customerId, currentBillingDates.currentBillStartDate(), currentBillingDates.currentBillEndDate());
 
+        InvoiceSummary previousSummary = previousMonthInvoices != null
+                ? new InvoiceSummary(
+                previousMonthInvoices.getRent(),
+                previousMonthInvoices.getEb(),
+                previousMonthInvoices.getPaidAmount(),
+                previousMonthInvoices.getInvoiceNumber(),
+                previousMonthInvoices.getInvoiceGeneratedDate(),
+                previousMonthInvoices.getInvoiceDueDate(),
+                previousMonthInvoices.getCurrentInvoiceStartDate(),
+                previousMonthInvoices.getCurrentInvoiceEndDate(),
+                isToday(previousMonthInvoices.getInvoiceGeneratedDate()),
+                buildHint(previousMonthInvoices),
+                buildMessage(previousMonthInvoices)
+        )
+                : null;
+
+        InvoiceSummary currentSummary = currentMonthInvoices != null
+                ? new InvoiceSummary(
+                currentMonthInvoices.getRent(),
+                currentMonthInvoices.getEb(),
+                currentMonthInvoices.getPaidAmount(),
+                currentMonthInvoices.getInvoiceNumber(),
+                currentMonthInvoices.getInvoiceGeneratedDate(),
+                currentMonthInvoices.getInvoiceDueDate(),
+                currentMonthInvoices.getCurrentInvoiceStartDate(),
+                currentMonthInvoices.getCurrentInvoiceEndDate(),
+                isToday(currentMonthInvoices.getInvoiceGeneratedDate()),
+                buildHint(currentMonthInvoices),
+                buildMessage(currentMonthInvoices)
+        )
+                : null;
+
+
+
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
-        HostelDetails hostelDetails = new HostelDetails(previousMonthInvoices, currentMonthInvoices, complaints);
+        HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaints);
         return new ResponseEntity<>(hostelDetails, HttpStatus.OK);
 
     }
+
+    public boolean isToday(Date date) {
+        LocalDate given = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate today = LocalDate.now();
+        return given.equals(today);
+    }
+
 
 
     public BillingDates getCurrentBillStartAndEndDates(String hostelId) {
@@ -133,6 +180,47 @@ public class HostelService {
     Beds findByBedIdAndRoomIdAndParentId(Integer bedId,int roomId, String parentId) {
         return bedsRepository.findByBedIdAndRoomIdAndParentId(bedId, roomId, parentId);
     }
+
+    private String buildHint(InvoiceSummaryResponse invoice) {
+
+        boolean isEb = invoice.getEb() != null && invoice.getEb() > 0;
+
+        LocalDate invoiceMonth = invoice.getInvoiceGeneratedDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        String monthName = invoiceMonth.getMonth()
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+        if (isEb) {
+            String previousMonthName = invoiceMonth.minusMonths(1)
+                    .getMonth()
+                    .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+            return previousMonthName + " EB bill generated";
+        } else {
+            return monthName + " rent bill generated";
+        }
+    }
+
+    private String buildMessage(InvoiceSummaryResponse invoice) {
+        if (invoice == null || invoice.getInvoiceGeneratedDate() == null) {
+            return "";
+        }
+
+        String monthName = getMonthName(invoice.getInvoiceGeneratedDate());
+        return monthName + " month bill generated";
+    }
+
+    private String getMonthName(Date date) {
+        if (date == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM", Locale.ENGLISH);
+        return sdf.format(date);
+    }
+
+
+
 
 
 
