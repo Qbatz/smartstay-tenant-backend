@@ -1,10 +1,12 @@
 package com.smartstay.tenant.service;
 
 
+import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.CustomerCredentials;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.payload.login.RequestToken;
+import com.smartstay.tenant.payload.login.UpdateFcm;
 import com.smartstay.tenant.payload.login.UpdateMpin;
 import com.smartstay.tenant.payload.login.VerifyMpin;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -45,6 +47,20 @@ public class LoginService {
         customerCredentialsService.saveCustomerCredentials(credentials);
         List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<?> updateFcm(UpdateFcm updateFcm) {
+        if (!authentication.isAuthenticated()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
+        }
+        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(updateFcm.xuid());
+        if (credentials == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
+        }
+        credentials.setFcmToken(updateFcm.fcmToken());
+        customerCredentialsService.saveCustomerCredentials(credentials);
+        return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
 
     public ResponseEntity<?> requestToken(RequestToken requestToken) {
