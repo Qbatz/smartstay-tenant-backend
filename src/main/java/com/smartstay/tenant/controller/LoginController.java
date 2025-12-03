@@ -44,5 +44,10 @@ public class LoginController {
         return loginService.verifyMpin(verifyMpin);
     }
 
+    @PostMapping("/hostels/{xuid}")
+    public ResponseEntity<?> getHostels(@PathVariable String xuid) {
+        return loginService.getHostelsList(xuid);
+    }
+
 
 }

@@ -49,6 +49,18 @@ public class LoginService {
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
 
+    public ResponseEntity<?> getHostelsList(String xuid) {
+//        if (!authentication.isAuthenticated()){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
+//        }
+        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
+        if (credentials == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
+        }
+        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        return new ResponseEntity<>(customerHostels, HttpStatus.OK);
+    }
+
 
     public ResponseEntity<?> updateFcm(UpdateFcm updateFcm) {
         if (!authentication.isAuthenticated()){
