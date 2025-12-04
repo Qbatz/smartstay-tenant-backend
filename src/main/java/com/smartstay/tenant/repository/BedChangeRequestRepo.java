@@ -65,5 +65,7 @@ public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Lo
             """)
     BedChangeRequestResponse findBedChangeRequestsById(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("requestId") Long requestId);
 
+    List<BedChangeRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
+
 
 }

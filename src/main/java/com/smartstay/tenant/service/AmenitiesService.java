@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
@@ -106,4 +107,7 @@ public class AmenitiesService {
     }
 
 
+    public List<AmenitiesV1> findByAmenityIds(List<String> listAmenitiesId) {
+        return amenityRepository.findAllById(listAmenitiesId);
+    }
 }

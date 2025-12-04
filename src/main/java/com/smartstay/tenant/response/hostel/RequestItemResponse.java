@@ -7,18 +7,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class RequestItemResponse {
 
-    private Long requestId;
-    private String type;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/mm/yyyy", timezone = "UTC")
-    private Date requestedDate;
-    private String status;
-    private String title;
-    private String description;
-    private String requestedItem;
-}
+public record RequestItemResponse (Long requestId,
+                                   String type,
+                                   String requestedDate,
+                                   String status,
+                                   String title,
+                                   String description,
+                                   String requestedItem,
+                                   int statusCode){}
 

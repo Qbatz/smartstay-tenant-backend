@@ -1,10 +1,7 @@
 package com.smartstay.tenant.filters;
 
-public class Request implements Comparable<> {
+import com.smartstay.tenant.response.hostel.RequestItemResponse;
 
+public class Request {
 
-    @Override
-    public int compareTo(Object o) {
-        return 0;
-    }
 }

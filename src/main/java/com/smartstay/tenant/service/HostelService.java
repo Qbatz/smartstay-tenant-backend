@@ -194,17 +194,18 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<AmenityRequestResponse> amenityRequests = amenityRequestService.getRequests(customerId, hostelId);
-        List<BedChangeRequestResponse> bedRequests = bedChangeRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> amenityRequests = amenityRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> bedRequests = bedChangeRequestService.getRequests(customerId, hostelId);
 
-        List<RequestItemResponse> unifiedList = new ArrayList<>();
+        amenityRequests.addAll(bedRequests);
 
-        amenityRequests.forEach(ar -> unifiedList.add(mapAmenity(ar)));
-        bedRequests.forEach(br -> unifiedList.add(mapBed(br)));
 
-        unifiedList.sort((a, b) -> b.getRequestedDate().compareTo(a.getRequestedDate()));
+//        amenityRequests.forEach(ar -> unifiedList.add(mapAmenity(ar)));
+//        bedRequests.forEach(br -> unifiedList.add(mapBed(br)));
+//
+//        unifiedList.sort((a, b) -> b.getRequestedDate().compareTo(a.getRequestedDate()));
 
-        return new ResponseEntity<>(unifiedList, HttpStatus.OK);
+        return new ResponseEntity<>(amenityRequests, HttpStatus.OK);
     }
 
 
