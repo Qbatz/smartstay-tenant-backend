@@ -5,7 +5,6 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -101,11 +100,11 @@ public class CustomerService {
             if (updateInfo.state() != null && !updateInfo.state().equalsIgnoreCase("")) {
                 customers.setState(updateInfo.state());
             }
-            if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")){
+            if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")) {
                 String formattedDate = updateInfo.dob().replace("/", "-");
-                customers.setDateOfBirth(Utils.stringToDate(formattedDate,Utils.USER_INPUT_DATE_FORMAT));
+                customers.setDateOfBirth(Utils.stringToDate(formattedDate, Utils.USER_INPUT_DATE_FORMAT));
             }
-            if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")){
+            if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")) {
                 Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
                 customers.setGender(gender.getLabel());
             }

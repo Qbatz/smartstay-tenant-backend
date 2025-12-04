@@ -65,6 +65,10 @@ public class AmenityRequestService {
         return amenityRequestRepository.findRequestsForCustomer(customerId, hostelId);
     }
 
+    public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
+        return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
+    }
+
 
 
 }

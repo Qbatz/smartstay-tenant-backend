@@ -60,10 +60,6 @@ public class BedsService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         List<BedChangeRequestResponse> requestResponses = bedChangeRequestService.getRequests(customerId, hostelId);
-
-        System.out.println(requestResponses);
-        System.out.println(customerId);
-
         return new ResponseEntity<>(requestResponses, HttpStatus.OK);
     }
 }

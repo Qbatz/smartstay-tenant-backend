@@ -42,4 +42,25 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
             """)
     List<AmenityRequestResponse> findRequestsForCustomer(@Param("customerId") String customerId, @Param("hostelId") String hostelId);
 
+    @Query("""
+                SELECT new com.smartstay.tenant.response.amenity.AmenityRequestResponse(
+                    ar.amenityRequestId,
+                    ar.hostelId,
+                    ar.customerId,
+                    ar.amenityId,
+                    a.amenityName,
+                    ar.requestedDate,
+                    ar.startFrom,
+                    ar.currentStatus,
+                    ar.description
+                )
+                FROM AmenityRequest ar
+                LEFT JOIN AmenitiesV1 a ON ar.amenityId = a.amenityId
+                WHERE ar.customerId = :customerId
+                  AND ar.amenityRequestId = :requestId
+                  AND ar.hostelId = :hostelId
+                  AND ar.isActive = true
+            """)
+    AmenityRequestResponse findRequestsForCustomerById(@Param("customerId") String customerId, @Param("hostelId") String hostelId, @Param("requestId") Long requestId);
+
 }

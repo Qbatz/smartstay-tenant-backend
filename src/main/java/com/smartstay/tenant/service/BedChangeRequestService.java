@@ -33,6 +33,10 @@ public class BedChangeRequestService {
         return requestRepo.findBedChangeRequests(hostelId, customerId);
     }
 
+    public BedChangeRequestResponse getRequestsById(String hostelId, String customerId, Long requestId) {
+        return requestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
+    }
+
 
     public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId, BedChangePayload request) {
         BedChangeRequest bedRequest = new BedChangeRequest();
