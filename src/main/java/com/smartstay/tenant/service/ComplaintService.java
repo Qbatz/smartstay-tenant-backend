@@ -56,6 +56,12 @@ public class ComplaintService {
     @Autowired
     private HostelRepository hostelRepository;
 
+    @Autowired
+    private UserHostelService userHostelService;
+
+    @Autowired
+    private ComplaintUpdatesRepository complaintUpdatesRepository;
+
 
     @Autowired
     private NotificationService notificationService;
@@ -165,6 +171,7 @@ public class ComplaintService {
         if (complaintTypeV1 == null) {
             return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+        UserHostel userHostel = userHostelService.findByUserIdAndHostelId(hostelId, customerId);
 
         complaint.setCustomerId(customerId);
         complaint.setComplaintTypeId(request.complaintTypeId());
@@ -177,8 +184,9 @@ public class ComplaintService {
         complaint.setIsActive(true);
         complaint.setStatus("PENDING");
         complaint.setIsDeleted(false);
-
-
+        if (userHostel != null) {
+            complaint.setParentId(userHostel.getParentId());
+        }
         List<String> listImageUrls = new ArrayList<>();
         if (complaintImages != null && !complaintImages.isEmpty()) {
             listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile), "CustomerComplaint-Images")).toList();

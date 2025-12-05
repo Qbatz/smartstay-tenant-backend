@@ -10,6 +10,7 @@ import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
+import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +60,7 @@ public class BedsService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<BedChangeRequestResponse> requestResponses = bedChangeRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> requestResponses = bedChangeRequestService.getRequests(customerId, hostelId);
         return new ResponseEntity<>(requestResponses, HttpStatus.OK);
     }
 }

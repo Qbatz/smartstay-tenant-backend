@@ -1,13 +1,13 @@
 package com.smartstay.tenant.service;
 
-
+import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.ennum.RequestStatus;
-import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.repository.BedChangeRequestRepo;
+import com.smartstay.tenant.repository.BedsRepository;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,9 @@ public class BedChangeRequestService {
     @Autowired
     private BedChangeRequestRepo requestRepo;
 
+    @Autowired
+    private BedsRepository bedsRepository;
+
 
     public boolean existsPendingRequest(String customerId, String hostelId) {
         return requestRepo.existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
@@ -33,9 +36,8 @@ public class BedChangeRequestService {
 
     public List<RequestItemResponse> getRequests(String hostelId, String customerId) {
         List<BedChangeRequest> listBedChangeReguest = requestRepo.findByHostelIdAndCustomerId(hostelId, customerId);
-
         return listBedChangeReguest.stream()
-                .map(i -> new BedChangeRequestMapper().apply(i))
+                .map(i -> new BedChangeRequestMapper(bedsRepository).apply(i))
                 .toList();
     }
 

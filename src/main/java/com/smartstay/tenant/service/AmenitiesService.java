@@ -11,6 +11,7 @@ import com.smartstay.tenant.response.amenity.AmenitiesStatusResponse;
 import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
+import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +63,7 @@ public class AmenitiesService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<AmenityRequestResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
 
         return new ResponseEntity<>(requests, HttpStatus.OK);
     }

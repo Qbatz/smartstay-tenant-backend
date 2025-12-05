@@ -171,16 +171,6 @@ public class HostelService {
         return sdf.format(date);
     }
 
-    private RequestItemResponse mapAmenity(AmenityRequestResponse a) {
-        return new RequestItemResponse(a.getRequestId(), RequestType.AMENITY_REQUEST.name(), a.getRequestedDate(), a.getStatus(), "Amenity Request", a.getDescription(), a.getAmenityName());
-    }
-
-    private RequestItemResponse mapBed(BedChangeRequestResponse b) {
-
-        String requestedItem = b.getBedName() + " | " + b.getRoomName() + " | " + b.getFloorName();
-
-        return new RequestItemResponse(b.getRequestId(), RequestType.CHANGE_BED.name(), b.getStartsFrom(), b.getCurrentStatus(), "Bed Change Request", b.getReason(), requestedItem);
-    }
 
     public ResponseEntity<?> getCustomerRequests(String hostelId) {
 
@@ -194,18 +184,16 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<RequestItemResponse> amenityRequests = amenityRequestService.getRequests(customerId, hostelId);
-        List<RequestItemResponse> bedRequests = bedChangeRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> amenityRequests = new ArrayList<>(Optional.ofNullable(amenityRequestService.getRequests(customerId, hostelId)).orElse(Collections.emptyList()));
+
+        List<RequestItemResponse> bedRequests = Optional.ofNullable(bedChangeRequestService.getRequests(customerId, hostelId)).orElse(Collections.emptyList());
 
         amenityRequests.addAll(bedRequests);
-
-
-//        amenityRequests.forEach(ar -> unifiedList.add(mapAmenity(ar)));
-//        bedRequests.forEach(br -> unifiedList.add(mapBed(br)));
-//
-//        unifiedList.sort((a, b) -> b.getRequestedDate().compareTo(a.getRequestedDate()));
+        amenityRequests.sort(Comparator.comparing(RequestItemResponse::requestedDate).reversed());
 
         return new ResponseEntity<>(amenityRequests, HttpStatus.OK);
+
+
     }
 
 
@@ -226,13 +214,13 @@ public class HostelService {
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
-            return new ResponseEntity<>(mapAmenity(amenityRequest), HttpStatus.OK);
+            return new ResponseEntity<>(amenityRequest, HttpStatus.OK);
         } else if (requestType.equals(RequestType.CHANGE_BED.name())) {
             BedChangeRequestResponse bedRequest = bedChangeRequestService.getRequestsById(customerId, hostelId, requestId);
             if (bedRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
-            return new ResponseEntity<>(mapBed(bedRequest), HttpStatus.OK);
+            return new ResponseEntity<>(bedRequest, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(Utils.INVALID_REQUEST_TYPE, HttpStatus.BAD_REQUEST);
         }

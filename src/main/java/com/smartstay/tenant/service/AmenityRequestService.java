@@ -1,16 +1,13 @@
 package com.smartstay.tenant.service;
 
 
-import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.dao.AmenityRequest;
-import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmenityRequestRepository;
-import com.smartstay.tenant.repository.BillingRuleRepository;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +62,7 @@ public class AmenityRequestService {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(billingDates.currentBillStartDate());
         calendar.add(Calendar.MONTH, 1);
-       return hostelConfigService.getBillingRuleByDateAndHostelId(hostelId, calendar.getTime());
+        return hostelConfigService.getBillingRuleByDateAndHostelId(hostelId, calendar.getTime());
     }
 
     public boolean existsPendingRequest(String customerId, String amenityId) {
@@ -74,22 +71,16 @@ public class AmenityRequestService {
 
     public List<RequestItemResponse> getRequests(String customerId, String hostelId) {
         List<AmenityRequest> listAmenities = amenityRequestRepository.findByHostelIdAndCustomerId(hostelId, customerId);
-        List<String> listAmenitiesId = listAmenities
-                .stream()
-                .map(AmenityRequest::getAmenityId)
-                .toList();
+        List<String> listAmenitiesId = listAmenities.stream().map(AmenityRequest::getAmenityId).toList();
 
         List<AmenitiesV1> listAmenitis = amenitiesService.findByAmenityIds(listAmenitiesId);
 
-        return listAmenities.stream()
-                .map(i -> new AmenityRequestMapper(listAmenitis).apply(i))
-                .toList();
+        return listAmenities.stream().map(i -> new AmenityRequestMapper(listAmenitis).apply(i)).toList();
     }
 
     public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
         return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
     }
-
 
 
 }

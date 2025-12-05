@@ -20,7 +20,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
     @Override
     public RequestItemResponse apply(AmenityRequest amenityRequest) {
-        String status = null;
+        String status = "";
         int statusCode = 0;
         String amenityName = null;
 
@@ -31,6 +31,26 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
         else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.PENDING.name())) {
             status = "Pending";
             statusCode = 2;
+        }
+        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.INPROGRESS.name())) {
+            status = "In Progress";
+            statusCode = 3;
+        }
+        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.ONHOLD.name())) {
+            status = "On Hold";
+            statusCode = 4;
+        }
+        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.CLOSED.name())) {
+            status = "Closed";
+            statusCode = 5;
+        }
+        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.REJECTED.name())) {
+            status = "Rejected";
+            statusCode = 6;
+        }
+        else {
+            status = "Unknown";
+            statusCode = 7;
         }
 
 
