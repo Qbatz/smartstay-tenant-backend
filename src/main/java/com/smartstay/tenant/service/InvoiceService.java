@@ -42,9 +42,9 @@ public class InvoiceService {
         return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
 
-    public InvoiceSummaryResponse getLatestInvoiceSummary(String customerId, Date startDate, Date endDate) {
+    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId,String customerId, Date startDate, Date endDate) {
         Pageable limitOne = PageRequest.of(0, 1);
-        return invoicesV1Repository.getInvoiceSummary(customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
+        return invoicesV1Repository.getInvoiceSummary(hostelId,customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
     }
 
 

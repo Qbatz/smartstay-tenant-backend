@@ -1,7 +1,6 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.login.RequestToken;
-import com.smartstay.tenant.payload.login.UpdateFcm;
 import com.smartstay.tenant.payload.login.UpdateMpin;
 import com.smartstay.tenant.payload.login.VerifyMpin;
 import com.smartstay.tenant.service.LoginService;
@@ -27,11 +26,6 @@ public class LoginController {
     @PostMapping("/request-token")
     public ResponseEntity<?> requestToken(@Valid @RequestBody RequestToken requestToken) {
         return loginService.requestToken(requestToken);
-    }
-
-    @PostMapping("/update-fcm")
-    public ResponseEntity<?> updateFcm(@Valid @RequestBody UpdateFcm updateFcm) {
-        return loginService.updateFcm(updateFcm);
     }
 
     @PostMapping("/set-Mpin")

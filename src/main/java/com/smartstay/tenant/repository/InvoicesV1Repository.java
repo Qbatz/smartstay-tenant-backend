@@ -60,6 +60,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 JOIN i.invoiceItems ii
                 LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
                 WHERE i.customerId = :customerId
+                  AND i.hostelId = :hostelId
                   AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate
                 GROUP BY 
                     i.invoiceId,
@@ -70,7 +71,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                     i.invoiceEndDate
                 ORDER BY i.invoiceGeneratedDate DESC
             """)
-    List<InvoiceSummaryResponse> getInvoiceSummary(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
+    List<InvoiceSummaryResponse> getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
 
 
     @Query("""
