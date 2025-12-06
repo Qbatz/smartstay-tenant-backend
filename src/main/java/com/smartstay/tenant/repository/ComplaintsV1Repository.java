@@ -96,4 +96,39 @@ public interface ComplaintsV1Repository extends JpaRepository<ComplaintsV1, Inte
     ComplaintsV1 findByComplaintIdAndHostelIdAndIsDeletedFalse(Integer complaintId, String hostelId);
 
 
+    @Query("""
+       SELECT c FROM ComplaintsV1 c
+       WHERE c.customerId = :customerId
+       AND c.hostelId = :hostelId
+       AND c.complaintTypeId = :complaintTypeId
+       AND c.status = 'PENDING'
+       AND c.isActive = true
+       AND c.isDeleted = false
+       """)
+    List<ComplaintsV1> findExistingOpenComplaint(
+            String customerId,
+            String hostelId,
+            Integer complaintTypeId
+    );
+
+    @Query("""
+       SELECT c FROM ComplaintsV1 c
+       WHERE c.customerId = :customerId
+       AND c.hostelId = :hostelId
+       AND c.complaintTypeId = :complaintTypeId
+       AND c.status = 'PENDING'
+       AND c.isActive = true
+       AND c.isDeleted = false
+       AND c.complaintId <> :complaintId
+       """)
+    List<ComplaintsV1> findExistingOpenComplaintForEdit(
+            Integer complaintId,
+            String customerId,
+            String hostelId,
+            Integer complaintTypeId
+    );
+
+
+    ComplaintsV1 findByComplaintIdAndHostelIdAndCustomerId(Integer complaintId, String hostelId, String customerId);
+
 }

@@ -1,19 +1,26 @@
 package com.smartstay.tenant.response.hostel;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class RequestItemResponse implements Comparable<RequestItemResponse> {
+    private Long requestId;
+    private String type;
+    private String requestedDate;
+    private String status;
+    private String title;
+    private String description;
+    private String requestedItem;
+    private int statusCode;
 
-
-public record RequestItemResponse (Long requestId,
-                                   String type,
-                                   String requestedDate,
-                                   String status,
-                                   String title,
-                                   String description,
-                                   String requestedItem,
-                                   int statusCode){}
+    @Override
+    public int compareTo(RequestItemResponse o) {
+        return this.requestedDate.compareTo(o.requestedDate);
+    }
+}
 

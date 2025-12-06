@@ -60,7 +60,7 @@ public class BedsService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<RequestItemResponse> requestResponses = bedChangeRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> requestResponses = bedChangeRequestService.getRequests(hostelId, customerId);
         return new ResponseEntity<>(requestResponses, HttpStatus.OK);
     }
 }

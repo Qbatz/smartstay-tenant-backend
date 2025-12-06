@@ -49,7 +49,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
         }
         else {
             status = "Unknown";
-            statusCode = 7;
+            statusCode = -1;
         }
 
         if (bedChangeRequest.getBedId() != null) {

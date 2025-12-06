@@ -190,11 +190,9 @@ public class HostelService {
 
         List<RequestItemResponse> amenityRequests = new ArrayList<>(Optional.ofNullable(amenityRequestService.getRequests(customerId, hostelId)).orElse(Collections.emptyList()));
 
-        List<RequestItemResponse> bedRequests = Optional.ofNullable(bedChangeRequestService.getRequests(customerId, hostelId)).orElse(Collections.emptyList());
-
+        List<RequestItemResponse> bedRequests = Optional.ofNullable(bedChangeRequestService.getRequests(hostelId, customerId)).orElse(Collections.emptyList());
         amenityRequests.addAll(bedRequests);
-        amenityRequests.sort(Comparator.comparing(RequestItemResponse::requestedDate).reversed());
-
+        Collections.sort(amenityRequests);
         return new ResponseEntity<>(amenityRequests, HttpStatus.OK);
 
 
