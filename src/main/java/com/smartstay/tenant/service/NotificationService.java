@@ -30,7 +30,7 @@ public class NotificationService {
 
 
     @Autowired
-    private AdminNotificationService adminNotificationService;
+    private AdminNotificationService notificationService;
 
     public ResponseEntity<?> getNotificationList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -41,7 +41,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<NotificationProjection> notifications = adminNotificationService.getActiveNotifications(hostelId);
+        List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId);
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -58,7 +58,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        NotificationProjection notifications = adminNotificationService.getNotificationById(hostelId, notificationId);
+        NotificationProjection notifications = notificationService.getNotificationById(hostelId, notificationId);
 
         if (notifications == null) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -89,13 +89,13 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        AdminNotifications notification = adminNotificationService.findByIdAndIsDeletedFalse(id);
+        AdminNotifications notification = notificationService.findByIdAndIsDeletedFalse(id);
         if (notification == null || !notification.getHostelId().equals(hostelId)) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         notification.setDeleted(true);
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
 
@@ -126,7 +126,7 @@ public class NotificationService {
         if (request.bedId() != null) {
             notification.setSourceId(String.valueOf(request.bedId()));
         }
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
     }
 
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
@@ -153,12 +153,12 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
     }
 
 
     public String markAsRead(List<Long> notificationIds, String hostelId) {
-        int updatedCount = adminNotificationService.markNotificationsAsRead(notificationIds, hostelId);
+        int updatedCount = notificationService.markNotificationsAsRead(notificationIds, hostelId);
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 
@@ -178,6 +178,6 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
     }
 }

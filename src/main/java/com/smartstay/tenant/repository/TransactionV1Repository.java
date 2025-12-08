@@ -38,4 +38,13 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
             """)
     Double getTotalPaid(@Param("invoiceId") String invoiceId);
 
+
+    @Query("""
+       SELECT t FROM TransactionV1 t 
+       WHERE t.invoiceId = :invoiceId 
+       ORDER BY t.paymentDate DESC
+       """)
+    TransactionV1 findLatestTransaction(String invoiceId);
+
+
 }

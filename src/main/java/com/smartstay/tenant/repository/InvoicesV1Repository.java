@@ -118,4 +118,9 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 
+
+    @Query("SELECT SUM(i.paidAmount) FROM InvoicesV1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
+    Double findAdvancePaidAmount(@Param("customerId") String customerId);
+
+
 }

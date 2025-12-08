@@ -32,5 +32,12 @@ public class CustomerController {
         return customerService.updateCustomerInfo(customerInfo, file);
     }
 
+    @GetMapping("/rentDetails/{hostelId}")
+    public ResponseEntity<?> getRentDetails(
+            @PathVariable String hostelId
+    ) {
+        return customerService.getRentDetails(hostelId);
+    }
+
 
 }

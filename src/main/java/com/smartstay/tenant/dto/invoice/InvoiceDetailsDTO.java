@@ -23,6 +23,12 @@ public class InvoiceDetailsDTO {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date dueDate;
 
+    @JsonFormat(pattern = "dd MMM yyyy")
+    private Date startDate;
+
+    @JsonFormat(pattern = "dd MMM yyyy")
+    private Date endDate;
+
     private Double totalAmount;
     private Double paidAmount;
     private Double dueAmount;
@@ -35,4 +41,10 @@ public class InvoiceDetailsDTO {
 
     private List<InvoiceItemDTO> invoiceItems;
     private List<ReceiptDTO> receipts;
+
+
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date lastPaidDate;
+    private String lastPaymentMode;
+    private String lastReferenceId;
 }
