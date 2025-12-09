@@ -47,4 +47,5 @@ public class InvoiceDetailsDTO {
     private Date lastPaidDate;
     private String lastPaymentMode;
     private String lastReferenceId;
+    private Boolean showMessage;
 }

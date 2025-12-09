@@ -4,6 +4,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
@@ -78,8 +79,6 @@ public class NotificationService {
         String data = markAsRead(request.notificationIds(), hostelId);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
-
-
     public ResponseEntity<?> deleteNotification(String hostelId, long id) {
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -98,8 +97,6 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
-
-
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         AdminNotifications notification = new AdminNotifications();
@@ -129,6 +126,25 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
     }
 
+
+    public void createNotificationForInvoiceGeneration(String invoiceId,String title,String description,String customerId, String hostelId) {
+
+        CustomerNotifications notification = new CustomerNotifications();
+        notification.setUserId(customerId);
+        notification.setNotificationType(RequestType.INVOICE_GENERATION.name());
+        notification.setTitle(title);
+        notification.setDescription(description);
+        notification.setUserType(UserType.TENANT.name());
+        notification.setHostelId(hostelId);
+        notification.setActive(true);
+        notification.setRead(false);
+        notification.setDeleted(false);
+        notification.setCreatedAt(new Date());
+        notification.setUpdatedAt(new Date());
+        notification.setSourceId(invoiceId);
+        notificationService.saveCustomerNotification(notification);
+    }
+
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
 
         AdminNotifications notification = new AdminNotifications();
@@ -155,7 +171,6 @@ public class NotificationService {
         notification.setUpdatedAt(new Date());
         notificationService.saveAdminNotification(notification);
     }
-
 
     public String markAsRead(List<Long> notificationIds, String hostelId) {
         int updatedCount = notificationService.markNotificationsAsRead(notificationIds, hostelId);

@@ -119,6 +119,13 @@ public class InvoiceService {
             }
         }
 
+        boolean showMessage = false;
+        Date today = new Date();
+
+        if ("Pending".equalsIgnoreCase(status) && invoice.getInvoiceDueDate().before(today)) {
+            showMessage = true;
+        }
+
         return new InvoiceDetailsDTO(
                 invoice.getInvoiceId(),
                 invoice.getInvoiceNumber(),
@@ -139,7 +146,8 @@ public class InvoiceService {
                 receipts,
                 lastPaidDate,
                 lastPaymentMode,
-                referenceId
+                referenceId,
+                showMessage
         );
     }
 

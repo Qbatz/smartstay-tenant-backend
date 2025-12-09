@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 
 public record ComplaintDetailsResponse(Integer complaintId, String complaintTypeName,
+
+                                       Integer complaintTypeId,
                                        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Kolkata") Date complaintDate,
 
                                        String description, String status, String assigneeName, String floorName,

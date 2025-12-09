@@ -2,6 +2,7 @@ package com.smartstay.tenant.service;
 
 
 import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.repository.AdminNotificationRepository;
 import com.smartstay.tenant.repository.CustomerNotificationRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
@@ -17,26 +18,30 @@ public class AdminNotificationService {
     private AdminNotificationRepository adminNotificationRepository;
 
     @Autowired
-    private CustomerNotificationRepository componentNotificationRepository;
+    private CustomerNotificationRepository customerNotificationRepository;
 
     public void saveAdminNotification(AdminNotifications adminNotifications) {
         adminNotificationRepository.save(adminNotifications);
     }
 
+    public void saveCustomerNotification(CustomerNotifications customerNotifications) {
+        customerNotificationRepository.save(customerNotifications);
+    }
+
     public List<NotificationProjection> getActiveNotifications(String hostelId) {
-        return componentNotificationRepository.getActiveNotifications(hostelId);
+        return customerNotificationRepository.getActiveNotifications(hostelId);
     }
 
     public NotificationProjection getNotificationById(String hostelId, long id) {
-        return componentNotificationRepository.getNotificationById(hostelId, id);
+        return customerNotificationRepository.getNotificationById(hostelId, id);
     }
 
     public int markNotificationsAsRead(List<Long> notificationIds, String hostelId) {
-        return componentNotificationRepository.markNotificationsAsRead(notificationIds, hostelId);
+        return customerNotificationRepository.markNotificationsAsRead(notificationIds, hostelId);
     }
 
     AdminNotifications findByIdAndIsDeletedFalse(Long id) {
-        return componentNotificationRepository.findByIdAndIsDeletedFalse(id).get();
+        return customerNotificationRepository.findByIdAndIsDeletedFalse(id).get();
     }
 
 
