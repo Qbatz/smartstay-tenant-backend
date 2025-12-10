@@ -4,6 +4,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AmenitiesV1;
+import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -97,6 +99,11 @@ public class AmenitiesService {
 
         if (amenityRequestService.existsPendingRequest(customerId, amenityId)) {
             return new ResponseEntity<>("Already requested. Please wait for approval.", HttpStatus.BAD_REQUEST);
+        }
+        List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
+        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+        if (!customerExist) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         Long count = amenityRepository.isAmenityAlreadyAssigned(customerId, amenityId);
         if (count != null && count > 0) {

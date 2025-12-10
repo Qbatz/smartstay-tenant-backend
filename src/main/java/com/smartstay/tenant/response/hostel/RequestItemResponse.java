@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequestItemResponse implements Comparable<RequestItemResponse> {
-    private Long requestId;
+    private String requestId;
     private String type;
     private String requestedDate;
     private String status;

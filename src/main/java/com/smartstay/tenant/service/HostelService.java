@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class HostelService {
@@ -188,18 +189,32 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<RequestItemResponse> amenityRequests = new ArrayList<>(Optional.ofNullable(amenityRequestService.getRequests(customerId, hostelId)).orElse(Collections.emptyList()));
+        List<RequestItemResponse> amenityRequests =
+                Optional.ofNullable(amenityRequestService.getRequests(customerId, hostelId))
+                        .orElse(Collections.emptyList());
 
-        List<RequestItemResponse> bedRequests = Optional.ofNullable(bedChangeRequestService.getRequests(hostelId, customerId)).orElse(Collections.emptyList());
-        amenityRequests.addAll(bedRequests);
-        Collections.sort(amenityRequests);
-        return new ResponseEntity<>(amenityRequests, HttpStatus.OK);
+        List<RequestItemResponse> mappedAmenityRequests = amenityRequests.stream()
+                .peek(req -> req.setRequestId("A" + req.getRequestId()))
+                .toList();
 
+        List<RequestItemResponse> result = new ArrayList<>(mappedAmenityRequests);
+        List<RequestItemResponse> bedRequests =
+                Optional.ofNullable(bedChangeRequestService.getRequests(hostelId, customerId))
+                        .orElse(Collections.emptyList());
 
+        List<RequestItemResponse> mappedBedRequests = bedRequests.stream()
+                .peek(req -> req.setRequestId("B" + req.getRequestId()))
+                .toList();
+
+        result.addAll(mappedBedRequests);
+        Collections.sort(result);
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 
-    public ResponseEntity<?> getCustomerRequestById(String hostelId, Long requestId, String requestType) {
+
+    public ResponseEntity<?> getCustomerRequestById(String hostelId, String requestId) {
 
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -211,22 +226,41 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        if (requestType.equals(RequestType.AMENITY_REQUEST.name())) {
-            AmenityRequestResponse amenityRequest = amenityRequestService.getRequestById(customerId, hostelId, requestId);
+        if (requestId == null || requestId.length() < 2) {
+            return new ResponseEntity<>("Invalid requestId format.", HttpStatus.BAD_REQUEST);
+        }
+
+        char prefix = requestId.charAt(0);
+        String idPart = requestId.substring(1);
+
+        Long actualId;
+        try {
+            actualId = Long.parseLong(idPart);
+        } catch (NumberFormatException e) {
+            return new ResponseEntity<>("Invalid requestId format.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (prefix == 'A') {
+            AmenityRequestResponse amenityRequest =
+                    amenityRequestService.getRequestById(customerId, hostelId, actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(amenityRequest, HttpStatus.OK);
-        } else if (requestType.equals(RequestType.CHANGE_BED.name())) {
-            BedChangeRequestResponse bedRequest = bedChangeRequestService.getRequestsById(customerId, hostelId, requestId);
+
+        } else if (prefix == 'B') {
+            BedChangeRequestResponse bedRequest =
+                    bedChangeRequestService.getRequestsById(customerId, hostelId, actualId);
             if (bedRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(bedRequest, HttpStatus.OK);
+
         } else {
-            return new ResponseEntity<>(Utils.INVALID_REQUEST_TYPE, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
         }
     }
+
 
 
 }

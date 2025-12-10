@@ -60,7 +60,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
         }
 
 
-        return new RequestItemResponse(bedChangeRequest.getId(),
+        return new RequestItemResponse(String.valueOf(bedChangeRequest.getId()),
                 RequestType.CHANGE_BED.name(),
                 Utils.dateToString(bedChangeRequest.getCreatedAt()),
                 status,
