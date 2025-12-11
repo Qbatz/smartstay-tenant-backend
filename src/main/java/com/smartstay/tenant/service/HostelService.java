@@ -92,10 +92,20 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        BillingDates previousBillingDates = getBillStartDate(hostelId, Utils.getFirstDayOfPreviousMonth());
-        BillingDates currentBillingDates = getCurrentBillStartAndEndDates(hostelId);
+        BillingDates currentMonthBillingDates =  hostelConfigService.getBillingRuleOnDate(hostelId, new Date());
+        Date startDate = currentMonthBillingDates.currentBillStartDate();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startDate);
+        calendar.add(Calendar.MONTH, -1);
+
+
+        BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
+
+
+
         InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
-        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentBillingDates.currentBillStartDate(), currentBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(), currentMonthBillingDates.currentBillEndDate());
 
         InvoiceSummary previousSummary = previousMonthInvoices != null ? new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(), previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(), previousMonthInvoices.getCurrentInvoiceEndDate(), isToday(previousMonthInvoices.getInvoiceGeneratedDate()), buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
 
