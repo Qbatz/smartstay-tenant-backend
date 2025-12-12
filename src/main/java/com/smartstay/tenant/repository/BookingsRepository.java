@@ -7,9 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
-import java.util.List;
-
 @Repository
 public interface BookingsRepository extends JpaRepository<BookingsV1, String> {
 
@@ -30,5 +27,11 @@ public interface BookingsRepository extends JpaRepository<BookingsV1, String> {
     CustomersBookingDetails getCustomerBookingDetails(@Param("customerId") String customerId);
 
     ;
+
+    BookingsV1 findTopByCustomerIdAndHostelIdOrderByJoiningDateDesc(
+            String customerId,
+            String hostelId
+    );
+
 
 }

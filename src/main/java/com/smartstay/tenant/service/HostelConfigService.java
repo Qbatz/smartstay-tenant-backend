@@ -49,6 +49,10 @@ public class HostelConfigService {
        return billingRuleRepository.findLatestBillingRule(hostelId, new Date());
     }
 
+    public BillingDates getBillingRuleOnDate(String hostelId, Date date) {
+        return getBillingRuleByDateAndHostelId(hostelId, date);
+    }
+
     public BillingDates getBillingRuleByDateAndHostelId(String hostelId, Date dateJoiningDate) {
         BillingRules billingRules = billingRuleRepository.findBillingRulesOnDateAndHostelId(hostelId, dateJoiningDate);
         BillingDates billDates = null;

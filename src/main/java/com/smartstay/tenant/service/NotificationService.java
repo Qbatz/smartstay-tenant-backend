@@ -4,6 +4,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
@@ -30,7 +31,7 @@ public class NotificationService {
 
 
     @Autowired
-    private AdminNotificationService adminNotificationService;
+    private AdminNotificationService notificationService;
 
     public ResponseEntity<?> getNotificationList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -41,7 +42,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<NotificationProjection> notifications = adminNotificationService.getActiveNotifications(hostelId);
+        List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId);
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -58,7 +59,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        NotificationProjection notifications = adminNotificationService.getNotificationById(hostelId, notificationId);
+        NotificationProjection notifications = notificationService.getNotificationById(hostelId, notificationId);
 
         if (notifications == null) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -78,8 +79,6 @@ public class NotificationService {
         String data = markAsRead(request.notificationIds(), hostelId);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
-
-
     public ResponseEntity<?> deleteNotification(String hostelId, long id) {
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -89,17 +88,15 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        AdminNotifications notification = adminNotificationService.findByIdAndIsDeletedFalse(id);
+        AdminNotifications notification = notificationService.findByIdAndIsDeletedFalse(id);
         if (notification == null || !notification.getHostelId().equals(hostelId)) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         notification.setDeleted(true);
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
-
-
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         AdminNotifications notification = new AdminNotifications();
@@ -126,7 +123,26 @@ public class NotificationService {
         if (request.bedId() != null) {
             notification.setSourceId(String.valueOf(request.bedId()));
         }
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
+    }
+
+
+    public void createNotificationForInvoiceGeneration(String invoiceId,String title,String description,String customerId, String hostelId) {
+
+        CustomerNotifications notification = new CustomerNotifications();
+        notification.setUserId(customerId);
+        notification.setNotificationType(RequestType.INVOICE_GENERATION.name());
+        notification.setTitle(title);
+        notification.setDescription(description);
+        notification.setUserType(UserType.TENANT.name());
+        notification.setHostelId(hostelId);
+        notification.setActive(true);
+        notification.setRead(false);
+        notification.setDeleted(false);
+        notification.setCreatedAt(new Date());
+        notification.setUpdatedAt(new Date());
+        notification.setSourceId(invoiceId);
+        notificationService.saveCustomerNotification(notification);
     }
 
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
@@ -153,12 +169,11 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
     }
 
-
     public String markAsRead(List<Long> notificationIds, String hostelId) {
-        int updatedCount = adminNotificationService.markNotificationsAsRead(notificationIds, hostelId);
+        int updatedCount = notificationService.markNotificationsAsRead(notificationIds, hostelId);
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 
@@ -178,6 +193,6 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
-        adminNotificationService.saveAdminNotification(notification);
+        notificationService.saveAdminNotification(notification);
     }
 }

@@ -3,10 +3,12 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.BankingV1;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
+import com.smartstay.tenant.repository.BankingV1Repository;
 import com.smartstay.tenant.repository.TransactionV1Repository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,9 @@ public class TransactionService {
 
     @Autowired
     private TransactionV1Repository transactionV1Repository;
+
+    @Autowired
+    private BankingV1Repository bankingV1Repository;
 
     @Autowired
     private CustomerService customerService;
@@ -70,4 +75,14 @@ public class TransactionService {
     public Double getTotalPaidAmountByInvoiceId(String invoiceId) {
         return transactionV1Repository.getTotalPaid(invoiceId);
     }
+
+    public BankingV1 getBankDetailsById(String bankId) {
+        return bankingV1Repository.findById(bankId).orElse(null);
+    }
+
+    public TransactionV1 getLatestTransactionByInvoiceId(String invoiceId) {
+        return transactionV1Repository.findLatestTransaction(invoiceId);
+    }
+
+
 }

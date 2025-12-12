@@ -118,4 +118,31 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 
+
+    @Query("SELECT SUM(i.paidAmount) FROM InvoicesV1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
+    Double findAdvancePaidAmount(@Param("customerId") String customerId);
+
+    @Query("SELECT i FROM InvoicesV1 i WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE")
+    List<InvoicesV1> findInvoicesGeneratedToday();
+
+//    @Query("""
+//        SELECT i
+//        FROM InvoicesV1 i
+//        JOIN Customers c ON c.customerId = i.customerId
+//        JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+//        WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+//          AND i.isCancelled = false AND c.customerId = '7e994f6a-2031-47e0-abb9-410f3ecb9efd'
+//    """)
+//    List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
+
+    @Query("""
+        SELECT i
+        FROM InvoicesV1 i
+        JOIN Customers c ON c.customerId = i.customerId
+        JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+        WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+          AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
+    """)
+    List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
+
 }

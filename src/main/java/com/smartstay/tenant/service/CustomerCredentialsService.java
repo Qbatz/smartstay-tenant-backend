@@ -16,6 +16,10 @@ public class CustomerCredentialsService {
         return repository.findByCustomerMobile(mobileNo);
     }
 
+    public String getFCmToken(String customerId) {
+        return repository.findFcmTokenByCustomerId(customerId);
+    }
+
     public CustomerCredentials getCustomerCredentialsByXUuid(String xUuid) {
         return repository.findByXuid(xUuid);
     }

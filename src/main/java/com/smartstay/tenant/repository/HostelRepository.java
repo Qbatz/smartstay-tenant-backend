@@ -19,7 +19,20 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
                                        h.pincode AS pincode,
                                        h.city AS city,
                                        h.state AS state,
-                                       h.main_image as hostelPic
+                                       h.main_image as hostelPic,
+                                       c.current_status AS currentStatus,
+                    CASE 
+                    WHEN c.current_status = 'ACTIVE' THEN 1
+                    WHEN c.current_status = 'INACTIVE' THEN 2
+                    WHEN c.current_status = 'VACATED' THEN 3
+                    WHEN c.current_status = 'NOTICE' THEN 4
+                    WHEN c.current_status = 'BOOKED' THEN 5
+                    WHEN c.current_status = 'CHECK_IN' THEN 6
+                    WHEN c.current_status = 'WALKED_IN' THEN 7
+                    WHEN c.current_status = 'CANCELLED_BOOKING' THEN 8
+                    WHEN c.current_status = 'SETTLEMENT_GENERATED' THEN 9
+                    ELSE 0
+                END AS statusCode
                                 FROM customers c
                                 INNER JOIN hostelv1 h
                                 WHERE c.customer_id = :customerId and h.hostel_id = c.hostel_id
@@ -39,7 +52,20 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
                 h.pincode AS pincode,
                 h.city AS city,
                 h.state AS state,
-                h.main_image AS hostelPic
+                h.main_image AS hostelPic,
+                c.current_status AS currentStatus,
+                CASE 
+                    WHEN c.current_status = 'ACTIVE' THEN 1
+                    WHEN c.current_status = 'INACTIVE' THEN 2
+                    WHEN c.current_status = 'VACATED' THEN 3
+                    WHEN c.current_status = 'NOTICE' THEN 4
+                    WHEN c.current_status = 'BOOKED' THEN 5
+                    WHEN c.current_status = 'CHECK_IN' THEN 6
+                    WHEN c.current_status = 'WALKED_IN' THEN 7
+                    WHEN c.current_status = 'CANCELLED_BOOKING' THEN 8
+                    WHEN c.current_status = 'SETTLEMENT_GENERATED' THEN 9
+                    ELSE 0
+                END AS statusCode
             FROM customers c
             INNER JOIN hostelv1 h ON h.hostel_id = c.hostel_id
             WHERE c.mobile = :mobile
