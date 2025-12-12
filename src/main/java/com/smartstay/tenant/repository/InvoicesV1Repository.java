@@ -60,6 +60,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 JOIN i.invoiceItems ii
                 LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
                 WHERE i.customerId = :customerId
+                  AND i.hostelId = :hostelId
                   AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate
                 GROUP BY 
                     i.invoiceId,
@@ -70,7 +71,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                     i.invoiceEndDate
                 ORDER BY i.invoiceGeneratedDate DESC
             """)
-    List<InvoiceSummaryResponse> getInvoiceSummary(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
+    List<InvoiceSummaryResponse> getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
 
 
     @Query("""
@@ -116,5 +117,32 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                   AND (ii.invoiceItem IS NULL OR ii.invoiceItem <> 'EB')
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
+
+
+    @Query("SELECT SUM(i.paidAmount) FROM InvoicesV1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
+    Double findAdvancePaidAmount(@Param("customerId") String customerId);
+
+    @Query("SELECT i FROM InvoicesV1 i WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE")
+    List<InvoicesV1> findInvoicesGeneratedToday();
+
+//    @Query("""
+//        SELECT i
+//        FROM InvoicesV1 i
+//        JOIN Customers c ON c.customerId = i.customerId
+//        JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+//        WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+//          AND i.isCancelled = false AND c.customerId = '7e994f6a-2031-47e0-abb9-410f3ecb9efd'
+//    """)
+//    List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
+
+    @Query("""
+        SELECT i
+        FROM InvoicesV1 i
+        JOIN Customers c ON c.customerId = i.customerId
+        JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+        WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+          AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
+    """)
+    List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
 }

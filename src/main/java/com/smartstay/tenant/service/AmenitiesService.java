@@ -3,6 +3,8 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.AmenitiesV1;
+import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
@@ -10,11 +12,13 @@ import com.smartstay.tenant.response.amenity.AmenitiesStatusResponse;
 import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
+import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -61,7 +65,7 @@ public class AmenitiesService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<AmenityRequestResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
+        List<RequestItemResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
 
         return new ResponseEntity<>(requests, HttpStatus.OK);
     }
@@ -96,6 +100,11 @@ public class AmenitiesService {
         if (amenityRequestService.existsPendingRequest(customerId, amenityId)) {
             return new ResponseEntity<>("Already requested. Please wait for approval.", HttpStatus.BAD_REQUEST);
         }
+        List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
+        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+        if (!customerExist) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
         Long count = amenityRepository.isAmenityAlreadyAssigned(customerId, amenityId);
         if (count != null && count > 0) {
             return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
@@ -106,4 +115,7 @@ public class AmenitiesService {
     }
 
 
+    public List<AmenitiesV1> findByAmenityIds(List<String> listAmenitiesId) {
+        return amenityRepository.findAllById(listAmenitiesId);
+    }
 }

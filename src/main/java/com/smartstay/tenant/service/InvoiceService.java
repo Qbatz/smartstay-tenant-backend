@@ -2,7 +2,9 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.BankingV1;
 import com.smartstay.tenant.dao.InvoicesV1;
+import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.invoice.InvoiceDetailsDTO;
 import com.smartstay.tenant.dto.invoice.InvoiceItemDTO;
 import com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO;
@@ -42,10 +44,9 @@ public class InvoiceService {
         return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
 
-    public InvoiceSummaryResponse getLatestInvoiceSummary(String customerId, Date startDate, Date endDate) {
+    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId,String customerId, Date startDate, Date endDate) {
         Pageable limitOne = PageRequest.of(0, 1);
-
-        return invoicesV1Repository.getInvoiceSummary(customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
+        return invoicesV1Repository.getInvoiceSummary(hostelId,customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
     }
 
 
@@ -87,7 +88,6 @@ public class InvoiceService {
 
     }
 
-
     public InvoiceDetailsDTO getInvoiceDetails(String invoiceId, InvoicesV1 invoice) {
 
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoiceId);
@@ -101,7 +101,54 @@ public class InvoiceService {
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoiceId);
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts);
+        TransactionV1 latestTransaction = transactionService.getLatestTransactionByInvoiceId(invoiceId);
+
+        Date lastPaidDate = null;
+        String lastPaymentMode = null;
+        String referenceId = null;
+
+        if (latestTransaction != null) {
+            lastPaidDate = latestTransaction.getPaymentDate();
+            referenceId = latestTransaction.getTransactionReferenceId();
+
+            if (latestTransaction.getBankId() != null) {
+                BankingV1 bank = transactionService.getBankDetailsById(latestTransaction.getBankId());
+                if (bank != null && bank.getBankName() != null) {
+                    lastPaymentMode = Utils.capitalize(bank.getBankName());
+                }
+            }
+        }
+
+        boolean showMessage = false;
+        Date today = new Date();
+
+        if ("Pending".equalsIgnoreCase(status) && invoice.getInvoiceDueDate().before(today)) {
+            showMessage = true;
+        }
+
+        return new InvoiceDetailsDTO(
+                invoice.getInvoiceId(),
+                invoice.getInvoiceNumber(),
+                Utils.capitalize(invoice.getInvoiceType()),
+                invoice.getInvoiceGeneratedDate(),
+                invoice.getInvoiceDueDate(),
+                invoice.getInvoiceStartDate(),
+                invoice.getInvoiceEndDate(),
+                invoice.getTotalAmount(),
+                totalPaid,
+                dueAmount,
+                status,
+                invoice.getGst(),
+                invoice.getCgst(),
+                invoice.getSgst(),
+                invoice.getGstPercentile(),
+                invoiceItems,
+                receipts,
+                lastPaidDate,
+                lastPaymentMode,
+                referenceId,
+                showMessage
+        );
     }
 
 }

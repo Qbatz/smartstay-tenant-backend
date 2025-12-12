@@ -1,13 +1,20 @@
 package com.smartstay.tenant.repository;
 
 import com.smartstay.tenant.dao.Beds;
+import com.smartstay.tenant.dto.BedDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 
 public interface BedsRepository extends JpaRepository<Beds, Integer> {
 
-    Beds findByBedIdAndRoomIdAndParentId(int bedId, int roomId, String parentId);
-
-    Beds findByBedIdAndParentIdAndHostelId(int bedId, String parentId, String hostelId);
+    @Query(value = """
+            SELECT bed.bed_id as bedId, bed.bed_name as bedName, flrs.floor_id as floorId, 
+            flrs.floor_name as floorName, rms.room_id as roomId, rms.room_name as roomName 
+            FROM beds bed left outer JOIN rooms rms on rms.room_id=bed.room_id LEFT OUTER JOIN 
+            floors flrs on flrs.floor_id=rms.floor_id where bed.bed_id=:bedId;
+            """, nativeQuery = true)
+    BedDetails findByBedId(@Param("bedId") Integer bedId);
 
 }

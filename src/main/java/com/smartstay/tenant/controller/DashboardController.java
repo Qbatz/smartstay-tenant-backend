@@ -29,5 +29,17 @@ public class DashboardController {
         return hostelService.getHostelDetails(hostelId);
     }
 
+    @GetMapping("requests/{hostelId}")
+    public ResponseEntity<?> getCustomerRequests(@PathVariable("hostelId") String hostelId) {
+        return hostelService.getCustomerRequests(hostelId);
+    }
+
+    @GetMapping("requests/{hostelId}/{requestId}")
+    public ResponseEntity<?> getCustomerRequestById(@PathVariable("hostelId") String hostelId, @PathVariable("requestId") String requestId) {
+        return hostelService.getCustomerRequestById(hostelId, requestId);
+    }
+
+
+
 
 }

@@ -4,11 +4,13 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
+import com.smartstay.tenant.dao.BillingRules;
+import com.smartstay.tenant.dao.BookingsV1;
 import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.repository.CustomerRepository;
+import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,10 +18,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CustomerService {
+
+    @Autowired
+    private InvoicesV1Repository invoicesV1Repository;
+
+    @Autowired
+    private HostelConfigService hostelConfigService;
 
     @Autowired
     CustomerRepository customersRepository;
@@ -101,11 +112,11 @@ public class CustomerService {
             if (updateInfo.state() != null && !updateInfo.state().equalsIgnoreCase("")) {
                 customers.setState(updateInfo.state());
             }
-            if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")){
+            if (updateInfo.dob() != null && !updateInfo.dob().equalsIgnoreCase("")) {
                 String formattedDate = updateInfo.dob().replace("/", "-");
-                customers.setDateOfBirth(Utils.stringToDate(formattedDate,Utils.USER_INPUT_DATE_FORMAT));
+                customers.setDateOfBirth(Utils.stringToDate(formattedDate, Utils.USER_INPUT_DATE_FORMAT));
             }
-            if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")){
+            if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")) {
                 Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
                 customers.setGender(gender.getLabel());
             }
@@ -117,6 +128,42 @@ public class CustomerService {
         } else {
             return new ResponseEntity<>(Utils.PAYLOADS_REQUIRED, HttpStatus.BAD_REQUEST);
         }
+    }
+
+
+    public ResponseEntity<?> getRentDetails(String hostelId) {
+
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+        if (!existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        BookingsV1 bookingDetails = bookingsService.getLatestBooking(customerId, hostelId);
+        if (bookingDetails == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Booking details not found");
+        }
+        Double rentAmount = bookingDetails.getRentAmount();
+        Double advancePaidAmount = invoicesV1Repository.findAdvancePaidAmount(customerId);
+        if (advancePaidAmount == null) {
+            advancePaidAmount = 0.0;
+        }
+
+        BillingRules billingRules = hostelConfigService.getLatestBillRuleByHostelIdAndStartDate(hostelId, new Date());
+
+        int dueDay = billingRules != null ? billingRules.getBillingDueDate() : 0;
+        String dueDateText = (dueDay > 0 ? dueDay : "0") + "th of every month";
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("joiningDate", Utils.dateToString(bookingDetails.getJoiningDate()));
+        response.put("rentAmount", rentAmount);
+        response.put("advancePaidAmount", advancePaidAmount);
+        response.put("dueDate", dueDateText);
+
+        return ResponseEntity.ok(response);
     }
 
 

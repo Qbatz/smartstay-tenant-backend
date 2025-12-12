@@ -33,6 +33,7 @@ public final class Utils {
     public static final String REQUEST_SENT_SUCCESSFULLY = "Request sent successfully.";
     public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
+    public static final String INVALID_REQUEST_TYPE = "Invalid request type.";
 
     public static final String CREATED = "Created Successfully";
     public static final String DELETED = "Deleted Successfully";

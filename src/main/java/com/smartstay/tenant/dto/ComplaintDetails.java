@@ -11,6 +11,8 @@ public record ComplaintDetails(
         Integer complaintId,
         String complaintTypeName,
 
+        Integer complaintTypeId,
+
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Kolkata")
         Date complaintDate,
 

@@ -10,40 +10,62 @@ import java.util.List;
 
 public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Long> {
 
-    boolean existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
-            String customerId,
-            String hostelId,
-            List<String> statusList
-    );
+    boolean existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(String customerId, String hostelId, List<String> statusList);
 
     @Query("""
-    SELECT new com.smartstay.tenant.dto.BedChangeRequestResponse(
-        b.id,
-        b.bedId,
-        bed.bedName,
-        b.floorId,
-        f.floorName,
-        b.roomId,
-        r.roomName,
-        b.startsFrom,
-        b.reason,
-        b.preferredType,
-        b.currentStatus
-    )
-    FROM BedChangeRequest b
-    LEFT JOIN Beds bed ON b.bedId = bed.bedId AND bed.isActive = true AND bed.isDeleted = false
-    LEFT JOIN Floors f ON b.floorId = f.floorId AND f.isActive = true AND f.isDeleted = false
-    LEFT JOIN Rooms r ON b.roomId = r.roomId AND r.isActive = true AND r.isDeleted = false
-    WHERE b.hostelId = :hostelId
-      AND b.customerId = :customerId
-      AND b.isActive = true
-      AND b.isDeleted = false
-    ORDER BY b.createdAt DESC
-""")
-    List<BedChangeRequestResponse> findBedChangeRequests(
-            @Param("hostelId") String hostelId,
-            @Param("customerId") String customerId
-    );
+                SELECT new com.smartstay.tenant.dto.BedChangeRequestResponse(
+                    b.id,
+                    b.bedId,
+                    bed.bedName,
+                    b.floorId,
+                    f.floorName,
+                    b.roomId,
+                    r.roomName,
+                    b.createdAt,
+                    b.reason,
+                    b.preferredType,
+                    b.currentStatus
+                )
+                FROM BedChangeRequest b
+                LEFT JOIN Beds bed ON b.bedId = bed.bedId AND bed.isActive = true AND bed.isDeleted = false
+                LEFT JOIN Floors f ON b.floorId = f.floorId AND f.isActive = true AND f.isDeleted = false
+                LEFT JOIN Rooms r ON b.roomId = r.roomId AND r.isActive = true AND r.isDeleted = false
+                WHERE b.hostelId = :hostelId
+                  AND b.customerId = :customerId
+                  AND b.isActive = true
+                  AND b.isDeleted = false
+                ORDER BY b.createdAt DESC
+            """)
+    List<BedChangeRequestResponse> findBedChangeRequests(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
+
+    @Query("""
+                SELECT new com.smartstay.tenant.dto.BedChangeRequestResponse(
+                    b.id,
+                    b.bedId,
+                    bed.bedName,
+                    b.floorId,
+                    f.floorName,
+                    b.roomId,
+                    r.roomName,
+                    b.startsFrom,
+                    b.reason,
+                    b.preferredType,
+                    b.currentStatus
+                )
+                FROM BedChangeRequest b
+                LEFT JOIN Beds bed ON b.bedId = bed.bedId AND bed.isActive = true AND bed.isDeleted = false
+                LEFT JOIN Floors f ON b.floorId = f.floorId AND f.isActive = true AND f.isDeleted = false
+                LEFT JOIN Rooms r ON b.roomId = r.roomId AND r.isActive = true AND r.isDeleted = false
+                WHERE b.hostelId = :hostelId
+                  AND b.id = :requestId
+                  AND b.customerId = :customerId
+                  AND b.isActive = true
+                  AND b.isDeleted = false
+                ORDER BY b.createdAt DESC
+            """)
+    BedChangeRequestResponse findBedChangeRequestsById(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("requestId") Long requestId);
+
+    List<BedChangeRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
 
 
 }

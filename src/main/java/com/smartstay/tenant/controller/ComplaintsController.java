@@ -3,6 +3,7 @@ package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
+import com.smartstay.tenant.payload.complaint.UpdateComplaint;
 import com.smartstay.tenant.response.complaints.AddComplaints;
 import com.smartstay.tenant.service.ComplaintService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -47,6 +48,11 @@ public class ComplaintsController {
     @PostMapping("/{hostelId}")
     public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,  @RequestPart(value = "payloads", required = false) AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
+    }
+
+    @PutMapping("/{hostelId}/{complaintId}")
+    public ResponseEntity<?> editComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart(value = "payloads", required = false) UpdateComplaint payloads, @PathVariable("hostelId") String hostelId, @PathVariable("complaintId") Integer complaintId) {
+        return complaintsService.updateComplaint(complaintImages, payloads, hostelId,complaintId);
     }
 
     @DeleteMapping("/{hostelId}/{complaintId}")
