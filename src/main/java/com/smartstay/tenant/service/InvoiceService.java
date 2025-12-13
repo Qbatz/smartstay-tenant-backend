@@ -5,17 +5,14 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BankingV1;
 import com.smartstay.tenant.dao.InvoicesV1;
 import com.smartstay.tenant.dao.TransactionV1;
-import com.smartstay.tenant.dto.invoice.InvoiceDetailsDTO;
-import com.smartstay.tenant.dto.invoice.InvoiceItemDTO;
-import com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO;
-import com.smartstay.tenant.dto.invoice.ReceiptDTO;
+import com.smartstay.tenant.dto.invoice.*;
 import com.smartstay.tenant.ennum.InvoiceType;
+import com.smartstay.tenant.mapper.invoice.InvoiceItemMapper;
+import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -44,9 +41,12 @@ public class InvoiceService {
         return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
 
-    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId,String customerId, Date startDate, Date endDate) {
-        Pageable limitOne = PageRequest.of(0, 1);
-        return invoicesV1Repository.getInvoiceSummary(hostelId,customerId, startDate, endDate, limitOne).stream().findFirst().orElse(null);
+    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId, Date startDate, Date endDate) {
+        InvoiceSummaryProjection projection = invoicesV1Repository.getInvoiceSummary(hostelId, customerId, startDate, endDate);
+        if (projection == null) {
+            return null;
+        }
+        return new InvoiceSummaryMapper().apply(projection);
     }
 
 
@@ -58,11 +58,14 @@ public class InvoiceService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<InvoiceItemResponseDTO> invoiceItems = invoicesV1Repository.getAllInvoiceItems(hostelId, customerId);
-        if (invoiceItems.isEmpty()) {
+        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository.getAllInvoiceItems(hostelId, customerId);
+        InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
+
+        List<InvoiceItemResponseDTO> invoiceItemDTOs = invoiceItems.stream().map(invoiceItemMapper).toList();
+        if (invoiceItemDTOs.isEmpty()) {
             return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(invoiceItems, HttpStatus.OK);
+        return new ResponseEntity<>(invoiceItemDTOs, HttpStatus.OK);
 
     }
 
@@ -126,29 +129,7 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        return new InvoiceDetailsDTO(
-                invoice.getInvoiceId(),
-                invoice.getInvoiceNumber(),
-                Utils.capitalize(invoice.getInvoiceType()),
-                invoice.getInvoiceGeneratedDate(),
-                invoice.getInvoiceDueDate(),
-                invoice.getInvoiceStartDate(),
-                invoice.getInvoiceEndDate(),
-                invoice.getTotalAmount(),
-                totalPaid,
-                dueAmount,
-                status,
-                invoice.getGst(),
-                invoice.getCgst(),
-                invoice.getSgst(),
-                invoice.getGstPercentile(),
-                invoiceItems,
-                receipts,
-                lastPaidDate,
-                lastPaymentMode,
-                referenceId,
-                showMessage
-        );
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
     }
 
 }

@@ -30,7 +30,7 @@ public class BedChangeRequestService {
         return requestRepo.existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
                 customerId,
                 hostelId,
-                List.of(RequestStatus.PENDING.name(), RequestStatus.INPROGRESS.name()
+                List.of(RequestStatus.OPEN.name(),RequestStatus.PENDING.name(),RequestStatus.INPROGRESS.name()
         ));
     }
 

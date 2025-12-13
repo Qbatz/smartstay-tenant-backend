@@ -58,8 +58,14 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         BillingRules billingRules =
                 hostelConfigService.getLatestBillRuleByHostelIdAndStartDate(hostelId, new Date());
 
-        int dueDay = (billingRules != null ? billingRules.getBillingDueDate() : 0);
-        String dueDateText = (dueDay > 0 ? dueDay : "0") + "th of every month";
+        Integer dueDayValue = (billingRules != null) ? billingRules.getBillingDueDate() : null;
+
+        String dueDateText;
+        if (dueDayValue != null && dueDayValue > 0) {
+            dueDateText = dueDayValue + "th of every month";
+        } else {
+            dueDateText = "0th of every month";
+        }
 
         rentalDetailsDTO.setJoiningDate(
                 bookingDetails.getJoiningDate() != null
