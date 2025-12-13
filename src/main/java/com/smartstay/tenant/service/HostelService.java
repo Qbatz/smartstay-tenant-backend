@@ -102,8 +102,6 @@ public class HostelService {
 
         BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
 
-
-
         InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
         InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(), currentMonthBillingDates.currentBillEndDate());
 
