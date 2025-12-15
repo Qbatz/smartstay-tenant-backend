@@ -1,6 +1,7 @@
 package com.smartstay.tenant.response.complaints;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
 
 import java.util.Date;
 import java.util.List;
@@ -17,5 +18,5 @@ public record ComplaintDetailsResponse(Integer complaintId, String complaintType
                                        Date assignedDate,
 
                                        String createdBy, String hostelName, String assigneeMobileNumber,
-                                       List<ComplaintImage> images, List<ComplaintComment> comments) {
+                                       List<ComplaintImage> images, List<ComplaintCommentProjection> comments) {
 }

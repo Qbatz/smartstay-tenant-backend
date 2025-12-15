@@ -5,5 +5,6 @@ public enum UserType {
     TENANT,
     OWNER,
     ADMIN,
-    STAFF
+    STAFF,
+    ALL_EXCEPT_TENANT
 }
