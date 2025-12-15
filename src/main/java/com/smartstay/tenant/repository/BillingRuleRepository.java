@@ -37,7 +37,7 @@ public interface BillingRuleRepository extends JpaRepository<BillingRules, Integ
     BillingRules findLatestBillingRule(@Param("hostelId") String hostelId, @Param("startDate") Date startDate);
 
     @Query(value = """
-            SELECT * FROM billing_rules WHERE hostel_id=:hostelId AND start_from IS NULL OR start_from <= DATE(:startDate) ORDER BY start_from DESC LIMIT 1
+            SELECT * FROM billing_rules WHERE hostel_id=:hostelId AND (start_from IS NULL OR start_from <= DATE(:startDate)) ORDER BY start_from DESC LIMIT 1
             """, nativeQuery = true)
     BillingRules findBillingRulesOnDateAndHostelId(@Param("hostelId") String hostel, @Param("startDate") Date date);
 }

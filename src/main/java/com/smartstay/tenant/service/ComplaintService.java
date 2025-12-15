@@ -7,6 +7,7 @@ import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
+import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
 import com.smartstay.tenant.ennum.CommentSource;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
@@ -14,7 +15,6 @@ import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
 import com.smartstay.tenant.repository.*;
 import com.smartstay.tenant.response.complaints.AddComplaints;
-import com.smartstay.tenant.response.complaints.ComplaintComment;
 import com.smartstay.tenant.response.complaints.ComplaintDetailsResponse;
 import com.smartstay.tenant.response.complaints.ComplaintImage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,9 +96,9 @@ public class ComplaintService {
         }
         List<ComplaintImage> images = complaintImagesRepository.findImagesByComplaintId(complaintId);
 
-        List<ComplaintComment> comments = commentsRepository.findCommentsByComplaintId(complaintId);
+        List<ComplaintCommentProjection> comments = commentsRepository.findCommentsByComplaintIds(complaintId);
 
-        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(), complaint.complaintTypeName(),complaint.complaintTypeId(), complaint.complaintDate(), complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(), complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(), complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images, comments);
+        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(), complaint.complaintTypeName(), complaint.complaintTypeId(), complaint.complaintDate(), complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(), complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(), complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images, comments);
 
         return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
     }

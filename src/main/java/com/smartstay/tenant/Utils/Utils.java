@@ -125,5 +125,23 @@ public final class Utils {
         return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
     }
 
+    public static String getInitials(String name) {
+
+        if (name == null || name.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] parts = name.trim().split("\\s+");
+
+        if (parts.length == 1) {
+            return parts[0].length() >= 2
+                    ? parts[0].substring(0, 2).toUpperCase()
+                    : parts[0].substring(0, 1).toUpperCase();
+        }
+
+        return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+
+
 
 }
