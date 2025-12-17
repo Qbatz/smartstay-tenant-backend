@@ -13,6 +13,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
                 SELECT c.customer_id AS customerId,
                                         h.hostel_id AS hostelId,
                                        h.hostel_name AS hostelName,
+                                       UPPER(SUBSTRING(COALESCE(h.hostel_name, ''), 1, 1)) AS hostelInitial,
                                        h.house_no AS houseNo,
                                        h.street AS street,
                                        h.landmark AS landmark,
