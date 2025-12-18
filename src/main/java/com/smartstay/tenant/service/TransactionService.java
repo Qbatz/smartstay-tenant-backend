@@ -81,7 +81,7 @@ public class TransactionService {
     }
 
     public TransactionV1 getLatestTransactionByInvoiceId(String invoiceId) {
-        return transactionV1Repository.findLatestTransaction(invoiceId);
+        return transactionV1Repository.findTopByInvoiceIdOrderByPaymentDateDesc(invoiceId);
     }
 
 
