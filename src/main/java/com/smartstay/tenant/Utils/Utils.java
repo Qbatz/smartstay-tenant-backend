@@ -139,8 +139,12 @@ public final class Utils {
                     : parts[0].substring(0, 1).toUpperCase();
         }
 
-        return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+        char first = parts[0].charAt(0);
+        char last = parts[parts.length - 1].charAt(0);
+
+        return ("" + first + last).toUpperCase();
     }
+
 
 
 

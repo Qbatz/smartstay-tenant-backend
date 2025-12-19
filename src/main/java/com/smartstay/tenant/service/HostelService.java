@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BillingRules;
+import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
@@ -268,6 +269,10 @@ public class HostelService {
         } else {
             return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public HostelV1 getHostelById(String hostelId) {
+        return hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
     }
 
 

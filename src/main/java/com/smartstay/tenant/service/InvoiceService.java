@@ -3,12 +3,14 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BankingV1;
+import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dao.InvoicesV1;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.invoice.*;
 import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.mapper.invoice.InvoiceItemMapper;
 import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
+import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
@@ -36,6 +38,9 @@ public class InvoiceService {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private HostelRepository hostelRepository;
+
 
     public List<InvoiceItems> getInvoicesWithItems(String customerId, Date startDate, Date endDate) {
         return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate, List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
@@ -58,6 +63,9 @@ public class InvoiceService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
+        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+
         List<InvoiceItemProjection> invoiceItems = invoicesV1Repository.getAllInvoiceItems(hostelId, customerId);
         InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
 
@@ -65,7 +73,12 @@ public class InvoiceService {
         if (invoiceItemDTOs.isEmpty()) {
             return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(invoiceItemDTOs, HttpStatus.OK);
+        InvoiceListDto invoiceListDto = new InvoiceListDto();
+        invoiceListDto.setInvoices(invoiceItemDTOs);
+        invoiceListDto.setHostelName(hostelV1.getHostelName());
+        invoiceListDto.setHostelUrl(hostelV1.getMainImage());
+        invoiceListDto.setInitials(Utils.getInitials(hostelV1.getHostelName()));
+        return new ResponseEntity<>(invoiceListDto, HttpStatus.OK);
 
     }
 

@@ -74,4 +74,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
     List<CustomerHostels> findHostelsByMobile(String mobile);
 
 
+    HostelV1 findByHostelIdAndIsActiveTrueAndIsDeletedFalse(String hostelId);
+
+
 }
