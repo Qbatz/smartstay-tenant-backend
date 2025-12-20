@@ -7,9 +7,12 @@ import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
+import com.smartstay.tenant.dto.comment.CommentsListResponse;
 import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
 import com.smartstay.tenant.ennum.CommentSource;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.ennum.UserType;
+import com.smartstay.tenant.mapper.comments.CommentsMapper;
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
@@ -98,7 +101,10 @@ public class ComplaintService {
 
         List<ComplaintCommentProjection> comments = commentsRepository.findCommentsByComplaintIds(complaintId);
 
-        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(), complaint.complaintTypeName(), complaint.complaintTypeId(), complaint.complaintDate(), complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(), complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(), complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images, comments);
+        CommentsMapper commentsMapper = new CommentsMapper();
+        List<CommentsListResponse> commentslist = comments.stream().map(commentsMapper).toList();
+
+        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(), complaint.complaintTypeName(), complaint.complaintTypeId(), complaint.complaintDate(), complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(), complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(), complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images, commentslist);
 
         return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
     }
@@ -360,6 +366,7 @@ public class ComplaintService {
         complaintComments.setComplaint(complaintExist);
         complaintComments.setComment(request.message());
         complaintComments.setIsActive(true);
+        complaintComments.setUserType(UserType.TENANT.name());
         complaintComments.setCreatedBy(customerId);
         complaintComments.setUserName(customers.getFirstName() + " " + customers.getLastName());
         complaintComments.setCreatedAt(new Date());
