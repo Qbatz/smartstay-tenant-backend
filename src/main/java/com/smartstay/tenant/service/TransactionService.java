@@ -6,6 +6,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BankingV1;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
+import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
 import com.smartstay.tenant.repository.BankingV1Repository;
@@ -32,6 +33,10 @@ public class TransactionService {
 
     @Autowired
     private Authentication authentication;
+
+    public TransactionV1 getTransactionById(String transactionId) {
+        return transactionV1Repository.findById(transactionId).orElse(null);
+    }
 
 
     public ResponseEntity<?> getTransactionList(String hostelId) {
@@ -82,6 +87,27 @@ public class TransactionService {
 
     public TransactionV1 getLatestTransactionByInvoiceId(String invoiceId) {
         return transactionV1Repository.findTopByInvoiceIdOrderByPaymentDateDesc(invoiceId);
+    }
+
+    public Double findPaidAmountForInvoice(String invoiceId) {
+        List<TransactionV1> listTransaction = transactionV1Repository.findByInvoiceId(invoiceId);
+        double paidAmount = 0.0;
+        if (!listTransaction.isEmpty()) {
+
+            paidAmount = listTransaction.stream()
+                    .mapToDouble(i -> {
+                        if (i.getPaidAmount() == null) {
+                            return 0.0;
+                        }
+                        return i.getPaidAmount();
+                    })
+                    .sum();
+        }
+        return paidAmount;
+    }
+
+    public List<PaymentHistoryProjection> getPaymentHistoryByInvoiceId(String invoiceId) {
+        return transactionV1Repository.getPaymentHistoryByInvoiceId(invoiceId);
     }
 
 

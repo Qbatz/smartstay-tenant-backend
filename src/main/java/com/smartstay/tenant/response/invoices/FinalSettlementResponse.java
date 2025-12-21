@@ -1,0 +1,22 @@
+package com.smartstay.tenant.response.invoices;
+
+import java.util.List;
+
+public record FinalSettlementResponse(String invoiceNumber,
+                                      String invoiceId,
+                                      String invoiceDate,
+                                      String dueDate,
+                                      String emailId,
+                                      String mobile,
+                                      String countryCode,
+                                      String invoiceType,
+                                      String hostelId,
+                                      CustomerInfo customerInfo,
+                                      StayInfo stayInfo,
+                                      AccountDetails accountDetails,
+                                      ConfigInfo configurations,
+
+                                      List<InvoiceSummary> invoiceSummaries,
+                                      InvoiceInfo invoiceInfo
+) {
+}

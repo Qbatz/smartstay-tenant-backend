@@ -17,4 +17,5 @@ public interface BedsRepository extends JpaRepository<Beds, Integer> {
             """, nativeQuery = true)
     BedDetails findByBedId(@Param("bedId") Integer bedId);
 
+
 }

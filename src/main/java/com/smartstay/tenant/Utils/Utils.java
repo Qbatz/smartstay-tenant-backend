@@ -10,19 +10,14 @@ import java.util.Date;
 
 public final class Utils {
 
-    private Utils() {}
-
     public static final String USER_INPUT_DATE_FORMAT = "dd-MM-yyyy";
-
     public static final String OUTPUT_DATE_FORMAT = "dd/MM/yyyy";
     public static final String OUTPUT_TIME_FORMAT = "hh:mm:ss aa";
     public static final String OUTPUT_MONTH_FORMAT = "MMM YYYY";
     public static final String OUTPUT_DATE_MONTH_FORMAT = "dd MMM";
-
     public static final String UNAUTHORIZED = "Unauthorized";
     public static final String SUCCESS = "Success";
     public static final String FAILED = "Failed";
-
     public static final String CUSTOMER_NOT_FOUND = "Customer not found.";
     public static final String COMPLAINTS_NOT_FOUND = "Complaints not found.";
     public static final String NOTIFICATION_NOT_FOUND = "Notifications not found.";
@@ -34,21 +29,27 @@ public final class Utils {
     public static final String COMPLAINT_NOT_FOUND = "Complaint not found.";
     public static final String NO_RECORDS_FOUND = "No records found";
     public static final String INVALID_REQUEST_TYPE = "Invalid request type.";
-
     public static final String CREATED = "Created Successfully";
     public static final String DELETED = "Deleted Successfully";
-
+    public static final String INVALID_HOSTEL_ID = "Invalid hostel id";
+    public static final String INVALID_TRANSACTION_ID = "Invalid transaction id";
+    public static final String INVALID_INVOICE_ID = "Invalid invoice id";
+    public static final String INVALID_INVOICE_DATE = "Invalid invoice date";
     public static final String PAYLOADS_REQUIRED = "Payloads required";
     public static final String UPDATED = "Updated Successfully";
     public static final String INVOICE_ITEMS_NOT_FOUND = "Invoice items not found.";
     public static final String INVOICE_NOT_FOUND = "Invoice not found.";
     public static final String PAYMENTS_NOT_FOUND = "Payments not found.";
     public static final String COMPLAINT_TYPE_NOT_FOUND = "Complaint type not found.";
+    public static final String ENVIRONMENT_LOCAL = "LOCAL";
+    public static final String ENVIRONMENT_DEV = "DEV";
+    public static final String ENVIRONMENT_QA = "QA";
+    public static final String ENVIRONMENT_PROD = "PROD";
+    private Utils() {
+    }
 
-    public static final Date findLastDate(Integer cycleStartDay, Date date) {
-        LocalDate today = date.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();;
+    public static Date findLastDate(Integer cycleStartDay, Date date) {
+        LocalDate today = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate startDate = LocalDate.of(today.getYear(), today.getMonth(), cycleStartDay);
 
         LocalDate cycleEnd;
@@ -98,6 +99,13 @@ public final class Utils {
         return new SimpleDateFormat(OUTPUT_DATE_FORMAT).format(date);
     }
 
+    public static String dateToTime(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return new SimpleDateFormat(OUTPUT_TIME_FORMAT).format(date);
+    }
+
 
     public static Date convertStringToDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) return null;
@@ -113,16 +121,26 @@ public final class Utils {
     }
 
     public static Date addDaysToDate(Date date, int noOfDays) {
-        return Date.from(date.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-                .plusDays(noOfDays)
-                .atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return Date.from(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(noOfDays).atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     public static String capitalize(String value) {
         if (value == null || value.isEmpty()) return value;
         return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+    }
+
+    public static String dateToDateMonth(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return new SimpleDateFormat(OUTPUT_DATE_MONTH_FORMAT).format(date);
+    }
+
+    public static String dateToMonth(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return new SimpleDateFormat(OUTPUT_MONTH_FORMAT).format(date);
     }
 
     public static String getInitials(String name) {
@@ -134,9 +152,7 @@ public final class Utils {
         String[] parts = name.trim().split("\\s+");
 
         if (parts.length == 1) {
-            return parts[0].length() >= 2
-                    ? parts[0].substring(0, 2).toUpperCase()
-                    : parts[0].substring(0, 1).toUpperCase();
+            return parts[0].length() >= 2 ? parts[0].substring(0, 2).toUpperCase() : parts[0].substring(0, 1).toUpperCase();
         }
 
         char first = parts[0].charAt(0);
@@ -144,8 +160,6 @@ public final class Utils {
 
         return ("" + first + last).toUpperCase();
     }
-
-
 
 
 }
