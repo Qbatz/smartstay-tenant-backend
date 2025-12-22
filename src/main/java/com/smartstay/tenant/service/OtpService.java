@@ -33,8 +33,6 @@ public class OtpService {
                     "&number=" + URLEncoder.encode(mobileNo, StandardCharsets.UTF_8) +
                     "&text=" + URLEncoder.encode(message, StandardCharsets.UTF_8) +
                     "&route=" + URLEncoder.encode("", StandardCharsets.UTF_8);
-
-            System.out.println("SMSS" + requestUrl);
             URL url = URI.create(requestUrl).toURL();
             HttpURLConnection uc = (HttpURLConnection)url.openConnection();
 
