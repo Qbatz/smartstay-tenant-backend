@@ -378,6 +378,11 @@ public class InvoiceService {
                     customers.getMobile(),
                     "91",
                     fullAddress.toString(),
+                    customers.getHouseNo(),
+                    customers.getStreet(),
+                    customers.getCity(),
+                    customers.getState(),
+                    customers.getPincode(),
                     Utils.dateToString(customers.getJoiningDate()));
         }
 
@@ -673,6 +678,11 @@ public class InvoiceService {
                     customers.getMobile(),
                     "91",
                     fullAddress.toString(),
+                    customers.getHouseNo(),
+                    customers.getStreet(),
+                    customers.getCity(),
+                    customers.getState(),
+                    customers.getPincode(),
                     Utils.dateToString(customers.getJoiningDate()));
         }
 

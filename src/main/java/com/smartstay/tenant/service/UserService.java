@@ -85,15 +85,20 @@ public class UserService {
                 customersOtpRepository.save(customersOtp);
             }
 
-            String otpMessage = "Dear user, your password reset OTP is " + otp
-                    + ". It is valid for 15 minutes.";
             if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
+                String otpMessage = "Dear user, your SmartStay Login OTP is " + otp +
+                        ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
                 otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
+
+                return new ResponseEntity<>(credentials.getXuid(), HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>(new VerifyMobileResponse(
+                        credentials.getXuid(), customersOtp.getOtp()
+                ), HttpStatus.OK);
             }
 
-            return new ResponseEntity<>(new VerifyMobileResponse(
-                    credentials.getXuid(), customersOtp.getOtp()
-            ), HttpStatus.OK);
+
+
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }

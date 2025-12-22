@@ -68,7 +68,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
                     ELSE 0
                 END AS statusCode
             FROM customers c
-            INNER JOIN hostelv1 h ON h.hostel_id = c.hostel_id
+            INNER JOIN hostelv1 h ON h.hostel_id = c.hostel_id and c.current_status not in ('VACATED')
             WHERE c.mobile = :mobile
             """, nativeQuery = true)
     List<CustomerHostels> findHostelsByMobile(String mobile);

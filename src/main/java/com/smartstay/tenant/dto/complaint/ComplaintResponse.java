@@ -1,14 +1,10 @@
-package com.smartstay.tenant.dto;
+package com.smartstay.tenant.dto.complaint;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Date;
 
-
-public record ComplaintDTO(
+public record ComplaintResponse(
         Integer complaintId,
         String complaintTypeName,
 
@@ -19,6 +15,8 @@ public record ComplaintDTO(
         String description,
         String status,
 
-        String assigneeName
+        String assigneeName,
+
+        String complaintDateDisplay
 ) {
 }

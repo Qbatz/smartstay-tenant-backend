@@ -9,10 +9,13 @@ import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.ComplaintDetails;
 import com.smartstay.tenant.dto.comment.CommentsListResponse;
 import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
+import com.smartstay.tenant.dto.complaint.ComplaintResponse;
 import com.smartstay.tenant.ennum.CommentSource;
+import com.smartstay.tenant.ennum.ComplaintStatus;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.comments.CommentsMapper;
+import com.smartstay.tenant.mapper.complaint.ComplaintMapper;
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
@@ -121,12 +124,18 @@ public class ComplaintService {
         }
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ComplaintDTO> complaints = complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
+        Page<ComplaintDTO> complaints =
+                complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
 
         if (complaints.isEmpty()) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(complaints, HttpStatus.OK);
+
+        ComplaintMapper complaintMapper = new ComplaintMapper();
+        Page<ComplaintResponse> response =
+                complaints.map(complaintMapper);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
@@ -174,7 +183,7 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId());
+        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId(),List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
 
         if (existingComplaint != null && !existingComplaint.isEmpty()) {
             return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
@@ -269,7 +278,7 @@ public class ComplaintService {
             }
         }
 
-        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId());
+        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
 
         if (existingComplaint != null && !existingComplaint.isEmpty()) {
             return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);

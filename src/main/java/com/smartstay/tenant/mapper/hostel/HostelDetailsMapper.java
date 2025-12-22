@@ -70,7 +70,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         if (dueDayValue != null && dueDayValue > 0) {
             dueDateText = dueDayValue + "th of every month";
         } else {
-            dueDateText = "0th of every month";
+            dueDateText = "1th of every month";
         }
 
         rentalDetailsDTO.setJoiningDate(
