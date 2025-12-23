@@ -29,6 +29,16 @@ public class InvoiceController {
         return invoiceService.getInvoiceList(hostelId);
     }
 
+    @GetMapping("receipt-details/{hostelId}/{transactionId}")
+    public ResponseEntity<?> getReceiptDetails(@PathVariable("hostelId") String hostelId, @PathVariable("transactionId") String transactionId) {
+        return invoiceService.getReceiptDetailsByTransactionId(hostelId, transactionId);
+    }
+
+    @GetMapping("invoice-details/{hostelId}/{invoiceId}")
+    public ResponseEntity<?> getInvoiceInfo(@PathVariable("hostelId") String hostelId, @PathVariable("invoiceId") String invoiceId) {
+        return invoiceService.getInvoiceDetailsByInvoiceId(hostelId, invoiceId);
+    }
+
 
 
     @GetMapping("/{hostelId}/{invoiceId}")

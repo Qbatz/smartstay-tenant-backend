@@ -6,6 +6,7 @@ import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceSummaryProjection;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
+import com.smartstay.tenant.response.invoices.InvoiceSummary;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -112,6 +113,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.total_amount          AS totalAmount,
                 i.invoice_due_date      AS invoiceDueDate,
                 i.invoice_generated_date AS invoiceGeneratedDate,
+                i.invoice_start_date    AS invoiceStartDate,
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status
@@ -177,5 +179,24 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                   AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
             """)
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
+
+
+    @Query(
+            value = """
+        SELECT 
+            i.invoice_number AS invoiceNumber,
+            i.total_amount AS totalAmount,
+            DATE_FORMAT(i.invoice_start_date, '%d/%m/%Y') AS invoiceStartDate,
+            i.invoice_type AS invoiceType
+        FROM invoicesv1 i
+        WHERE i.hostel_id = :hostelId
+        AND i.invoice_id IN (:invoiceId)
+        """,
+            nativeQuery = true
+    )
+    List<InvoiceSummary> findInvoiceSummariesByHostelId(
+            @Param("hostelId") String hostelId,
+            @Param("invoiceId") List<String> invoiceId
+    );
 
 }

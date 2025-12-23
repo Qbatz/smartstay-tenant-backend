@@ -5,11 +5,13 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
+import com.smartstay.tenant.dto.BedDetails;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.NotificationRequest;
+import com.smartstay.tenant.repository.BedsRepository;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ public class BedsService {
     private CustomerService customerService;
 
     @Autowired
+    private BedsRepository bedsRepository;
+
+    @Autowired
     private NotificationService notificationService;
 
     public ResponseEntity<?> requestBedChange(String hostelId, BedChangePayload request) {
@@ -44,6 +49,11 @@ public class BedsService {
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
+        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+        if (!customerExist) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
         boolean requested = bedChangeRequestService.existsPendingRequest(customerId, hostelId);
         if (requested) {
@@ -69,5 +79,9 @@ public class BedsService {
         }
         List<RequestItemResponse> requestResponses = bedChangeRequestService.getRequests(hostelId, customerId);
         return new ResponseEntity<>(requestResponses, HttpStatus.OK);
+    }
+
+    public BedDetails getBedDetails(Integer bedId) {
+        return bedsRepository.findByBedId(bedId);
     }
 }

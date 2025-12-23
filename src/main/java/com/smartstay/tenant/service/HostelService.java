@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BillingRules;
+import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
@@ -102,42 +103,11 @@ public class HostelService {
 
         BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(previousBillingDates.currentBillStartDate());
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        Date previousMonthStartDate = cal.getTime();
 
-        cal.setTime(previousBillingDates.currentBillEndDate());
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.MILLISECOND, 999);
-        Date previousMonthEndDate = cal.getTime();
+        InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(), currentMonthBillingDates.currentBillEndDate());
 
-
-        cal.setTime(currentMonthBillingDates.currentBillStartDate());
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        Date currentMonthStartDate = cal.getTime();
-
-        cal.setTime(currentMonthBillingDates.currentBillEndDate());
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.MILLISECOND, 999);
-        Date currentMonthEndDate = cal.getTime();
-
-
-
-        InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, previousMonthStartDate, previousMonthEndDate);
-        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentMonthStartDate, currentMonthEndDate);
-
-        InvoiceSummary previousSummary = previousMonthInvoices != null ? new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(), previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(), previousMonthInvoices.getCurrentInvoiceEndDate(), isToday(previousMonthInvoices.getInvoiceGeneratedDate()), buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
+        InvoiceSummary previousSummary = previousMonthInvoices != null ? new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(), previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(), previousMonthInvoices.getCurrentInvoiceEndDate(), false, buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
 
         InvoiceSummary currentSummary = currentMonthInvoices != null ? new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(), currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(), currentMonthInvoices.getCurrentInvoiceEndDate(), isToday(currentMonthInvoices.getInvoiceGeneratedDate()), buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;
 
@@ -299,6 +269,10 @@ public class HostelService {
         } else {
             return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public HostelV1 getHostelById(String hostelId) {
+        return hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
     }
 
 

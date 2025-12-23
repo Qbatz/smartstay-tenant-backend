@@ -21,6 +21,7 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
                 invoiceItemProjection.getTotalAmount(),
                 invoiceItemProjection.getInvoiceDueDate(),
                 invoiceItemProjection.getInvoiceGeneratedDate(),
+                invoiceItemProjection.getInvoiceStartDate(),
                 invoiceItemProjection.getPaidAmount(),
                 invoiceItemProjection.getDueAmount(),
                 Utils.capitalize(invoiceItemProjection.getStatus())

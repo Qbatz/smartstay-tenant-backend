@@ -15,7 +15,4 @@ public interface ComplaintCommentProjection {
     Date getCommentDate();
     String getProfileUrl();
 
-    default String getInitial() {
-        return Utils.getInitials(getUserName());
-    }
 }
