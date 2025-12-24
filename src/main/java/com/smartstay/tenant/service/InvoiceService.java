@@ -25,6 +25,7 @@ import com.smartstay.tenant.response.receipt.ReceiptConfigInfo;
 import com.smartstay.tenant.response.receipt.ReceiptDetails;
 import com.smartstay.tenant.response.receipt.ReceiptInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,8 +49,6 @@ public class InvoiceService {
 
     @Autowired
     private TransactionService transactionService;
-    @Autowired
-    private HostelService hostelService;
 
     @Autowired
     private HostelRepository hostelRepository;
@@ -71,6 +70,12 @@ public class InvoiceService {
 
     @Autowired
     private UserService userService;
+    private HostelService hostelService;
+
+    @Autowired
+    public void setHostelService(@Lazy HostelService hostelService) {
+        this.hostelService = hostelService;
+    }
 
 
     public List<InvoiceItems> getInvoicesWithItems(String customerId, Date startDate, Date endDate) {
@@ -810,11 +815,11 @@ public class InvoiceService {
             listInvoiceItems.add(new com.smartstay.tenant.response.invoices.InvoiceItems(invoicesV1.getInvoiceNumber(),
                     InvoiceType.SETTLEMENT.name(),
                     invoicesV1.getBasePrice()));
-            List<Deductions> listDeductions = invoicesV1
+            List<com.smartstay.tenant.dao.Deductions> listDeductions = invoicesV1
                     .getInvoiceItems()
                     .stream()
                     .map(i -> {
-                        Deductions d = new Deductions();
+                        com.smartstay.tenant.dao.Deductions d = new com.smartstay.tenant.dao.Deductions();
                         if (i.getInvoiceItem().equalsIgnoreCase(com.smartstay.tenant.ennum.InvoiceItems.OTHERS.name())) {
                             if (i.getOtherItem() != null) {
                                 i.setInvoiceItem(i.getOtherItem());
