@@ -54,7 +54,7 @@ public class UserService {
     @Autowired
     OtpService otpService;
 
-    @Value("ENVIRONMENT")
+    @Value("${ENVIRONMENT}")
     private String environment;
 
     public CustomersOtp getOtpByMobile(String xUuid) {
@@ -121,7 +121,17 @@ public class UserService {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            return new ResponseEntity<>(customersOtp.getOtp(), HttpStatus.OK);
+            if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
+                String otpMessage = "Dear user, your SmartStay Login OTP is " + customersOtp.getOtp() +
+                        ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
+                otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
+
+
+                return new ResponseEntity<>("Otp sent to your mobile number", HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>(customersOtp.getOtp(), HttpStatus.OK);
+            }
+
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
