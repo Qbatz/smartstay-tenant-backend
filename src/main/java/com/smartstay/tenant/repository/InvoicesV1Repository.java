@@ -178,4 +178,22 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
+    @Query("""
+            SELECT inv FROM InvoicesV1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
+            inv.invoiceType='ADVANCE'
+            """)
+    InvoicesV1 findAdvanceInvoice(String customerId, String hostelId);
+
+    @Query("""
+            SELECT inv FROM InvoicesV1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
+            inv.invoiceType='BOOKING'
+            """)
+    InvoicesV1 findBookingInvoice(String customerId, String hostelId);
+
+    @Query("""
+            SELECT inv from InvoicesV1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate) 
+            AND DATE(inv.invoiceEndDate) >= DATE(:startDate) AND inv.invoiceType in ('RENT', 'REASSIGN_RENT')
+            """)
+    List<InvoicesV1> findCurrentMonthInvoices(String customerId, Date startDate, Date endDate);
+
 }
