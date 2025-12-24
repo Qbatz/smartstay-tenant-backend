@@ -30,7 +30,13 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
 
         RentalDetailsDTO rentalDetailsDTO = getRentDetails(customerHostels.getHostelId(), customerHostels.getCustomerId());
 
-        return new HostelWithRentDTO(customerHostels.getCustomerId(), customerHostels.getHostelId(), customerHostels.getHostelName(), customerHostels.getHostelInitial(), customerHostels.getHouseNo(), customerHostels.getStreet(), customerHostels.getLandmark(), customerHostels.getPincode(), customerHostels.getCity(), customerHostels.getState(), customerHostels.getHostelPic(), customerHostels.getCurrentStatus(), customerHostels.getStatusCode(), rentalDetailsDTO);
+        String hostelInitial = null;
+        if (customerHostels.getHostelName() != null && !customerHostels.getHostelName().trim().equalsIgnoreCase("")) {
+            hostelInitial = Utils.getInitials(customerHostels.getHostelName());
+        }
+        System.out.println("Hostel Initial: " + hostelInitial);
+        System.out.println("Customer Hostel: " + customerHostels.getHostelName());
+        return new HostelWithRentDTO(customerHostels.getCustomerId(), customerHostels.getHostelId(), customerHostels.getHostelName(),hostelInitial, customerHostels.getHouseNo(), customerHostels.getStreet(), customerHostels.getLandmark(), customerHostels.getPincode(), customerHostels.getCity(), customerHostels.getState(), customerHostels.getHostelPic(), customerHostels.getCurrentStatus(), customerHostels.getStatusCode(), rentalDetailsDTO);
     }
 
     public RentalDetailsDTO getRentDetails(String hostelId, String customerId) {
@@ -64,7 +70,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         if (dueDayValue != null && dueDayValue > 0) {
             dueDateText = dueDayValue + "th of every month";
         } else {
-            dueDateText = "0th of every month";
+            dueDateText = "1th of every month";
         }
 
         rentalDetailsDTO.setJoiningDate(

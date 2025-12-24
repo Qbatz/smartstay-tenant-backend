@@ -1,23 +1,27 @@
 package com.smartstay.tenant.service;
 
 
-import com.smartstay.tenant.dao.CustomerCredentials;
-import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.CustomersOtp;
-import com.smartstay.tenant.dao.UserConfig;
+import com.smartstay.tenant.Utils.Utils;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.payload.login.Login;
 import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
+import com.smartstay.tenant.repository.UserRepository;
 import com.smartstay.tenant.response.VerifyOtpResponse;
 import com.smartstay.tenant.response.login.VerifyMobileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +46,16 @@ public class UserService {
     UserConfigService userConfigService;
 
     @Autowired
+    UserRepository userRepository;
+
+    @Autowired
     CustomerCredentialsService customerCredentialsService;
+
+    @Autowired
+    OtpService otpService;
+
+    @Value("ENVIRONMENT")
+    private String environment;
 
     public CustomersOtp getOtpByMobile(String xUuid) {
         return customersOtpRepository.findByXuid(xUuid);
@@ -54,8 +67,9 @@ public class UserService {
             CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
             Date now = new Date();
             Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
+            int otp = generateSixDigitOtp();
             if (customersOtp != null) {
-                customersOtp.setOtp(generateSixDigitOtp());
+                customersOtp.setOtp(otp);
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setUpdatedAt(new Date());
                 customersOtp.setVerified(false);
@@ -64,16 +78,27 @@ public class UserService {
             } else {
                 customersOtp = new CustomersOtp();
                 customersOtp.setXuid(credentials.getXuid());
-                customersOtp.setOtp(generateSixDigitOtp());
+                customersOtp.setOtp(otp);
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setCreatedAt(new Date());
                 customersOtp.setVerified(false);
                 customersOtpRepository.save(customersOtp);
             }
 
-            return new ResponseEntity<>(new VerifyMobileResponse(
-                    credentials.getXuid(), customersOtp.getOtp()
-            ), HttpStatus.OK);
+            if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
+                String otpMessage = "Dear user, your SmartStay Login OTP is " + otp +
+                        ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
+                otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
+
+                return new ResponseEntity<>(credentials.getXuid(), HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>(new VerifyMobileResponse(
+                        credentials.getXuid(), customersOtp.getOtp()
+                ), HttpStatus.OK);
+            }
+
+
+
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
@@ -134,4 +159,10 @@ public class UserService {
     private int generateSixDigitOtp() {
         return (int) (100000 + Math.random() * 900000);
     }
+
+
+    public Users findUserByUserId(String userId) {
+        return userRepository.findUserByUserId(userId);
+    }
+
 }

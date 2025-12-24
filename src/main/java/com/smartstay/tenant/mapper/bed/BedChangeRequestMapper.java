@@ -61,7 +61,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
 
 
         return new RequestItemResponse(String.valueOf(bedChangeRequest.getId()),
-                RequestType.CHANGE_BED.name(),
+                Utils.capitalize(RequestType.CHANGE_BED.name().replace("_", " ")),
                 Utils.dateToString(bedChangeRequest.getCreatedAt()),
                 status,
                 "Requested bed change",

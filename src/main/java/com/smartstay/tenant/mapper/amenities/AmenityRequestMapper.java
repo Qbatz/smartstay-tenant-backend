@@ -68,7 +68,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
 
         return new RequestItemResponse(String.valueOf(amenityRequest.getAmenityRequestId()),
-                RequestType.AMENITY_REQUEST.name(),
+                Utils.capitalize(RequestType.AMENITY_REQUEST.name().replace("_", " ")),
                 Utils.dateToString(amenityRequest.getRequestedDate()),
                 status,
                 "Requested " + amenityName,

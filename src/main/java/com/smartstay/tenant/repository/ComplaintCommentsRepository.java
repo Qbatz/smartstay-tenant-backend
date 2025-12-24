@@ -22,7 +22,13 @@ public interface ComplaintCommentsRepository extends JpaRepository<ComplaintComm
                 SELECT
                     cc.comment_id AS commentId,
                     cc.comment AS comment,
-                    cc.user_name AS userName,
+                     CASE
+                                                         WHEN cc.user_type = 'TENANT'
+                                                             THEN CONCAT(cust.first_name, ' ', cust.last_name)
+                                                         WHEN cc.user_type = 'ADMIN'
+                                                             THEN CONCAT(u.first_name, ' ', u.last_name)
+                                                         ELSE cc.user_name
+                                                     END AS userName,
                     cc.comment_date AS commentDate,
                     CASE
                         WHEN cc.user_type = 'TENANT'
@@ -32,16 +38,16 @@ public interface ComplaintCommentsRepository extends JpaRepository<ComplaintComm
                 FROM complaint_comments cc
                 LEFT JOIN customers cust
                        ON cc.created_by = cust.customer_id
+                        LEFT JOIN users u
+                                  ON cc.created_by = u.user_id
+                                 AND cc.user_type = 'ADMIN'
                 WHERE cc.complaint_id = :complaintId
                   AND cc.is_active = TRUE
                 ORDER BY cc.created_at ASC
             """, nativeQuery = true)
-    List<ComplaintCommentProjection> findCommentsByComplaintIds(
-            @Param("complaintId") Integer complaintId
-    );
+    List<ComplaintCommentProjection> findCommentsByComplaintIds(@Param("complaintId") Integer complaintId);
 
     List<ComplaintComments> findByComplaint_ComplaintIdAndIsActiveTrue(Integer complaintId);
-
 
 
 }

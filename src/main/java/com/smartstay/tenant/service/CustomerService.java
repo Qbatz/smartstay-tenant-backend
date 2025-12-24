@@ -57,6 +57,10 @@ public class CustomerService {
 
     }
 
+    public Customers getCustomerInformation(String customerId) {
+        return customersRepository.findById(customerId).orElse(null);
+    }
+
 
     boolean existsByCustomerIdAndHostelId(String customerId, String hostelId) {
         return customersRepository.existsByCustomerIdAndHostelId(customerId, hostelId);

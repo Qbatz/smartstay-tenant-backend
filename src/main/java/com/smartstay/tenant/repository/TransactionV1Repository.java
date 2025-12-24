@@ -2,6 +2,7 @@ package com.smartstay.tenant.repository;
 
 
 import com.smartstay.tenant.dao.TransactionV1;
+import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -39,12 +40,27 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
     Double getTotalPaid(@Param("invoiceId") String invoiceId);
 
 
-    @Query("""
-       SELECT t FROM TransactionV1 t 
-       WHERE t.invoiceId = :invoiceId 
-       ORDER BY t.paymentDate DESC
-       """)
-    TransactionV1 findLatestTransaction(String invoiceId);
+    TransactionV1 findTopByInvoiceIdOrderByPaymentDateDesc(String invoiceId);
+
+
+    List<TransactionV1> findByInvoiceId(String invoiceId);
+
+
+    @Query(value = """
+    SELECT 
+        reference_number AS referenceNumber,
+        paid_amount AS amount,
+        DATE_FORMAT(paid_at, '%d/%m/%Y') AS paidDate,
+        transaction_reference_id as transactionReferenceId
+    FROM 
+        transactionv1
+    WHERE 
+        invoice_id = :invoiceId
+    ORDER BY 
+        paid_at DESC
+""", nativeQuery = true)
+    List<PaymentHistoryProjection> getPaymentHistoryByInvoiceId(@Param("invoiceId") String invoiceId);
+
 
 
 }
