@@ -25,11 +25,12 @@ public interface CustomerNotificationRepository extends JpaRepository<CustomerNo
                     is_read 
                 FROM customer_notifications 
                 WHERE hostel_id = :hostelId 
+                AND userId = :userId
                   AND is_deleted = false 
                   AND is_active = true 
                 ORDER BY created_at DESC
             """, nativeQuery = true)
-    List<NotificationProjection> getActiveNotifications(@Param("hostelId") String hostelId);
+    List<NotificationProjection> getActiveNotifications(@Param("hostelId") String hostelId, @Param("userId") String userId);
 
     @Query(value = """
                 SELECT 
