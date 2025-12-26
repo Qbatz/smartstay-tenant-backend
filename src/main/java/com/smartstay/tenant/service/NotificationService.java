@@ -42,7 +42,7 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId);
+        List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId, customerId);
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);

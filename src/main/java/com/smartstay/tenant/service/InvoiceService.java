@@ -247,7 +247,11 @@ public class InvoiceService {
 
         double dueAmount = invoice.getTotalAmount() - totalPaid;
 
-        String status = dueAmount == 0 ? "Paid" : totalPaid == 0 ? "Pending" : "Partially Paid";
+
+        String status = "";
+        if (invoice != null) {
+            status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus());
+        }
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoiceId);
 
@@ -276,7 +280,8 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(),
+                invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {

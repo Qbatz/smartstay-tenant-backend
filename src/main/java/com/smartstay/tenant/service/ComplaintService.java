@@ -245,23 +245,17 @@ public class ComplaintService {
         if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        if (request.floorId() != null) {
+        if (request !=null && request.floorId() != null) {
             complaint.setFloorId(request.floorId());
-        } else {
-            complaint.setFloorId(0);
         }
 
-        if (request.roomId() != null) {
+        if ( request !=null &&  request.roomId() != null) {
             complaint.setRoomId(request.roomId());
-        } else {
-            complaint.setRoomId(0);
         }
 
-        if (request.bedId() != null) {
+        if (request !=null && request.bedId() != null) {
             complaint.setBedId(request.bedId());
 
-        } else {
-            complaint.setBedId(0);
         }
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
 
@@ -271,29 +265,27 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        if (request.complaintTypeId() != null) {
+        if (request !=null && request.complaintTypeId() != null) {
             ComplaintTypeV1 complaintTypeV1Check = complaintTypeService.getComplaintTypeById(request.complaintTypeId(), hostelId);
             if (complaintTypeV1Check == null) {
                 return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
-        }
 
-        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
+            List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
 
-        if (existingComplaint != null && !existingComplaint.isEmpty()) {
-            return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
-        }
+            if (existingComplaint != null && !existingComplaint.isEmpty()) {
+                return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
+            }
 
-        if (request.complaintTypeId() != null) {
             complaint.setComplaintTypeId(request.complaintTypeId());
         }
 
-        if (request.description() != null) {
+        if (request != null && request.description() != null) {
             complaint.setDescription(request.description());
         }
         complaint.setUpdatedAt(new Date());
 
-        if (request.isActive() != null) {
+        if (request != null && request.isActive() != null) {
             complaint.setIsActive(request.isActive());
         }
 

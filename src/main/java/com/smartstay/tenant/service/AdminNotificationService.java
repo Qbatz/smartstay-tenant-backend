@@ -28,8 +28,8 @@ public class AdminNotificationService {
         customerNotificationRepository.save(customerNotifications);
     }
 
-    public List<NotificationProjection> getActiveNotifications(String hostelId) {
-        return customerNotificationRepository.getActiveNotifications(hostelId);
+    public List<NotificationProjection> getActiveNotifications(String hostelId, String customerId) {
+        return customerNotificationRepository.getActiveNotifications(hostelId,customerId);
     }
 
     public NotificationProjection getNotificationById(String hostelId, long id) {
