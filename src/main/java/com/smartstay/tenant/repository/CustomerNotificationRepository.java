@@ -25,7 +25,7 @@ public interface CustomerNotificationRepository extends JpaRepository<CustomerNo
                     is_read 
                 FROM customer_notifications 
                 WHERE hostel_id = :hostelId 
-                AND userId = :userId
+                AND user_id = :userId
                   AND is_deleted = false 
                   AND is_active = true 
                 ORDER BY created_at DESC
