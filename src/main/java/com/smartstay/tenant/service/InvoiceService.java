@@ -30,6 +30,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -232,6 +235,20 @@ public class InvoiceService {
         }
 
         CurrentMonthInfo currentMonthInfo = null;
+
+        Date startDate = null;
+
+        Date invoiceStartDate = invoice.getInvoiceStartDate();
+        Date joiningDate = customers.getJoiningDate();
+        Date endDate = invoice.getInvoiceEndDate();
+
+        long numberOfDays = 0;
+        numberOfDays = calculateBillableDays(invoiceStartDate, endDate, joiningDate);
+
+
+        BillingDates billingDate = hostelService.getBillStartDate(invoice.getHostelId(), new Date());
+
+
 
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo, currentMonthInfo, lastPaidDate, lastPaymentMode, referenceId, showMessage);
 
@@ -943,6 +960,32 @@ public class InvoiceService {
                 signatureInfo);
         return new ResponseEntity<>(details, HttpStatus.OK);
 
+    }
+
+    public static long calculateBillableDays(
+            Date invoiceStartDate,
+            Date joiningDate,
+            Date invoiceEndDate
+    ) {
+        if (invoiceStartDate == null || joiningDate == null || invoiceEndDate == null) {
+            throw new IllegalArgumentException("Dates must not be null");
+        }
+
+        LocalDate startDate = toLocalDate(invoiceStartDate);
+        LocalDate joinDate = toLocalDate(joiningDate);
+        LocalDate endDate = toLocalDate(invoiceEndDate);
+
+        // Decide effective start date
+        LocalDate effectiveStartDate =
+                joinDate.isAfter(startDate) ? joinDate : startDate;
+
+        return ChronoUnit.DAYS.between(effectiveStartDate, endDate) + 1;
+    }
+
+    private static LocalDate toLocalDate(Date date) {
+        return date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 
 }
