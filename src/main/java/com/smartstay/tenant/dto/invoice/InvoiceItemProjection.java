@@ -18,4 +18,6 @@ public interface InvoiceItemProjection {
     Double getDueAmount();
 
     String getStatus();
+
+    Date getPaymentDate();
 }

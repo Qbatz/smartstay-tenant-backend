@@ -123,35 +123,44 @@ public class HostelService {
         return given.equals(today);
     }
 
-
-    public BillingDates getCurrentBillStartAndEndDates(String hostelId) {
+    public BillingDates getBillStartAndEndDateBasedOnDate(String hostelId, Date date) {
         BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
         int billStartDate = 1;
+        int billingRuleDueDate = 5;
         if (billingRules != null) {
             billStartDate = billingRules.getBillingStartDate();
-        }
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_MONTH, billStartDate);
-
-        Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
-
-        return new BillingDates(calendar.getTime(), findEndDate);
-    }
-
-    public BillingDates getBillStartDate(String hostelId, Date date) {
-        BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
-        int billStartDate = 1;
-        if (billingRules != null) {
-            billStartDate = billingRules.getBillingStartDate();
+            billingRuleDueDate = billingRules.getBillDueDays();
         }
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.DAY_OF_MONTH, billStartDate);
 
+        Date dueDate = Utils.addDaysToDate(calendar.getTime(), billingRuleDueDate);
+
         Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
 
-        return new BillingDates(calendar.getTime(), findEndDate);
+        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate);
+    }
+
+    public BillingDates getBillStartDate(String hostelId, Date date) {
+        BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
+        int billStartDate = 1;
+        int billingRuleDueDate = 5;
+        if (billingRules != null) {
+            billStartDate = billingRules.getBillingStartDate();
+            billingRuleDueDate = billingRules.getBillDueDays();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_MONTH, billStartDate);
+
+        Date dueDate = Utils.addDaysToDate(calendar.getTime(), billingRuleDueDate);
+
+        Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
+
+        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate);
     }
 
     private String buildHint(InvoiceSummaryResponse invoice) {

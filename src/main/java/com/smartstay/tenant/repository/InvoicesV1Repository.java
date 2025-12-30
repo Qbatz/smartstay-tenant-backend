@@ -116,7 +116,8 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_start_date    AS invoiceStartDate,
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
-                i.payment_status        AS status
+                i.payment_status        AS status,
+                i.paid_at         AS paymentDate
             FROM invoicesv1 i
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
@@ -215,6 +216,32 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoiceSummary> findInvoiceSummariesByHostelId(
             @Param("hostelId") String hostelId,
             @Param("invoiceId") List<String> invoiceId
+    );
+
+    @Query(value = """
+            SELECT * FROM `invoicesv1` WHERE customer_id=:customerId AND hostel_id=:hostelId AND DATE(invoice_start_date) >= DATE(:startDate) 
+             AND  (invoice_type='RENT' OR invoice_type='REASSIGN_RENT')
+            """, nativeQuery = true)
+    List<InvoicesV1> findAllCurrentMonthInvoices(@Param("customerId") String customerId, @Param("hostelId") String hostelId, @Param("startDate") Date startDate);
+
+    @Query(value = """
+            SELECT * FROM invoicesv1 invc WHERE invc.customer_id=:customerId and DATE(invc.invoice_start_date) >= DATE(:startDate) ORDER BY invc.invoice_start_date DESC LIMIT 1;
+            """, nativeQuery = true)
+    InvoicesV1 findCurrentRunningInvoice(@Param("customerId") String customerId, @Param("startDate") Date startDate);
+
+
+    @Query(value = """
+        SELECT COALESCE(SUM(paid_amount), 0)
+        FROM invoicesv1
+        WHERE customer_id = :customerId
+          AND hostel_id = :hostelId
+          AND DATE(invoice_start_date) >= DATE(:startDate)
+          AND invoice_type IN ('RENT', 'REASSIGN_RENT')
+        """, nativeQuery = true)
+    Double getTotalPaidAmountForCurrentMonth(
+            @Param("customerId") String customerId,
+            @Param("hostelId") String hostelId,
+            @Param("startDate") Date startDate
     );
 
 }

@@ -10,3 +10,10 @@ public record CurrentMonthInfo(long noOfDaysStayed,
                                Double lastRentPaid,
                                List<BedHistory> bedHistories) {
 }
+
+//billing cycle 1 to 30
+//
+//this month 1 to 31
+//
+//5 date join 6 th shift 7 shift
+//10 th shift 11 th shift
