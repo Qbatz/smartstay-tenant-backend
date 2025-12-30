@@ -17,7 +17,7 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
         }
         Date displayDate = null;
         if (invoiceItemProjection.getStatus().equalsIgnoreCase("PAID")) {
-            displayDate = invoiceItemProjection.getPaymentDate();
+            displayDate = invoiceItemProjection.getPaidAt();
         } else {
             displayDate = invoiceItemProjection.getInvoiceDueDate();
         }

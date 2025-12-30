@@ -117,7 +117,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
-                i.paid_at         AS paymentDate
+                t.paid_at         AS paidAt
             FROM invoicesv1 i
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
@@ -125,12 +125,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
               AND i.customer_id = :customerId
               AND i.is_cancelled = false
             GROUP BY
-                i.invoice_id,
-                i.invoice_type,
-                i.invoice_number,
-                i.total_amount,
-                i.invoice_due_date,
-                i.invoice_generated_date
+                i.invoice_id
             ORDER BY i.invoice_generated_date DESC
             """, nativeQuery = true)
     List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);

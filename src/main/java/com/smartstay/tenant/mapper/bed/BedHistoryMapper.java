@@ -18,12 +18,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 @Component
-@RequiredArgsConstructor
 public class BedHistoryMapper {
 
     private final BedsRepository bedsRepository;
     private final RoomRepository roomsRepository;
     private final FloorRepository floorsRepository;
+
+    public BedHistoryMapper(RoomRepository roomRepository, FloorRepository floorRepository, BedsRepository bedsRepository) {
+        this.roomsRepository = roomRepository;
+        this.floorsRepository = floorRepository;
+        this.bedsRepository = bedsRepository;
+    }
 
     public BedHistory map(CustomersBedHistory history) {
 

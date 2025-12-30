@@ -19,5 +19,5 @@ public interface InvoiceItemProjection {
 
     String getStatus();
 
-    Date getPaymentDate();
+    Date getPaidAt();
 }
