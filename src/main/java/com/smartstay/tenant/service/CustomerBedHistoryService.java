@@ -7,7 +7,6 @@ import com.smartstay.tenant.repository.BedsRepository;
 import com.smartstay.tenant.repository.CustomerBedHistoryRepository;
 import com.smartstay.tenant.repository.FloorRepository;
 import com.smartstay.tenant.repository.RoomRepository;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,7 @@ public class CustomerBedHistoryService {
     @Autowired
     private CustomerBedHistoryRepository customerBedHistoryRepository;
 
-    private  BedHistoryMapper bedHistoryMapper;
+    private BedHistoryMapper bedHistoryMapper;
 
     @Autowired
     private RoomRepository roomRepository;
@@ -50,16 +49,12 @@ public class CustomerBedHistoryService {
         return customerBedHistoryRepository.getLatestRentAmount(customerId, null);
     }
 
-    public List<BedHistory> getBedHistory(String customerId, String hostelId, Date startDate, Date endDate) {
-        bedHistoryMapper = new BedHistoryMapper(
-                roomRepository,
-                floorRepository,
-                bedsRepository
-        );
-        return customerBedHistoryRepository
-                .findBedHistoryInRange(customerId, hostelId, startDate, endDate)
-                .stream()
-                .map(bedHistoryMapper::map)
-                .toList();
+    public List<BedHistory> getBedHistory(Date invoiceGenDate, String customerId, String hostelId, Date startDate, Date endDate) {
+        bedHistoryMapper = new BedHistoryMapper(roomRepository, floorRepository, bedsRepository);
+
+        List<CustomersBedHistory> customersBedHistories = customerBedHistoryRepository.findBedHistoryInRange(customerId, hostelId, startDate, endDate);
+
+        List<BedHistory> result = customersBedHistories.stream().map(h -> bedHistoryMapper.map(h, startDate, endDate, invoiceGenDate)).toList();
+        return result;
     }
 }

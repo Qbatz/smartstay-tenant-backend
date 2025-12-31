@@ -247,28 +247,43 @@ public class InvoiceService {
 
         BillingDates billingDate = hostelService.getBillStartAndEndDateBasedOnDate(invoice.getHostelId(), invoiceStartDate);
 
+        System.out.println("Billing Start Date: " + billingDate.currentBillStartDate() + ", Billing End Date: " + billingDate.currentBillEndDate());
+        System.out.println("customerId: " + customerId);
         List<CustomersBedHistory> customersBedHistories = customerBedHistoryService.getCustomerBedByDates(customerId, billingDate.currentBillStartDate(), invoice.getInvoiceEndDate());
+
+        System.out.println("Customers Bed Histories: " + customersBedHistories.size());
+
+        Date billingStart = billingDate.currentBillStartDate(); // Dec 01
+        Date billingEnd = billingDate.currentBillEndDate();     // Dec 31
 
         long noOfDaysStayed = 0;
 
         for (CustomersBedHistory bedHistory : customersBedHistories) {
 
-            Date startDate = bedHistory.getStartDate();
-            Date endDate = bedHistory.getEndDate();
+            Date bedStart = bedHistory.getStartDate();
+            Date bedEnd = bedHistory.getEndDate();
 
-            if (startDate.before(invoiceStartDate)) {
-                startDate = invoiceStartDate;
+            // If end date is null, treat as invoice generated date
+            if (bedEnd == null) {
+                bedEnd = invoice.getInvoiceGeneratedDate();
             }
 
-            if (endDate == null || endDate.after(invoice.getInvoiceEndDate())) {
-                endDate = invoice.getInvoiceEndDate();
+            // Clip to billing window
+            Date effectiveStart = bedStart.before(billingStart) ? billingStart : bedStart;
+            Date effectiveEnd = bedEnd.after(billingEnd) ? billingEnd : bedEnd;
+
+            // If no overlap, skip
+            if (effectiveStart.after(effectiveEnd)) {
+                continue;
             }
 
-            if (!startDate.after(endDate)) {
-                long noOfDays = Utils.findNumberOfDays(startDate, endDate);
-                noOfDaysStayed += noOfDays;
-            }
+            long noOfDays = Utils.findNumberOfDays(effectiveStart, effectiveEnd);
+
+            System.out.println("Effective Start: " + effectiveStart + ", Effective End: " + effectiveEnd + ", Days: " + noOfDays);
+
+            noOfDaysStayed += noOfDays;
         }
+
 
         List<InvoicesV1> currentMonthInvoices = invoicesV1Repository.findAllCurrentMonthInvoices(customers.getCustomerId(), customers.getHostelId(), billingDate.currentBillStartDate());
 
@@ -316,7 +331,7 @@ public class InvoiceService {
 
         double lastRentPaid = invoicesV1Repository.getTotalPaidAmountForCurrentMonth(customerId, invoice.getHostelId(), billingDate.currentBillStartDate());
 
-        List<BedHistory> customersBedHistoriesForLastMonth = customerBedHistoryService.getBedHistory(customerId, invoice.getHostelId(), billingDate.currentBillStartDate(), billingDate.currentBillEndDate());
+        List<BedHistory> customersBedHistoriesForLastMonth = customerBedHistoryService.getBedHistory(invoice.getInvoiceGeneratedDate(),customerId, invoice.getHostelId(), billingDate.currentBillStartDate(), billingDate.currentBillEndDate());
 
         currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed, payableRent, lastRentPaid, customersBedHistoriesForLastMonth);
 
@@ -354,9 +369,19 @@ public class InvoiceService {
             referenceId = latestTransaction.getTransactionReferenceId();
 
             if (latestTransaction.getBankId() != null) {
-                BankingV1 bank = transactionService.getBankDetailsById(latestTransaction.getBankId());
-                if (bank != null && bank.getBankName() != null) {
-                    lastPaymentMode = Utils.capitalize(bank.getBankName());
+                BankingV1 bankingV1 = transactionService.getBankDetailsById(latestTransaction.getBankId());
+
+                if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
+                    lastPaymentMode = "Cash";
+                }
+                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CARD.name())) {
+                    lastPaymentMode = "Card";
+                }
+                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.UPI.name())) {
+                    lastPaymentMode = "Upi";
+                }
+                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
+                    lastPaymentMode = "Bank";
                 }
             }
         }
@@ -368,8 +393,7 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(),
-                invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
@@ -444,9 +468,7 @@ public class InvoiceService {
         } else {
             bankName = bankingV1.getBankName();
         }
-        String account = bankingV1.getAccountHolderName() +
-                "-" +
-                bankName;
+        String account = bankingV1.getAccountHolderName() + "-" + bankName;
         AccountDetails accountDetails = new AccountDetails(bankingV1.getAccountNumber(), bankingV1.getIfscCode(), account, bankingV1.getUpiId(), null);
         ReceiptConfigInfo receiptConfigInfo = null;
         BillTemplates hostelTemplates = templatesService.getTemplateByHostelId(hostelId);

@@ -30,33 +30,63 @@ public class BedHistoryMapper {
         this.bedsRepository = bedsRepository;
     }
 
-    public BedHistory map(CustomersBedHistory history) {
+    public BedHistory map(CustomersBedHistory history,
+                          Date billingStartDate,
+                          Date billingEndDate,
+                          Date fallbackEndDate) {
 
         Beds bed = bedsRepository.findById(history.getBedId()).orElse(null);
         Rooms room = roomsRepository.findById(history.getRoomId()).orElse(null);
         Floors floor = floorsRepository.findById(history.getFloorId()).orElse(null);
 
-        long noOfDaysStayed = calculateDays(history.getStartDate(), history.getEndDate());
-
+        long noOfDaysStayed = calculateBillingDays(
+                history.getStartDate(),
+                history.getEndDate(),
+                billingStartDate,
+                billingEndDate,
+                fallbackEndDate
+        );
+        
         return new BedHistory(bed != null ? bed.getBedName() : "", room != null ? room.getRoomName() : "", floor != null ? floor.getFloorName() : "", noOfDaysStayed, history.getRentAmount());
     }
 
-    private long calculateDays(Date startDate, Date endDate) {
+    private long calculateBillingDays(
+            Date stayStart,
+            Date stayEnd,
+            Date billingStart,
+            Date billingEnd,
+            Date fallbackEnd
+    ) {
 
-        if (startDate == null) {
+        if (stayStart == null || billingStart == null || billingEnd == null) {
             return 0;
         }
 
-        LocalDate start = toLocalDate(startDate);
-        LocalDate end = endDate != null ? toLocalDate(endDate) : LocalDate.now();
+        if (stayEnd == null) {
+            stayEnd = fallbackEnd;
+        }
 
-        long days = ChronoUnit.DAYS.between(start, end);
+        LocalDate effectiveStart = max(toLocalDate(stayStart), toLocalDate(billingStart));
+        LocalDate effectiveEnd = min(toLocalDate(stayEnd), toLocalDate(billingEnd));
 
-        return Math.max(days, 1);
+        if (effectiveStart.isAfter(effectiveEnd)) {
+            return 0;
+        }
+
+        return ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
     }
 
     private LocalDate toLocalDate(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
+
+    private LocalDate max(LocalDate a, LocalDate b) {
+        return a.isAfter(b) ? a : b;
+    }
+
+    private LocalDate min(LocalDate a, LocalDate b) {
+        return a.isBefore(b) ? a : b;
+    }
+
 }
 
