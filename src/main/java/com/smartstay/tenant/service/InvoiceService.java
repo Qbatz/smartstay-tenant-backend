@@ -554,7 +554,7 @@ public class InvoiceService {
             customerInfo = new CustomerInfo(customers.getFirstName(), customers.getLastName(), fullName.toString(), customers.getCustomerId(), customers.getMobile(), "91", fullAddress.toString(), customers.getHouseNo(), customers.getStreet(), customers.getCity(), customers.getState(), customers.getPincode(), Utils.dateToString(customers.getJoiningDate()));
         }
 
-        StayInfo stayInfo = new StayInfo(null, null, null, null);
+        StayInfo stayInfo = new StayInfo(null, null, null, null,null);
         CustomersBedHistory bedHistory = null;
         if (!invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.BOOKING.name())) {
             assert customers != null;
@@ -562,7 +562,7 @@ public class InvoiceService {
             if (bedHistory != null) {
                 BedDetails bedDetails = bedService.getBedDetails(bedHistory.getBedId());
                 if (bedDetails != null) {
-                    stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName());
+                    stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName(),Utils.getInitials(hostelV1.getHostelName()));
                 }
             }
 
@@ -571,7 +571,7 @@ public class InvoiceService {
             bedHistory = customerBedHistoryService.getCustomerBookedBed(customers.getCustomerId());
             BedDetails bedDetails = bedService.getBedDetails(bedHistory.getBedId());
             if (bedDetails != null) {
-                stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName());
+                stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName(),Utils.getInitials(hostelV1.getHostelName()));
             }
         }
         StringBuilder receiverfullName = new StringBuilder();
@@ -774,7 +774,7 @@ public class InvoiceService {
         if (bedHistory != null) {
             BedDetails bedDetails = bedService.getBedDetails(bedHistory.getBedId());
             if (bedDetails != null) {
-                stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName());
+                stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName(),Utils.getInitials(hostelV1.getHostelName()));
             }
         }
 
