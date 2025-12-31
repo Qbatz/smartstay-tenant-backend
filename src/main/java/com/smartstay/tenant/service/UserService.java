@@ -100,7 +100,7 @@ public class UserService {
 
 
         } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("You are not belongs to any hostels.", HttpStatus.BAD_REQUEST);
         }
 
     }
