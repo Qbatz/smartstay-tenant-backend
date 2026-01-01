@@ -35,7 +35,8 @@ public class OtpService {
                     "&route=" + URLEncoder.encode("", StandardCharsets.UTF_8);
             URL url = URI.create(requestUrl).toURL();
             HttpURLConnection uc = (HttpURLConnection)url.openConnection();
-
+            System.out.println(uc.getResponseMessage());
+            System.out.println(uc.getResponseCode());
             uc.disconnect();
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             throw new RuntimeException(e);
