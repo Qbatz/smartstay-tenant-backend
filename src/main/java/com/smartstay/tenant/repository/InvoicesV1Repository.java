@@ -76,35 +76,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """, nativeQuery = true)
     InvoiceSummaryProjection getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
-    @Query("""
-                SELECT new com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse(
-                    SUM(CASE WHEN ii.invoiceItem = 'RENT' THEN ii.amount ELSE 0 END),
-                    SUM(CASE WHEN ii.invoiceItem = 'EB' THEN ii.amount ELSE 0 END),
-                    SUM(COALESCE(t.paidAmount, 0)),
-                    i.invoiceNumber,
-                    i.invoiceGeneratedDate,
-                    i.invoiceDueDate,
-                    i.invoiceStartDate,
-                    i.invoiceEndDate
-                )
-                FROM InvoicesV1 i
-                JOIN i.invoiceItems ii
-                LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
-                WHERE i.customerId = :customerId
-                  AND i.hostelId = :hostelId
-                  AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate
-                GROUP BY 
-                    i.invoiceId,
-                    i.invoiceNumber,
-                    i.invoiceGeneratedDate,
-                    i.invoiceDueDate,
-                    i.invoiceStartDate,
-                    i.invoiceEndDate
-                ORDER BY i.invoiceGeneratedDate DESC
-            """)
-    List<InvoiceSummaryResponse> getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
-
-
     @Query(value = """
             SELECT
                 i.invoice_id            AS invoiceId,
@@ -145,7 +116,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
                 FROM InvoiceItems ii
                 WHERE ii.invoice.invoiceId = :invoiceId
-                  AND (ii.invoiceItem IS NULL OR ii.invoiceItem <> 'EB')
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 

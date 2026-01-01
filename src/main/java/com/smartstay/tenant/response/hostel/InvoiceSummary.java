@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -18,16 +19,16 @@ public class InvoiceSummary {
     private String invoiceNumber;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private Date invoiceGeneratedDate;
+    private LocalDate invoiceGeneratedDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private Date invoiceDueDate;
+    private LocalDate invoiceDueDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private Date currentInvoiceStartDate;
+    private LocalDate currentInvoiceStartDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private Date currentInvoiceEndDate;
+    private LocalDate currentInvoiceEndDate;
 
     private boolean shouldShow;
     private String hint;
