@@ -64,7 +64,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         BillingRules billingRules =
                 hostelConfigService.getLatestBillRuleByHostelIdAndStartDate(hostelId, new Date());
 
-        Integer dueDayValue = (billingRules != null) ? billingRules.getBillingDueDate() : null;
+        Integer dueDayValue = (billingRules != null) ? billingRules.getBillDueDays() : null;
 
         String dueDateText;
         if (dueDayValue != null && dueDayValue > 0) {

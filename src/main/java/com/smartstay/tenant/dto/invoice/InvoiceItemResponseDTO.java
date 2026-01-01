@@ -20,6 +20,8 @@ public class InvoiceItemResponseDTO {
     private Date invoiceGeneratedDate;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date invoiceStartDate;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date disPlayDate;
     private Double paidAmount;
     private Double dueAmount;
     private String status;

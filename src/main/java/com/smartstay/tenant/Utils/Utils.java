@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -136,6 +137,17 @@ public final class Utils {
         return new SimpleDateFormat(OUTPUT_DATE_MONTH_FORMAT).format(date);
     }
 
+    public static int compareWithTwoDates(Date date1, Date date2) {
+        LocalDate localDate1 = date1.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        LocalDate localDate2 = date2.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return localDate1.compareTo(localDate2);
+    }
+
     public static String dateToMonth(Date date) {
         if (date == null) {
             return "";
@@ -181,6 +193,13 @@ public final class Utils {
         }
 
         return new SimpleDateFormat("dd/MM/yyyy").format(date);
+    }
+
+    public static long findNumberOfDays(Date date1, Date date2) {
+        LocalDate start = date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate end   = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        return ChronoUnit.DAYS.between(start, end) + 1;
     }
 
 

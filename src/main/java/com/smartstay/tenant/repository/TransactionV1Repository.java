@@ -40,7 +40,7 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
     Double getTotalPaid(@Param("invoiceId") String invoiceId);
 
 
-    TransactionV1 findTopByInvoiceIdOrderByPaymentDateDesc(String invoiceId);
+    TransactionV1 findTopByInvoiceIdOrderByPaidAtDesc(String invoiceId);
 
 
     List<TransactionV1> findByInvoiceId(String invoiceId);
