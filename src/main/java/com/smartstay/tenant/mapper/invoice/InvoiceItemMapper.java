@@ -4,6 +4,7 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -15,12 +16,6 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
         if (invoiceItemProjection == null) {
             return null;
         }
-        Date displayDate = null;
-        if (invoiceItemProjection.getStatus().equalsIgnoreCase("PAID")) {
-            displayDate = invoiceItemProjection.getPaidAt();
-        } else {
-            displayDate = invoiceItemProjection.getInvoiceDueDate();
-        }
         return new InvoiceItemResponseDTO(
                 invoiceItemProjection.getInvoiceId(),
                 invoiceItemProjection.getInvoiceType(),
@@ -29,7 +24,8 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
                 invoiceItemProjection.getInvoiceDueDate(),
                 invoiceItemProjection.getInvoiceGeneratedDate(),
                 invoiceItemProjection.getInvoiceStartDate(),
-                displayDate,
+                invoiceItemProjection.getPaidAt(),
+                invoiceItemProjection.getPaymentDate(),
                 invoiceItemProjection.getPaidAmount(),
                 invoiceItemProjection.getDueAmount(),
                 Utils.capitalize(invoiceItemProjection.getStatus())

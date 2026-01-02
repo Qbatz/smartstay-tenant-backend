@@ -88,7 +88,8 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
-                t.paid_at         AS paidAt
+                t.paid_at         AS paidAt,
+                t.payment_date    AS paymentDate
             FROM invoicesv1 i
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
