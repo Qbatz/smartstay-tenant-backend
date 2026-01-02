@@ -37,8 +37,6 @@ public class LoginService {
     @Autowired
     JWTService jwtService;
     @Autowired
-    UserConfigService userConfigService;
-    @Autowired
     CustomerCredentialsService customerCredentialsService;
 
     @Autowired

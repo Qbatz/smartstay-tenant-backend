@@ -1,16 +1,22 @@
 package com.smartstay.tenant.dto.invoice;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public interface InvoiceSummaryProjection {
 
     Double getRentAmount();
+
     Double getEbAmount();
+
     Double getPaidAmount();
 
     String getInvoiceNumber();
-    Date getInvoiceGeneratedDate();
-    Date getInvoiceDueDate();
-    Date getInvoiceStartDate();
-    Date getInvoiceEndDate();
+
+    LocalDate getInvoiceGeneratedDate();
+
+    LocalDate getInvoiceDueDate();
+
+    LocalDate getInvoiceStartDate();
+
+    LocalDate getInvoiceEndDate();
 }

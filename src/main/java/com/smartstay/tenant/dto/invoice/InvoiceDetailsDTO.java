@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -17,17 +17,13 @@ public class InvoiceDetailsDTO {
     private String invoiceNumber;
     private String invoiceType;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date generatedDate;
+    private String generatedDate;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date dueDate;
+    private String dueDate;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date startDate;
+    private String startDate;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date endDate;
+    private String endDate;
 
     private Double totalAmount;
     private Double paidAmount;
@@ -43,8 +39,7 @@ public class InvoiceDetailsDTO {
     private List<ReceiptDTO> receipts;
 
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date lastPaidDate;
+    private String lastPaidDate;
     private String lastPaymentMode;
     private String lastReferenceId;
     private Boolean showMessage;

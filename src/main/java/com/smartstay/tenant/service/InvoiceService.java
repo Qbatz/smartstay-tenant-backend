@@ -103,6 +103,9 @@ public class InvoiceService {
 
     public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId, Date startDate, Date endDate) {
         InvoiceSummaryProjection projection = invoicesV1Repository.getInvoiceSummary(hostelId, customerId, startDate, endDate);
+
+        System.out.println("Invoice Summary Projection: " + projection);
+        System.out.println("DueDate---> " + (projection != null ? projection.getInvoiceDueDate() : "null"));
         if (projection == null) {
             return null;
         }
@@ -393,8 +396,11 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+        System.out.println("showMessage: " + Utils.dateToString(invoice.getInvoiceDueDate()));
+
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()), Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, Utils.dateToString(lastPaidDate), lastPaymentMode, referenceId, showMessage);
     }
+
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
         if (!authentication.isAuthenticated()) {
