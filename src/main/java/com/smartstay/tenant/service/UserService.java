@@ -42,10 +42,6 @@ public class UserService {
     @Autowired
     CustomersOtpRepository customersOtpRepository;
 
-
-    @Autowired
-    UserConfigService userConfigService;
-
     @Autowired
     UserRepository userRepository;
 
