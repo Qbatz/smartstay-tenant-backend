@@ -11,6 +11,7 @@ import com.smartstay.tenant.repository.CustomersOtpRepository;
 import com.smartstay.tenant.repository.UserRepository;
 import com.smartstay.tenant.response.VerifyOtpResponse;
 import com.smartstay.tenant.response.login.VerifyMobileResponse;
+import com.smartstay.tenant.response.login.VerifyPhoneProdResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -40,10 +41,6 @@ public class UserService {
 
     @Autowired
     CustomersOtpRepository customersOtpRepository;
-
-
-    @Autowired
-    UserConfigService userConfigService;
 
     @Autowired
     UserRepository userRepository;
@@ -90,7 +87,8 @@ public class UserService {
                         ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
                 otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
 
-                return new ResponseEntity<>(credentials.getXuid(), HttpStatus.OK);
+
+                return new ResponseEntity<>(new VerifyPhoneProdResponse(credentials.getXuid()), HttpStatus.OK);
             }else {
                 return new ResponseEntity<>(new VerifyMobileResponse(
                         credentials.getXuid(), customersOtp.getOtp()
@@ -100,7 +98,7 @@ public class UserService {
 
 
         } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("You are not belongs to any hostels.", HttpStatus.BAD_REQUEST);
         }
 
     }
