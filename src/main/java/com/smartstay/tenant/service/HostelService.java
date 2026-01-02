@@ -117,10 +117,9 @@ public class HostelService {
 
     }
 
-    public boolean isToday(Date date) {
-        LocalDate given = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    public boolean isToday(LocalDate date) {
         LocalDate today = LocalDate.now();
-        return given.equals(today);
+        return date.equals(today);
     }
 
     public BillingDates getBillStartAndEndDateBasedOnDate(String hostelId, Date date) {
@@ -167,7 +166,7 @@ public class HostelService {
 
         boolean isEb = invoice.getEb() != null && invoice.getEb() > 0;
 
-        LocalDate invoiceMonth = invoice.getCurrentInvoiceStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate invoiceMonth = invoice.getCurrentInvoiceStartDate();
 
         String monthName = invoiceMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
@@ -189,10 +188,10 @@ public class HostelService {
         return monthName + " month bill generated";
     }
 
-    private String getMonthName(Date date) {
+    private String getMonthName(LocalDate date) {
         if (date == null) return "";
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM", Locale.ENGLISH);
-        return sdf.format(date);
+        return date.getMonth()
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 
 

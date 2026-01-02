@@ -103,6 +103,9 @@ public class InvoiceService {
 
     public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId, Date startDate, Date endDate) {
         InvoiceSummaryProjection projection = invoicesV1Repository.getInvoiceSummary(hostelId, customerId, startDate, endDate);
+
+        System.out.println("Invoice Summary Projection: " + projection);
+        System.out.println("DueDate---> " + (projection != null ? projection.getInvoiceDueDate() : "null"));
         if (projection == null) {
             return null;
         }
