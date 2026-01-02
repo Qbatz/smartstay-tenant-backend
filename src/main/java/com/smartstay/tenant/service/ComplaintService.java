@@ -66,9 +66,6 @@ public class ComplaintService {
     @Autowired
     private UserHostelService userHostelService;
 
-    @Autowired
-    private ComplaintUpdatesRepository complaintUpdatesRepository;
-
 
     @Autowired
     private NotificationService notificationService;
@@ -150,7 +147,6 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-
         ComplaintsV1 complaint = new ComplaintsV1();
         if (request.floorId() != null) {
             complaint.setFloorId(request.floorId());
@@ -171,7 +167,6 @@ public class ComplaintService {
             complaint.setBedId(0);
         }
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
-
 
         boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
         if (!customerExist) {
@@ -198,7 +193,7 @@ public class ComplaintService {
         complaint.setCreatedBy(customerId);
         complaint.setHostelId(hostelId);
         complaint.setIsActive(true);
-        complaint.setStatus("PENDING");
+        complaint.setStatus(ComplaintStatus.OPENED.name());
         complaint.setIsDeleted(false);
         if (hostelV1 != null) {
             complaint.setParentId(hostelV1.getParentId());
@@ -222,7 +217,21 @@ public class ComplaintService {
             complaint.setAdditionalImages(complaintImagesList);
         }
 
+        ComplaintUpdates complaintUpdates = new ComplaintUpdates();
+        complaintUpdates.setStatus(ComplaintStatus.OPENED.name());
+        complaintUpdates.setUserType(UserType.TENANT.name());
+        complaintUpdates.setUpdatedBy(authentication.getName());
+        complaintUpdates.setComments("Created a complaint");
+        complaintUpdates.setComplaint(complaint);
+        complaintUpdates.setCreatedAt(new Date());
+
+
+        List<ComplaintUpdates> listComplaintUpdates = new ArrayList<>();
+        listComplaintUpdates.add(complaintUpdates);
+        complaint.setComplaintUpdates(listComplaintUpdates);
+
         ComplaintsV1 savedComplaint = complaintsV1Repository.save(complaint);
+
         notificationService.createNotificationForComplaint(customerId, hostelId, savedComplaint.getComplaintId().toString(), complaintTypeV1.getComplaintTypeName(), request.description()
 
         );
@@ -367,11 +376,13 @@ public class ComplaintService {
         complaintComments.setComplaint(complaintExist);
         complaintComments.setComment(request.message());
         complaintComments.setIsActive(true);
+        complaintComments.setComplaintStatus(complaintExist.getStatus());
         complaintComments.setUserType(UserType.TENANT.name());
         complaintComments.setCreatedBy(customerId);
         complaintComments.setUserName(customers.getFirstName() + " " + customers.getLastName());
         complaintComments.setCreatedAt(new Date());
         commentsRepository.save(complaintComments);
+
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
