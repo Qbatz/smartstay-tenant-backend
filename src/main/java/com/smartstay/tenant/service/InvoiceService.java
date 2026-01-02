@@ -520,7 +520,6 @@ public class InvoiceService {
             } else {
                 hostelLogo = templateType.getReceiptLogoUrl();
             }
-
             receiptConfigInfo = new ReceiptConfigInfo(templateType.getReceiptTermsAndCondition(), receiptSignatureUrl, hostelLogo, hostelFullAddress.toString(), templateType.getReceiptTemplateColor(), templateType.getReceiptNotes(), invoiceType);
         }
 
@@ -594,7 +593,21 @@ public class InvoiceService {
         }
 
 
-        ReceiptInfo receiptInfo = new ReceiptInfo(transactionV1.getTransactionReferenceId(), transactionV1.getTransactionId(), Utils.dateToString(transactionV1.getPaymentDate()), Utils.dateToTime(transactionV1.getPaymentDate()), transactionV1.getPaidAmount(), invoiceType, transactionV1.getReferenceNumber(), receiverfullName.toString(), invoiceMonth);
+        String paymentMode = "";
+
+        if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
+            paymentMode = "Cash";
+        }
+        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CARD.name())) {
+            paymentMode = "Card";
+        }
+        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.UPI.name())) {
+            paymentMode = "Upi";
+        }
+        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
+            paymentMode = "Bank";
+        }
+        ReceiptInfo receiptInfo = new ReceiptInfo(transactionV1.getTransactionReferenceId(), transactionV1.getTransactionId(), Utils.dateToString(transactionV1.getPaymentDate()), Utils.dateToTime(transactionV1.getPaymentDate()), transactionV1.getPaidAmount(), invoiceType, transactionV1.getReferenceNumber(), receiverfullName.toString(), invoiceMonth, paymentMode);
 
 
         double dueAmount = 0.0;
