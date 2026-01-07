@@ -158,12 +158,26 @@ public class CustomerService {
 
         BillingRules billingRules = hostelConfigService.getLatestBillRuleByHostelIdAndStartDate(hostelId, new Date());
 
-        int dueDay = billingRules != null ? billingRules.getBillingDueDate() : 0;
-        String dueDateText = (dueDay > 0 ? dueDay : "0") + "th of every month";
+//        int dueDay = billingRules != null ? billingRules.getBillingDueDate() : 0;
+        String dueDateText =  " 1st of every month";
+        if (billingRules != null) {
+            if (billingRules.getBillingStartDate() == 1) {
+                dueDateText =billingRules.getBillingStartDate()+ "st of every month";
+            }
+            else if (billingRules.getBillingStartDate() == 2){
+                dueDateText =billingRules.getBillingStartDate()+ "nd of every month";
+            }
+            else if (billingRules.getBillingStartDate() == 3){
+                dueDateText =billingRules.getBillingStartDate()+ "rd of every month";
+            }else {
+                dueDateText =billingRules.getBillingStartDate()+ "th of every month";
+            }
+
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("joiningDate", Utils.dateToString(bookingDetails.getJoiningDate()));
-        response.put("rentAmount", rentAmount);
+        response.put("rentAmount", rentAmount );
         response.put("advancePaidAmount", advancePaidAmount);
         response.put("dueDate", dueDateText);
 
