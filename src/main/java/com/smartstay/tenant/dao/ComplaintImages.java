@@ -5,12 +5,10 @@ import lombok.*;
 
 import java.util.Date;
 
-@Data
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Data
 public class ComplaintImages {
 
     @Id

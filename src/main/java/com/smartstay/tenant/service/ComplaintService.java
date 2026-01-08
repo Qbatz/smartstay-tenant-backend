@@ -121,16 +121,14 @@ public class ComplaintService {
         }
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ComplaintDTO> complaints =
-                complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
+        Page<ComplaintDTO> complaints = complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
 
         if (complaints.isEmpty()) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         ComplaintMapper complaintMapper = new ComplaintMapper();
-        Page<ComplaintResponse> response =
-                complaints.map(complaintMapper);
+        Page<ComplaintResponse> response = complaints.map(complaintMapper);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -178,7 +176,7 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId(),List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
+        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
 
         if (existingComplaint != null && !existingComplaint.isEmpty()) {
             return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
@@ -250,19 +248,20 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
+        System.out.println("Updating complaint with ID: " + complaintId + " for customer: " + customerId + " in hostel: " + hostelId);
         ComplaintsV1 complaint = complaintsV1Repository.findByComplaintIdAndHostelIdAndCustomerId(complaintId, hostelId, customerId);
         if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        if (request !=null && request.floorId() != null) {
+        if (request != null && request.floorId() != null) {
             complaint.setFloorId(request.floorId());
         }
 
-        if ( request !=null &&  request.roomId() != null) {
+        if (request != null && request.roomId() != null) {
             complaint.setRoomId(request.roomId());
         }
 
-        if (request !=null && request.bedId() != null) {
+        if (request != null && request.bedId() != null) {
             complaint.setBedId(request.bedId());
 
         }
@@ -274,7 +273,7 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        if (request !=null && request.complaintTypeId() != null) {
+        if (request != null && request.complaintTypeId() != null) {
             ComplaintTypeV1 complaintTypeV1Check = complaintTypeService.getComplaintTypeById(request.complaintTypeId(), hostelId);
             if (complaintTypeV1Check == null) {
                 return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -301,21 +300,40 @@ public class ComplaintService {
         List<String> listImageUrls = new ArrayList<>();
         if (complaintImages != null && !complaintImages.isEmpty()) {
             listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile), "CustomerComplaint-Images")).toList();
+
         }
+
         if (!listImageUrls.isEmpty()) {
-            List<ComplaintImages> complaintImagesList = listImageUrls.stream().map(item -> {
-                ComplaintImages complaintImages1 = new ComplaintImages();
-                complaintImages1.setIsActive(true);
-                complaintImages1.setIsDeleted(false);
-                complaintImages1.setCreatedAt(new Date());
-                complaintImages1.setCreatedBy(customerId);
-                complaintImages1.setImageUrl(item);
-                complaintImages1.setComplaints(complaint);
-                return complaintImages1;
-            }).toList();
+            List<ComplaintImages> complaintImagesList = complaint.getAdditionalImages();
+
+            if (complaintImages == null || complaintImages.isEmpty()) {
+                complaintImagesList = listImageUrls.stream().map(item -> {
+                    ComplaintImages complaintImages1 = new ComplaintImages();
+                    complaintImages1.setIsActive(true);
+                    complaintImages1.setIsDeleted(false);
+                    complaintImages1.setCreatedAt(new Date());
+                    complaintImages1.setCreatedBy(customerId);
+                    complaintImages1.setImageUrl(item);
+                    complaintImages1.setComplaints(complaint);
+                    return complaintImages1;
+                }).toList();
+            } else {
+
+                complaintImagesList.addAll(listImageUrls.stream().map(item -> {
+                    ComplaintImages complaintImages1 = new ComplaintImages();
+                    complaintImages1.setIsActive(true);
+                    complaintImages1.setIsDeleted(false);
+                    complaintImages1.setCreatedAt(new Date());
+                    complaintImages1.setCreatedBy(customerId);
+                    complaintImages1.setImageUrl(item);
+                    complaintImages1.setComplaints(complaint);
+                    return complaintImages1;
+                }).toList());
+            }
+
 
             complaint.setAdditionalImages(complaintImagesList);
-        }
+        } System.out.println("Complaint after update: " + complaint);
         complaintsV1Repository.save(complaint);
 
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
