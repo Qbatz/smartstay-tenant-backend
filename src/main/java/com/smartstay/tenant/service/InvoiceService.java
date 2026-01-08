@@ -795,6 +795,8 @@ public class InvoiceService {
             if (bedDetails != null) {
                 stayInfo = new StayInfo(bedDetails.getBedName(), bedDetails.getFloorName(), bedDetails.getRoomName(), hostelV1.getHostelName(),Utils.getInitials(hostelV1.getHostelName()));
             }
+        }else {
+            stayInfo = new StayInfo(null, null, null, hostelV1.getHostelName(),Utils.getInitials(hostelV1.getHostelName()));
         }
 
         if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.SETTLEMENT.name())) {
