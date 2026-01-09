@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,24 +33,20 @@ public class UserService {
 
     @Autowired
     AuthenticationManager authManager;
-
     @Autowired
     JWTService jwtService;
-
     @Autowired
     CustomerRepository customersRepository;
-
     @Autowired
     CustomersOtpRepository customersOtpRepository;
-
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     CustomerCredentialsService customerCredentialsService;
-
     @Autowired
     OtpService otpService;
+    @Autowired
+    private UserHostelService userHostelService;
 
     @Value("${ENVIRONMENT}")
     private String environment;
@@ -173,4 +170,17 @@ public class UserService {
         return userRepository.findUserByUserId(userId);
     }
 
+    public List<Users> findMasters(String hostelId) {
+        List<Integer> materRoleIds = new ArrayList<>();
+        materRoleIds.add(1);
+        materRoleIds.add(2);
+
+        List<UserHostel> findAllUsers = userHostelService.findAllUsersByHostelId(hostelId);
+        List<String> userIds = findAllUsers
+                .stream()
+                .map(UserHostel::getUserId)
+                .toList();
+
+        return userRepository.findByUserIdInAndRoleIdIn(userIds, materRoleIds);
+    }
 }

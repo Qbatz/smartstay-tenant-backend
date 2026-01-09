@@ -5,6 +5,8 @@ import com.smartstay.tenant.repository.UserHostelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserHostelService {
 
@@ -13,5 +15,9 @@ public class UserHostelService {
 
     public UserHostel findByUserIdAndHostelId(String userId, String hostelId) {
         return userHostelRepo.findByUserIdAndHostelId(userId, hostelId);
+    }
+
+    public List<UserHostel> findAllUsersByHostelId(String hostelId) {
+        return userHostelRepo.findAllByHostelId(hostelId);
     }
 }

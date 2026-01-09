@@ -15,6 +15,7 @@ import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
 import com.smartstay.tenant.response.notification.NotificationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,14 @@ public class NotificationService {
 
     @Autowired
     private HostelRepository hostelRepository;
-
-
-
-
     @Autowired
     private AdminNotificationService notificationService;
+    private FCMNotificationService fcmNotificationService;
+
+    @Autowired
+    public void setFcmNotificationService(@Lazy FCMNotificationService fcmNotificationService) {
+        this.fcmNotificationService = fcmNotificationService;
+    }
 
     public ResponseEntity<?> getNotificationList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -208,5 +211,6 @@ public class NotificationService {
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notificationService.saveAdminNotification(notification);
+        fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
     }
 }
