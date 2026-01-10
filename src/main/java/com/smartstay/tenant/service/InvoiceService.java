@@ -368,7 +368,7 @@ public class InvoiceService {
         String referenceId = null;
 
         if (latestTransaction != null) {
-            lastPaidDate = latestTransaction.getPaidAt();
+            lastPaidDate = latestTransaction.getPaymentDate();
             referenceId = latestTransaction.getTransactionReferenceId();
 
             if (latestTransaction.getBankId() != null) {
