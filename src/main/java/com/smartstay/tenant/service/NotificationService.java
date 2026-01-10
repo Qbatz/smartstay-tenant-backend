@@ -5,13 +5,17 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AdminNotifications;
 import com.smartstay.tenant.dao.CustomerNotifications;
+import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
+import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
+import com.smartstay.tenant.response.notification.NotificationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,9 +33,16 @@ public class NotificationService {
     @Autowired
     private CustomerService customerService;
 
-
+    @Autowired
+    private HostelRepository hostelRepository;
     @Autowired
     private AdminNotificationService notificationService;
+    private FCMNotificationService fcmNotificationService;
+
+    @Autowired
+    public void setFcmNotificationService(@Lazy FCMNotificationService fcmNotificationService) {
+        this.fcmNotificationService = fcmNotificationService;
+    }
 
     public ResponseEntity<?> getNotificationList(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -42,12 +53,16 @@ public class NotificationService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId, customerId);
+        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(notifications, HttpStatus.OK);
+        NotificationResponse notificationResponse = new NotificationResponse(notifications, hostelV1.getHostelName(), Utils.getInitials(hostelV1.getHostelName()), hostelV1.getMainImage());
+        return new ResponseEntity<>(notificationResponse, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getNotificationById(String hostelId, long notificationId) {
@@ -79,6 +94,7 @@ public class NotificationService {
         String data = markAsRead(request.notificationIds(), hostelId);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
+
     public ResponseEntity<?> deleteNotification(String hostelId, long id) {
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -97,6 +113,7 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
+
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         AdminNotifications notification = new AdminNotifications();
@@ -127,7 +144,7 @@ public class NotificationService {
     }
 
 
-    public void createNotificationForInvoiceGeneration(String invoiceId,String title,String description,String customerId, String hostelId) {
+    public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description, String customerId, String hostelId) {
 
         CustomerNotifications notification = new CustomerNotifications();
         notification.setUserId(customerId);
@@ -194,5 +211,6 @@ public class NotificationService {
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notificationService.saveAdminNotification(notification);
+        fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
     }
 }

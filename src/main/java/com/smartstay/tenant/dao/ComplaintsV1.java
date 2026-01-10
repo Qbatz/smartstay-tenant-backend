@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.Date;
 import java.util.List;
@@ -36,8 +37,14 @@ public class  ComplaintsV1 {
     private Boolean isDeleted;
 
     @OneToMany(mappedBy = "complaint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<ComplaintComments> complaintComments;
 
-    @OneToMany(mappedBy = "complaints", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ComplaintImages> additionalImages;
+    @OneToMany(mappedBy = "complaints", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    List<ComplaintImages> additionalImages;
+
+    @OneToMany(mappedBy = "complaint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    List<ComplaintUpdates> complaintUpdates;
 }
