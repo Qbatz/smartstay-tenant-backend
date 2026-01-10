@@ -112,6 +112,7 @@ public class FCMNotificationService {
 
                     MulticastMessage multicastMessage = MulticastMessage.builder()
                             .addAllTokens(fcmTokens)
+                            .putAllData(payloads)
                             .build();
 
                     try {
