@@ -23,4 +23,6 @@ public interface InvoiceItemProjection {
     LocalDate getPaidAt();
 
     LocalDate getPaymentDate();
+
+    Boolean getIsCancelled();
 }

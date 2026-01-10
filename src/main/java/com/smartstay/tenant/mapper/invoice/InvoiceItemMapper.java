@@ -1,5 +1,6 @@
 package com.smartstay.tenant.mapper.invoice;
 
+import com.smartstay.tenant.Utils.InvoiceUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceItemResponseDTO;
@@ -16,6 +17,10 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
         if (invoiceItemProjection == null) {
             return null;
         }
+        String status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoiceItemProjection.getStatus());
+        if (invoiceItemProjection.getIsCancelled() != null && invoiceItemProjection.getIsCancelled()) {
+            status = "Cancelled";
+        }
         return new InvoiceItemResponseDTO(
                 invoiceItemProjection.getInvoiceId(),
                 invoiceItemProjection.getInvoiceType(),
@@ -28,7 +33,8 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
                 invoiceItemProjection.getPaymentDate(),
                 invoiceItemProjection.getPaidAmount(),
                 invoiceItemProjection.getDueAmount(),
-                Utils.capitalize(invoiceItemProjection.getStatus())
+                status,
+                invoiceItemProjection.getIsCancelled()
         );
     }
 }

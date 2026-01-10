@@ -28,5 +28,6 @@ public class InvoiceItemResponseDTO {
     private Double paidAmount;
     private Double dueAmount;
     private String status;
+    private Boolean isCancelled;
 }
 

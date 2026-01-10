@@ -89,13 +89,13 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
                 t.paid_at         AS paidAt,
-                t.payment_date    AS paymentDate
+                t.payment_date    AS paymentDate,
+                i.is_cancelled       AS isCancelled
             FROM invoicesv1 i
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
             WHERE i.hostel_id = :hostelId
               AND i.customer_id = :customerId
-              AND i.is_cancelled = false
             GROUP BY
                 i.invoice_id
             ORDER BY i.invoice_generated_date DESC
