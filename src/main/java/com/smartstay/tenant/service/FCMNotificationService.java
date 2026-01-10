@@ -126,4 +126,64 @@ public class FCMNotificationService {
 
         }
     }
+
+    public void sendNotificationBedChangeRequest(String hostelId) {
+        if (!authentication.isAuthenticated()) {
+            return;
+        }
+
+        List<Users> adminUsers = userService.findMasters(hostelId);
+
+        Customers customers = customerService.getCustomerById(authentication.getName());
+        if (customers != null) {
+            StringBuilder fullName = new StringBuilder();
+            if (customers.getFirstName() != null) {
+                fullName.append(customers.getFirstName());
+            }
+            if (customers.getLastName() != null && !customers.getLastName().trim().equalsIgnoreCase("")) {
+                fullName.append(" ");
+                fullName.append(customers.getLastName());
+            }
+
+            if (adminUsers != null) {
+                List<String> fcmTokens = new ArrayList<>();
+                List<UsersConfig> userConfigs = adminUsers
+                        .stream()
+                        .map(Users::getConfig)
+                        .toList();
+                if (userConfigs != null) {
+                    userConfigs.forEach(item -> {
+                        if (item != null) {
+                            if (item.getFcmToken() != null) {
+                                fcmTokens.add(item.getFcmToken());
+                            }
+                            if (item.getFcmWebToken() != null) {
+                                fcmTokens.add(item.getFcmWebToken());
+                            }
+                        }
+                    });
+                }
+
+                if (!fcmTokens.isEmpty()) {
+                    HashMap<String, String> payloads = new HashMap<>();
+                    payloads.put("title", "Bed Change Request");
+                    payloads.put("type", "BED_CHANGE_REQUEST");
+                    payloads.put("description", fullName+" has raised a bed change request. Review and respond now.");
+
+                    MulticastMessage multicastMessage = MulticastMessage.builder()
+                            .addAllTokens(fcmTokens)
+                            .putAllData(payloads)
+                            .build();
+
+                    try {
+                        BatchResponse response = FirebaseMessaging.getInstance()
+                                .sendEachForMulticast(multicastMessage);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+        }
+    }
 }
