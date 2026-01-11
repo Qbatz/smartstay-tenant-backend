@@ -41,6 +41,9 @@ public class BedsService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private FCMNotificationService fcmNotificationService;
+
     public ResponseEntity<?> requestBedChange(String hostelId, BedChangePayload request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -61,6 +64,7 @@ public class BedsService {
         }
         bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
+        fcmNotificationService.sendNotificationBedChangeRequest(hostelId);
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
 
