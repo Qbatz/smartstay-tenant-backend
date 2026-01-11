@@ -8,6 +8,7 @@ import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.InvoicesV1;
 import com.smartstay.tenant.dao.Users;
 import com.smartstay.tenant.dao.UsersConfig;
+import com.smartstay.tenant.ennum.NotificationType;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,7 +57,7 @@ public class FCMNotificationService {
                 notificationService.createNotificationForInvoiceGeneration(invoice.getInvoiceId(), "Invoice Generated", "Hi " + invoice.getCustomerMobile() + ", your " + Utils.capitalize(invoice.getInvoiceType()) + " invoice for this month has been generated.", invoice.getCustomerId(), invoice.getHostelId());
                 HashMap<String, String> payloads = new HashMap<>();
                 payloads.put("title", "Invoice Generated");
-                payloads.put("type", "INVOICE_NOTIFICATION");
+                payloads.put("type", NotificationType.INVOICE_NOTIFICATION.name());
                 payloads.put("description", "Hi " + invoice.getCustomerMobile() + ", your " + Utils.capitalize(invoice.getInvoiceType()) + " invoice for this month has been generated.");
                 Message message = Message.builder().setToken(fCmToken).putAllData(payloads).build();
                 try {
@@ -107,7 +108,7 @@ public class FCMNotificationService {
                 if (!fcmTokens.isEmpty()) {
                     HashMap<String, String> payloads = new HashMap<>();
                     payloads.put("title", "New complaints for " + complaintType);
-                    payloads.put("type", "COMPLAINTS_RAISED");
+                    payloads.put("type", NotificationType.COMPLAINTS_RAISED.name());
                     payloads.put("description", "Hi," + fullName.toString() + " has raised a complaints for" + complaintType);
 
                     MulticastMessage multicastMessage = MulticastMessage.builder()
@@ -167,7 +168,7 @@ public class FCMNotificationService {
                 if (!fcmTokens.isEmpty()) {
                     HashMap<String, String> payloads = new HashMap<>();
                     payloads.put("title", "Bed Change Request");
-                    payloads.put("type", "BED_CHANGE_REQUEST");
+                    payloads.put("type", NotificationType.BED_CHANGE_REQUEST.name());
                     payloads.put("description", fullName+" has raised a bed change request. Review and respond now.");
 
                     MulticastMessage multicastMessage = MulticastMessage.builder()
