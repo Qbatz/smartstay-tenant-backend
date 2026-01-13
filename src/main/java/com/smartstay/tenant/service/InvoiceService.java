@@ -427,6 +427,7 @@ public class InvoiceService {
         StringBuilder hostelFullAddress = new StringBuilder();
         String receiptSignatureUrl = null;
         String hostelLogo = null;
+        StringBuilder invoiceRentalPeriod = new StringBuilder();
 
         if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.ADVANCE.name())) {
             invoiceType = "Advance";
@@ -434,6 +435,12 @@ public class InvoiceService {
             invoiceType = "Booking";
         } else if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.SETTLEMENT.name())) {
             invoiceType = "Settlement";
+        }
+
+        if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.RENT.name()) || invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.REASSIGN_RENT.name())) {
+            invoiceRentalPeriod.append(Utils.dateToDateMonth(invoicesV1.getInvoiceStartDate()));
+            invoiceRentalPeriod.append("-");
+            invoiceRentalPeriod.append(Utils.dateToDateMonth(invoicesV1.getInvoiceEndDate()));
         }
 
         if (hostelV1.getHouseNo() != null && !hostelV1.getHouseNo().equalsIgnoreCase("")) {
@@ -616,7 +623,13 @@ public class InvoiceService {
         }
 
 
-        ReceiptDetails details = new ReceiptDetails(invoicesV1.getInvoiceNumber(), transactionV1.getTransactionReferenceId(), Utils.dateToString(invoicesV1.getInvoiceStartDate()), invoicesV1.getInvoiceId(), invoicesV1.getTotalAmount(), invoicesV1.getPaidAmount(), dueAmount, hostelEmail, hostelPhone, "91", receiptInfo, customerInfo, stayInfo, accountDetails, receiptConfigInfo);
+        ReceiptDetails details = new ReceiptDetails(invoicesV1.getInvoiceNumber(), transactionV1.getTransactionReferenceId(),
+                Utils.dateToString(invoicesV1.getInvoiceStartDate()),
+                invoicesV1.getInvoiceId(), invoicesV1.getTotalAmount(),
+                invoicesV1.getPaidAmount(), dueAmount, hostelEmail,
+                hostelPhone, "91", receiptInfo,
+                customerInfo, stayInfo, invoiceRentalPeriod.toString(),
+                accountDetails, receiptConfigInfo);
         return new ResponseEntity<>(details, HttpStatus.OK);
 
     }
