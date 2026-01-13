@@ -94,6 +94,11 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             FROM invoicesv1 i
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
+                   AND t.paid_at = (
+                               SELECT MAX(t2.paid_at)
+                               FROM transactionv1 t2
+                               WHERE t2.invoice_id = i.invoice_id
+                         )
             WHERE i.hostel_id = :hostelId
               AND i.customer_id = :customerId
             GROUP BY
