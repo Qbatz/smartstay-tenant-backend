@@ -18,6 +18,8 @@ public record ReceiptDetails(
         ReceiptInfo receiptInfo,
         CustomerInfo customerInfo,
         StayInfo stayInfo,
+
+        String invoiceRentalPeriod,
         AccountDetails accountDetails,
         ReceiptConfigInfo configurations
 ) {
