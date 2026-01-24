@@ -4,6 +4,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.dao.ComplaintsV1;
 import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.ennum.RequestType;
@@ -212,5 +213,13 @@ public class NotificationService {
         notification.setUpdatedAt(new Date());
         notificationService.saveAdminNotification(notification);
         fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
+    }
+
+    public void sendPushNotification(String assigneeId, String complaintType) {
+        fcmNotificationService.sendCommentNotification(assigneeId, complaintType);
+    }
+
+    public void findAndUpdateComplaints(ComplaintsV1 complaint, String title) {
+        notificationService.updateComplaintsOnNotification(complaint, title);
     }
 }

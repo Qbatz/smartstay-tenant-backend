@@ -22,10 +22,10 @@ public class FinalSettlementDetails {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date dueDate;
 
-    @JsonFormat(pattern = "dd MMM yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private Date startDate;
 
-    @JsonFormat(pattern = "dd MMM yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private Date endDate;
 
     private Double totalAmount;

@@ -7,11 +7,11 @@ import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
 import java.util.Date;
 import java.util.List;
 
-public record ComplaintDetailsResponse(Integer complaintId, String complaintTypeName,
+public record ComplaintDetailsResponse(Integer complaintId,
+                                       String complaintTypeName,
 
                                        Integer complaintTypeId,
                                        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "Asia/Kolkata") Date complaintDate,
-
                                        String description, String status, String assigneeName, String floorName,
                                        String roomName, String bedName, String customerName,
 

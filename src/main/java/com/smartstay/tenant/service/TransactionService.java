@@ -111,4 +111,7 @@ public class TransactionService {
     }
 
 
+    public List<TransactionV1> getAllTransactionsByInvoiceId(String invoiceId) {
+        return transactionV1Repository.findByInvoiceId(invoiceId);
+    }
 }

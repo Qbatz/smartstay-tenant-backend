@@ -250,11 +250,7 @@ public class InvoiceService {
 
         BillingDates billingDate = hostelService.getBillStartAndEndDateBasedOnDate(invoice.getHostelId(), invoiceStartDate);
 
-        System.out.println("Billing Start Date: " + billingDate.currentBillStartDate() + ", Billing End Date: " + billingDate.currentBillEndDate());
-        System.out.println("customerId: " + customerId);
         List<CustomersBedHistory> customersBedHistories = customerBedHistoryService.getCustomerBedByDates(customerId, billingDate.currentBillStartDate(), invoice.getInvoiceEndDate());
-
-        System.out.println("Customers Bed Histories: " + customersBedHistories.size());
 
         Date billingStart = billingDate.currentBillStartDate(); // Dec 01
         Date billingEnd = billingDate.currentBillEndDate();     // Dec 31
@@ -281,8 +277,6 @@ public class InvoiceService {
             }
 
             long noOfDays = Utils.findNumberOfDays(effectiveStart, effectiveEnd);
-
-            System.out.println("Effective Start: " + effectiveStart + ", Effective End: " + effectiveEnd + ", Days: " + noOfDays);
 
             noOfDaysStayed += noOfDays;
         }
@@ -339,7 +333,11 @@ public class InvoiceService {
         currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed, payableRent, lastRentPaid, customersBedHistoriesForLastMonth);
 
 
-        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo, currentMonthInfo, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(),
+                invoice.getInvoiceNumber(),
+                Utils.capitalize(invoice.getInvoiceType()),
+                invoice.getInvoiceGeneratedDate(),
+                invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo, currentMonthInfo, lastPaidDate, lastPaymentMode, referenceId, showMessage);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }
@@ -348,8 +346,19 @@ public class InvoiceService {
 
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoiceId);
 
-        Double totalPaid = transactionService.getTotalPaidAmountByInvoiceId(invoiceId);
-        if (totalPaid == null) totalPaid = 0.0;
+        Double totalPaid = 0.0;
+        List<TransactionV1> listTransactions = transactionService.getAllTransactionsByInvoiceId(invoiceId);
+        if (listTransactions != null) {
+            totalPaid = listTransactions
+                    .stream()
+                    .mapToDouble(i -> {
+                        if (i.getPaidAmount() != null) {
+                            return i.getPaidAmount();
+                        }
+                        return 0.0;
+                    })
+                    .sum();
+        }
 
         double dueAmount = invoice.getTotalAmount() - totalPaid;
 
@@ -396,9 +405,16 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        System.out.println("showMessage: " + Utils.dateToString(invoice.getInvoiceDueDate()));
-
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()), Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()), Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, Utils.dateToString(lastPaidDate), lastPaymentMode, referenceId, showMessage);
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(),
+                invoice.getInvoiceNumber(),
+                Utils.capitalize(invoice.getInvoiceType()),
+                Utils.dateToString(invoice.getInvoiceGeneratedDate()),
+                Utils.dateToString(invoice.getInvoiceDueDate()),
+                Utils.dateToString(invoice.getInvoiceStartDate()),
+                Utils.dateToString(invoice.getInvoiceEndDate()),
+                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
+                invoice.getGstPercentile(), invoiceItems, receipts, Utils.dateToString(lastPaidDate),
+                lastPaymentMode, referenceId, showMessage);
     }
 
 
@@ -614,7 +630,13 @@ public class InvoiceService {
         else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
             paymentMode = "Bank";
         }
-        ReceiptInfo receiptInfo = new ReceiptInfo(transactionV1.getTransactionReferenceId(), transactionV1.getTransactionId(), Utils.dateToString(transactionV1.getPaymentDate()), Utils.dateToTime(transactionV1.getPaymentDate()), transactionV1.getPaidAmount(), invoiceType, transactionV1.getReferenceNumber(), receiverfullName.toString(), invoiceMonth, paymentMode);
+        ReceiptInfo receiptInfo = new ReceiptInfo(transactionV1.getTransactionReferenceId(),
+                transactionV1.getTransactionId(),
+                Utils.dateToString(transactionV1.getPaymentDate()),
+                Utils.dateToTime(transactionV1.getPaymentDate()),
+                transactionV1.getPaidAmount(),
+                invoiceType,
+                transactionV1.getReferenceNumber(), receiverfullName.toString(), invoiceMonth, paymentMode);
 
 
         double dueAmount = 0.0;
@@ -623,7 +645,8 @@ public class InvoiceService {
         }
 
 
-        ReceiptDetails details = new ReceiptDetails(invoicesV1.getInvoiceNumber(), transactionV1.getTransactionReferenceId(),
+        ReceiptDetails details = new ReceiptDetails(invoicesV1.getInvoiceNumber(),
+                transactionV1.getTransactionReferenceId(),
                 Utils.dateToString(invoicesV1.getInvoiceStartDate()),
                 invoicesV1.getInvoiceId(), invoicesV1.getTotalAmount(),
                 invoicesV1.getPaidAmount(), dueAmount, hostelEmail,

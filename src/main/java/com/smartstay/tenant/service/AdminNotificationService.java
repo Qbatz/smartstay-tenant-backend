@@ -2,6 +2,7 @@ package com.smartstay.tenant.service;
 
 
 import com.smartstay.tenant.dao.AdminNotifications;
+import com.smartstay.tenant.dao.ComplaintsV1;
 import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.repository.AdminNotificationRepository;
 import com.smartstay.tenant.repository.CustomerNotificationRepository;
@@ -9,6 +10,7 @@ import com.smartstay.tenant.response.notification.NotificationProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -45,7 +47,21 @@ public class AdminNotificationService {
     }
 
 
+    public void updateComplaintsOnNotification(ComplaintsV1 complaint, String title) {
+        List<AdminNotifications> listNotifications = adminNotificationRepository.findByUserIdAndSourceId(complaint.getCustomerId(), String.valueOf(complaint.getComplaintId()));
+        if (!listNotifications.isEmpty()) {
+            AdminNotifications an = listNotifications
+                    .stream()
+                    .filter(i -> i.getHostelId().equalsIgnoreCase(complaint.getHostelId()))
+                    .findFirst()
+                    .orElse(null);
 
-
-
+            if (an != null) {
+                an.setUpdatedAt(new Date());
+                an.setDescription(complaint.getDescription());
+                an.setTitle(title);
+                adminNotificationRepository.save(an);
+            }
+        }
+    }
 }
