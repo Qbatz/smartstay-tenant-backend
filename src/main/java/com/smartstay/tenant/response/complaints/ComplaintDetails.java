@@ -1,5 +1,7 @@
 package com.smartstay.tenant.response.complaints;
 
+import com.smartstay.tenant.dto.complaint.ComplaintComments;
+
 import java.util.List;
 
 public record ComplaintDetails(Integer complaintId,
@@ -11,5 +13,6 @@ public record ComplaintDetails(Integer complaintId,
                                String time,
                                CustomerDetails customerDetails,
                                UserDetails assignee,
-                               List<ComplaintImages> complaintImages) {
+                               List<ComplaintImages> complaintImages,
+                               List<ComplaintComments> comments) {
 }

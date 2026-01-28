@@ -56,6 +56,12 @@ public class CustomerService {
         return new ResponseEntity<>(new CustomerMapper().toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
 
     }
+    public List<Customers> getCustomerDetails(List<String> customerIds) {
+        if (!customerIds.isEmpty()) {
+            return customersRepository.findByCustomerIdIn(customerIds);
+        }
+        return null;
+    }
 
     public Customers getCustomerInformation(String customerId) {
         return customersRepository.findById(customerId).orElse(null);
@@ -184,5 +190,8 @@ public class CustomerService {
         return ResponseEntity.ok(response);
     }
 
+    public List<Customers> findAllByListOfCustomers(List<String> customerIds) {
+        return customersRepository.findAllById(customerIds);
+    }
 
 }

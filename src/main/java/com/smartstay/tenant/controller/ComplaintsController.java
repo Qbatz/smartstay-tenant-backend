@@ -49,6 +49,11 @@ public class ComplaintsController {
         return complaintsService.getComplaintById(hostelId, complaintId);
     }
 
+    @GetMapping("/updates/{hostelId}/{complaintId}")
+    public ResponseEntity<?> getComplaintUpdates(@PathVariable("hostelId") String hostelId, @PathVariable("complaintId") String complaintId) {
+        return complaintsService.getUpdates(hostelId, complaintId);
+    }
+
     @PostMapping("/{hostelId}")
     public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,  @RequestPart(value = "payloads", required = false) AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);

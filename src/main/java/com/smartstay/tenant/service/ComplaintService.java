@@ -18,6 +18,7 @@ import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.comments.CommentsMapper;
 import com.smartstay.tenant.mapper.complaint.ComplaintMapper;
+import com.smartstay.tenant.mapper.complaint.ComplaintUpdatesMapper;
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
@@ -144,19 +145,19 @@ public class ComplaintService {
         }
 
         StringBuilder fullName = new StringBuilder();
-        StringBuilder initials = new StringBuilder();
+        StringBuilder intls = new StringBuilder();
         if (customers.getFirstName() != null) {
             fullName.append(customers.getFirstName());
-            initials.append(customers.getFirstName().toUpperCase().charAt(0));
+            intls.append(customers.getFirstName().toUpperCase().charAt(0));
         }
         if (customers.getLastName() != null && !customers.getLastName().trim().equalsIgnoreCase("")) {
             fullName.append(" ");
             fullName.append(customers.getLastName());
-            initials.append(customers.getLastName().toUpperCase().charAt(0));
+            intls.append(customers.getLastName().toUpperCase().charAt(0));
         }
         else {
             if (customers.getFirstName() != null && customers.getFirstName().length() > 1) {
-                initials.append(customers.getFirstName().toUpperCase().charAt(1));
+                intls.append(customers.getFirstName().toUpperCase().charAt(1));
             }
         }
 
@@ -165,7 +166,7 @@ public class ComplaintService {
                 customers.getFirstName(),
                 customers.getLastName(),
                 customers.getProfilePic(),
-                initials.toString(),
+                intls.toString(),
                 CountriesUtils.COUNTR_CODE_INDIA,
                 customers.getMobile());
 
@@ -200,7 +201,9 @@ public class ComplaintService {
                         users.getLastName(),
                         uFullName.toString(),
                         uInitials.toString(),
-                        users.getProfileUrl());
+                        users.getProfileUrl(),
+                        users.getMobileNo(),
+                        CountriesUtils.COUNTR_CODE_INDIA);
 
             }
         }
@@ -215,6 +218,83 @@ public class ComplaintService {
                     .toList();
         }
 
+        List<com.smartstay.tenant.dto.complaint.ComplaintComments> complaintComments = new ArrayList<>();
+
+        if (complaintsV1.getComplaintComments() != null) {
+            List<String> userId = complaintsV1.getComplaintComments()
+                    .stream()
+                    .filter(i -> !i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                    .map(ComplaintComments::getCreatedBy)
+                    .toList();
+
+            List<String> tenantUserIds = complaintsV1.getComplaintComments()
+                    .stream()
+                    .filter(i -> i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                    .map(ComplaintComments::getCreatedBy)
+                    .toList();
+
+            List<Users> adminUsers = userService.findAllUsersById(userId);
+            List<Customers> tenants = customerService.findAllByListOfCustomers(tenantUserIds);
+
+            complaintComments = complaintsV1.getComplaintComments()
+                    .stream()
+                    .map(i -> {
+                        StringBuilder initials = new StringBuilder();
+                        String profilePic = null;
+                        if (i.getUserType().equalsIgnoreCase(UserType.TENANT.name())) {
+                            if (!tenants.isEmpty()) {
+                                Customers cus = tenants.stream()
+                                        .filter(tnt -> tnt.getCustomerId().equalsIgnoreCase(i.getCreatedBy()))
+                                        .findFirst()
+                                        .orElse(null);
+                                if (cus != null) {
+                                    profilePic = cus.getProfilePic();
+                                    if (cus.getFirstName() != null) {
+                                        initials.append(cus.getFirstName().trim().toUpperCase().charAt(0));
+                                    }
+                                    if (cus.getLastName() != null && !cus.getLastName().trim().equalsIgnoreCase("")) {
+                                        initials.append(cus.getLastName().trim().toUpperCase().charAt(0));
+                                    }
+                                    else if (cus.getFirstName() != null) {
+                                        if (cus.getFirstName().length() > 1) {
+                                            initials.append(cus.getFirstName().trim().toUpperCase().charAt(1));
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                        else {
+                            if (!adminUsers.isEmpty()) {
+                                Users admUsr = adminUsers.stream()
+                                        .filter(tnt -> tnt.getUserId().equalsIgnoreCase(i.getCreatedBy()))
+                                        .findFirst()
+                                        .orElse(null);
+                                if (admUsr != null) {
+                                    profilePic = admUsr.getProfileUrl();
+                                    if (admUsr.getFirstName() != null) {
+                                        initials.append(admUsr.getFirstName().trim().toUpperCase().charAt(0));
+                                    }
+                                    if (admUsr.getLastName() != null && !admUsr.getLastName().trim().equalsIgnoreCase("")) {
+                                        initials.append(admUsr.getLastName().trim().toUpperCase().charAt(0));
+                                    }
+                                    else if (admUsr.getFirstName() != null) {
+                                        if (admUsr.getFirstName().length() > 1) {
+                                            initials.append(admUsr.getFirstName().trim().toUpperCase().charAt(1));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return new com.smartstay.tenant.dto.complaint.ComplaintComments(i.getComment(),
+                                fullName.toString(),
+                                initials.toString(),
+                                profilePic,
+                               Utils.dateToString(i.getCreatedAt()),
+                                Utils.dateToTime(i.getCreatedAt()));
+                    })
+                    .toList();
+        }
 
         com.smartstay.tenant.response.complaints.ComplaintDetails complaintDetails = new com.smartstay.tenant.response.complaints.ComplaintDetails(complaintsV1.getComplaintId(),
                 complaintsV1.getDescription(),
@@ -225,7 +305,8 @@ public class ComplaintService {
                 Utils.dateToTime(complaintsV1.getComplaintDate()),
                 customerDetails,
                 userDetails,
-                images);
+                images,
+                complaintComments);
 
 
         return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
@@ -565,4 +646,80 @@ public class ComplaintService {
         }
     }
 
+    public ResponseEntity<?> getUpdates(String hostelId, String complaintId) {
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        Customers customers = customerService.getCustomerById(authentication.getName());
+        if (customers == null) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        Integer cId = 0;
+        if (complaintId == null) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            cId = Integer.parseInt(complaintId);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        ComplaintsV1 complaints = complaintsV1Repository.findById(cId).orElse(null);
+        if (complaints == null) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        if (!complaints.getHostelId().equalsIgnoreCase(hostelId)) {
+            return new ResponseEntity<>(Utils.INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+        if (!customerService.existsByCustomerIdAndHostelId(customers.getCustomerId(), hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaints.getComplaintTypeId(), hostelId);
+        if (complaintTypeV1 == null) {
+            return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+        String complaintTypeName = complaintTypeV1.getComplaintTypeName();
+        List<ComplaintUpdates> listComplaintUpdates = complaints.getComplaintUpdates();
+        List<ComplaintComments> listComplaintComments = complaints.getComplaintComments();
+
+        List<String> updatedByAdminUsers = new ArrayList<>(listComplaintUpdates
+                .stream()
+                .filter(i -> !i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                .map(ComplaintUpdates::getUpdatedBy)
+                .toList());
+        List<String> updatedByTenantUsers = new ArrayList<>(listComplaintUpdates
+                .stream()
+                .filter(i -> i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                .map(ComplaintUpdates::getUpdatedBy)
+                .toList());
+        updatedByAdminUsers.addAll(listComplaintComments
+                .stream()
+                .filter(i -> !i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                .map(ComplaintComments::getCreatedBy)
+                .toList());
+        updatedByTenantUsers.addAll(listComplaintComments
+                .stream()
+                .filter(i -> i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
+                .map(ComplaintComments::getCreatedBy)
+                .toList());
+
+        List<Users> adminUsers = userService.findAllUsersById(updatedByAdminUsers);
+        List<Customers> tenantUsers = customerService.getCustomerDetails(updatedByTenantUsers);
+
+        List<String> assignedUsersIds = listComplaintUpdates
+                .stream()
+                .filter(i -> i.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name()))
+                .map(ComplaintUpdates::getAssignedTo)
+                .toList();
+        List<Users> assignedUsers = userService.findAllUsersById(assignedUsersIds);
+
+        List<ComplaintUpdatesList> listComments =
+                listComplaintUpdates
+                        .stream()
+                        .map(i -> new ComplaintUpdatesMapper(tenantUsers, adminUsers, listComplaintComments, complaints.getDescription(), assignedUsers, complaintTypeName).apply(i))
+                        .toList();
+        ComplaintsUpdates updates = new ComplaintsUpdates(complaintId, listComments);
+        return new ResponseEntity<>(updates, HttpStatus.OK);
+    }
 }

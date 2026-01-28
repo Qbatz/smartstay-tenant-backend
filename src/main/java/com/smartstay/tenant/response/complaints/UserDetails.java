@@ -5,5 +5,7 @@ public record UserDetails(String userId,
                           String lastName,
                           String fullName,
                           String initials,
-                          String profilePic) {
+                          String profilePic,
+                          String mobile,
+                          String countryCode) {
 }
