@@ -295,9 +295,7 @@ public class InvoiceService {
         }
 
         double payableRent = 0.0;
-        for (InvoicesV1 inv : currentMonthInvoicesBeforeBedChange) {
-            payableRent += inv.getTotalAmount();
-        }
+
 
         CustomersBedHistory latestBedHistory = customerBedHistoryService.getLatestRentAmount(customerId);
 
@@ -330,7 +328,12 @@ public class InvoiceService {
 
         List<BedHistory> customersBedHistoriesForLastMonth = customerBedHistoryService.getBedHistory(invoice.getInvoiceGeneratedDate(),customerId, invoice.getHostelId(), billingDate.currentBillStartDate(), billingDate.currentBillEndDate());
 
-        currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed, payableRent, lastRentPaid, customersBedHistoriesForLastMonth);
+        payableRent = customersBedHistoriesForLastMonth
+                .stream()
+                .mapToDouble(BedHistory::rent)
+                .sum();
+        currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed,
+                (double)Math.round(payableRent), lastRentPaid, customersBedHistoriesForLastMonth);
 
 
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(),
@@ -674,7 +677,6 @@ public class InvoiceService {
         if (invoicesV1 == null) {
             return new ResponseEntity<>(Utils.INVALID_INVOICE_ID, HttpStatus.BAD_REQUEST);
         }
-
 
         String paymentStatus = null;
         if (invoicesV1.getPaymentStatus() != null) {

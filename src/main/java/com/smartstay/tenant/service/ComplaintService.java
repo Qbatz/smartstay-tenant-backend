@@ -719,7 +719,7 @@ public class ComplaintService {
                         .stream()
                         .map(i -> new ComplaintUpdatesMapper(tenantUsers, adminUsers, listComplaintComments, complaints.getDescription(), assignedUsers, complaintTypeName).apply(i))
                         .toList();
-        ComplaintsUpdates updates = new ComplaintsUpdates(complaintId, listComments);
+        ComplaintsUpdates updates = new ComplaintsUpdates(complaintId, complaints.getStatus(), listComments);
         return new ResponseEntity<>(updates, HttpStatus.OK);
     }
 }

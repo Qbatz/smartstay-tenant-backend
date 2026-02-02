@@ -206,5 +206,16 @@ public final class Utils {
         return ChronoUnit.DAYS.between(start, end) + 1;
     }
 
+    public static long findNoOfDaysInCurrentMonth(Date date) {
+        LocalDate localDate = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return localDate.lengthOfMonth();
+    }
+    public static Double roundOffWithTwoDigit(double number) {
+        return Math.round(number * 100.0) / 100.0;
+    }
+
 
 }

@@ -11,5 +11,6 @@ public record ComplaintUpdatesList(String update,
                                    String profilePic,
                                    String updatedAt,
                                    String updatedTime,
+                                   String status,
                                    List<ComplaintComments> comments) {
 }

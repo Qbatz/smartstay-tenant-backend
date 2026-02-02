@@ -193,6 +193,7 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
                 profilePic,
                 updatedAt,
                 updatedTime,
+                complaintUpdates.getStatus(),
                 listComments);
     }
 
