@@ -53,4 +53,6 @@ public interface AdminNotificationRepository extends JpaRepository<AdminNotifica
     int markNotificationsAsRead(@Param("notificationIds") List<Long> notificationIds, @Param("hostelId") String hostelId);
 
     Optional<AdminNotifications> findByIdAndIsDeletedFalse(Long id);
+
+    List<AdminNotifications> findByUserIdAndSourceId(String userId, String sourceId);
 }

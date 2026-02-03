@@ -23,7 +23,8 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
                     b.accountType,
                     b.bankName,
                     t.paidAmount,
-                    t.paidAt
+                    t.paidAt,
+                    t.transactionReferenceId
                 )
                 FROM TransactionV1 t
                 LEFT JOIN BankingV1 b ON b.bankId = t.bankId

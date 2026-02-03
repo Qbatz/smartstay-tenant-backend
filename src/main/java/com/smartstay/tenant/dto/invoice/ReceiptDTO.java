@@ -21,4 +21,5 @@ public class ReceiptDTO {
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date paidAt;
+    private String transactionNumber;
 }

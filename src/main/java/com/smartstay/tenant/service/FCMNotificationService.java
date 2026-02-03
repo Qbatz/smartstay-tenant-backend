@@ -4,10 +4,7 @@ package com.smartstay.tenant.service;
 import com.google.firebase.messaging.*;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.InvoicesV1;
-import com.smartstay.tenant.dao.Users;
-import com.smartstay.tenant.dao.UsersConfig;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.ennum.NotificationType;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,6 +182,45 @@ public class FCMNotificationService {
                 }
             }
 
+        }
+    }
+
+    public void sendCommentNotification(String assigneeId, String complaintType) {
+        if (!authentication.isAuthenticated()) {
+            return;
+        }
+
+        Users users = userService.findUserByUserId(assigneeId);
+        if (users != null) {
+            UsersConfig config = users.getConfig();
+            if (config != null) {
+                List<String> fcmIds = new ArrayList<>();
+                if (config.getFcmWebToken() != null) {
+                    fcmIds.add(config.getFcmWebToken());
+                }
+                if (config.getFcmToken() != null) {
+                    fcmIds.add(config.getFcmToken());
+                }
+
+                if (!fcmIds.isEmpty()) {
+                    HashMap<String, String> payloads = new HashMap<>();
+                    payloads.put("title", "New Comment added for a complaint");
+                    payloads.put("type", NotificationType.COMPLAINT_COMMENTS.name());
+                    payloads.put("description", "New comment added for a complaint " + complaintType);
+
+                    MulticastMessage multicastMessage = MulticastMessage.builder()
+                            .addAllTokens(fcmIds)
+                            .putAllData(payloads)
+                            .build();
+
+                    try {
+                        BatchResponse response = FirebaseMessaging.getInstance()
+                                .sendEachForMulticast(multicastMessage);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
     }
 }

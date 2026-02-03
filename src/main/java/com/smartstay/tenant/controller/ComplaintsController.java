@@ -35,21 +35,29 @@ public class ComplaintsController {
         return complaintsService.getComplaintList(hostelId, page, size);
     }
 
-    @GetMapping("/{hostelId}/{complaintId}")
+    @GetMapping("/old/{hostelId}/{complaintId}")
     public ResponseEntity<?> getComplaintById(
             @PathVariable String hostelId,
             @PathVariable Integer complaintId
 
     ) {
+        return complaintsService.getComplaintByIdOld(hostelId, complaintId);
+    }
+
+    @GetMapping("/{hostelId}/{complaintId}")
+    public ResponseEntity<?> getComplaintDetails(@PathVariable("hostelId") String hostelId, @PathVariable("complaintId") String complaintId) {
         return complaintsService.getComplaintById(hostelId, complaintId);
     }
 
+    @GetMapping("/updates/{hostelId}/{complaintId}")
+    public ResponseEntity<?> getComplaintUpdates(@PathVariable("hostelId") String hostelId, @PathVariable("complaintId") String complaintId) {
+        return complaintsService.getUpdates(hostelId, complaintId);
+    }
 
     @PostMapping("/{hostelId}")
     public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,  @RequestPart(value = "payloads", required = false) AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
-
     @PutMapping("/{hostelId}/{complaintId}")
     public ResponseEntity<?> editComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart(value = "payloads", required = false) UpdateComplaint payloads, @PathVariable("hostelId") String hostelId, @PathVariable("complaintId") Integer complaintId) {
         return complaintsService.updateComplaint(complaintImages, payloads, hostelId,complaintId);

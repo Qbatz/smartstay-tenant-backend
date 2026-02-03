@@ -39,8 +39,6 @@ public class InvoiceController {
         return invoiceService.getInvoiceDetailsByInvoiceId(hostelId, invoiceId);
     }
 
-
-
     @GetMapping("/{hostelId}/{invoiceId}")
     public ResponseEntity<?> getInvoiceById(@PathVariable String hostelId, @PathVariable String invoiceId) {
         return invoiceService.getInvoicesById(hostelId,invoiceId);

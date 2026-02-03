@@ -42,10 +42,14 @@ public final class Utils {
     public static final String INVOICE_NOT_FOUND = "Invoice not found.";
     public static final String PAYMENTS_NOT_FOUND = "Payments not found.";
     public static final String COMPLAINT_TYPE_NOT_FOUND = "Complaint type not found.";
+    public static final String INVALID_COMPLAINT_ID = "Invalid complaint id passed";
+    public static final String INVALID_REQUEST = "Invalid request";
     public static final String ENVIRONMENT_LOCAL = "LOCAL";
     public static final String ENVIRONMENT_DEV = "DEV";
     public static final String ENVIRONMENT_QA = "QA";
     public static final String ENVIRONMENT_PROD = "PROD";
+
+    public static final String CANNOT_MAKE_BED_CHANGE_REQUEST_NOTICE_CUSTOMER = "Bed change is not allowed during the notice period.";
     private Utils() {
     }
 
@@ -200,6 +204,17 @@ public final class Utils {
         LocalDate end   = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         return ChronoUnit.DAYS.between(start, end) + 1;
+    }
+
+    public static long findNoOfDaysInCurrentMonth(Date date) {
+        LocalDate localDate = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return localDate.lengthOfMonth();
+    }
+    public static Double roundOffWithTwoDigit(double number) {
+        return Math.round(number * 100.0) / 100.0;
     }
 
 

@@ -4,6 +4,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BedChangeRequest;
+import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BedDetails;
 import com.smartstay.tenant.ennum.CustomerStatus;
@@ -49,6 +50,14 @@ public class BedsService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
         String customerId = authentication.getName();
+
+        Customers customers = customerService.getCustomerInformation(customerId);
+        if (customers == null) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+        if (customers.getCurrentStatus().equalsIgnoreCase(CustomerStatus.NOTICE.name())) {
+            return new ResponseEntity<>(Utils.CANNOT_MAKE_BED_CHANGE_REQUEST_NOTICE_CUSTOMER, HttpStatus.BAD_REQUEST);
+        }
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);

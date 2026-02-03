@@ -113,7 +113,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 FROM InvoicesV1 i
                 WHERE i.invoiceId = :invoiceId
                   AND i.customerId = :customerId
-                  AND i.isCancelled = false
             """)
     InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId, @Param("customerId") String customerId);
 

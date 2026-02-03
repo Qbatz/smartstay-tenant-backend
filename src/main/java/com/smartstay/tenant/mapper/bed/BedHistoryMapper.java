@@ -1,6 +1,7 @@
 package com.smartstay.tenant.mapper.bed;
 
 
+import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.CustomersBedHistory;
 import com.smartstay.tenant.dao.Floors;
@@ -46,8 +47,11 @@ public class BedHistoryMapper {
                 billingEndDate,
                 fallbackEndDate
         );
-        
-        return new BedHistory(bed != null ? bed.getBedName() : "", room != null ? room.getRoomName() : "", floor != null ? floor.getFloorName() : "", noOfDaysStayed, history.getRentAmount());
+        Double rent = history.getRentAmount();
+        long totalDaysInAMonth = Utils.findNoOfDaysInCurrentMonth(billingStartDate);
+        Double rentPerDay = rent / totalDaysInAMonth;
+        double rentForStayedDays = rentPerDay * noOfDaysStayed;
+        return new BedHistory(bed != null ? bed.getBedName() : "", room != null ? room.getRoomName() : "", floor != null ? floor.getFloorName() : "", noOfDaysStayed, Utils.roundOffWithTwoDigit(rentForStayedDays));
     }
 
     private long calculateBillingDays(
