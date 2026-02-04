@@ -53,6 +53,7 @@ public class AdminNotificationService {
             AdminNotifications an = listNotifications
                     .stream()
                     .filter(i -> i.getHostelId().equalsIgnoreCase(complaint.getHostelId()))
+                    .filter(i -> i.getSourceId().equalsIgnoreCase(String.valueOf(complaint.getComplaintId())))
                     .findFirst()
                     .orElse(null);
 

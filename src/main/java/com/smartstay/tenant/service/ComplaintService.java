@@ -214,6 +214,12 @@ public class ComplaintService {
             images = complaintsV1
                     .getAdditionalImages()
                     .stream()
+                    .filter(i -> {
+                        if (i.getIsDeleted() == null) {
+                            return true;
+                        }
+                        return !i.getIsDeleted();
+                    })
                     .map(i -> new com.smartstay.tenant.response.complaints.ComplaintImages(i.getId(), i.getImageUrl()))
                     .toList();
         }
@@ -534,10 +540,10 @@ public class ComplaintService {
             complaint.setAdditionalImages(complaintImagesList);
         }
         complaintsV1Repository.save(complaint);
-        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaintId, hostelId);
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaint.getComplaintTypeId(), hostelId);
         String title = null;
         if (complaintTypeV1 != null) {
-            title = "Complaint updated for " + complaintTypeV1.getComplaintTypeName();
+            title = "Complaint raised for " + complaintTypeV1.getComplaintTypeName();
         }
         notificationService.findAndUpdateComplaints(complaint, title);
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
