@@ -82,6 +82,8 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
                     a.amenity_name AS amenityName,
                     a.amenity_amount AS amenityAmount,
                     a.is_pro_rate AS proRate,
+                    a.description AS description,
+                    a.terms_and_condition as termsAndCondition,
                     CASE 
                         WHEN EXISTS (
                             SELECT 1 
