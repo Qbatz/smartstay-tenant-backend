@@ -80,7 +80,8 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        AmenityDetails amenityInfo = amenityRepository.findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
+        AmenityDetails amenityInfo = amenityRepository
+                .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
         if (amenityInfo != null) {
             return new ResponseEntity<>(amenityInfo, HttpStatus.OK);
         }
