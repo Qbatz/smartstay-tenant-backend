@@ -26,8 +26,7 @@ public record BookingDetailsDto(
         @JsonFormat(pattern = "dd/MM/yyyy")
         Date joiningDate,
 
-        @JsonFormat(pattern = "dd/MM/yyyy")
-        Date expectedJoiningDate,
+        String expectedJoiningDate,
 
         String bookingId,
         String currentStatus,

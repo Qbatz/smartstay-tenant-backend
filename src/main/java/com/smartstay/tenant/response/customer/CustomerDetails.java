@@ -24,6 +24,8 @@ public record CustomerDetails(
 
         String initials,
 
+        String expJoiningDate,
+
         @JsonFormat(pattern = "dd/MM/yyyy")
         Date dateOfBirth,
 
