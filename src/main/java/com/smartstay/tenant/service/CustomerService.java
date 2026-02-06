@@ -53,7 +53,8 @@ public class CustomerService {
         if (customers == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
-        return new ResponseEntity<>(new CustomerMapper().toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
+        return new ResponseEntity<>(new CustomerMapper()
+                .toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
 
     }
     public List<Customers> getCustomerDetails(List<String> customerIds) {

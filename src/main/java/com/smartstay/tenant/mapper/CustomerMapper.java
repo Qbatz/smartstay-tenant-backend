@@ -39,7 +39,7 @@ public class CustomerMapper {
                     b.getLeavingDate(),
                     b.getNoticeDate(),
                     b.getJoiningDate(),
-                    b.getExpectedJoiningDate(),
+                    b.getExpectedJoiningDate() != null ? Utils.dateToString(b.getExpectedJoiningDate()) : null,
                     b.getBookingId(),
                     b.getCurrentStatus(),
                     b.getReasonForLeaving(),
@@ -61,6 +61,7 @@ public class CustomerMapper {
                 c.getState(),
                 c.getProfilePic(),
                 initials.toString(),
+                c.getExpJoiningDate() != null ? Utils.dateToString(c.getExpJoiningDate()) : null,
                 c.getDateOfBirth(),
                 c.getGender(),
 
