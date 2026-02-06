@@ -61,7 +61,8 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             JOIN invoice_items ii ON ii.invoice_id = i.invoice_id
             LEFT JOIN transactionv1 t ON t.invoice_id = i.invoice_id
             WHERE i.customer_id = :customerId
-              AND i.hostel_id = :hostelId
+             AND i.hostel_id = :hostelId
+             AND i.invoice_type IN ('RENT','REASSIGN_RENT')
              AND DATE(i.invoice_start_date) >= DATE(:startDate)
              AND DATE(i.invoice_start_date) <= DATE(:endDate)
             GROUP BY
@@ -74,7 +75,8 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             ORDER BY i.invoice_start_date DESC
             LIMIT 1
             """, nativeQuery = true)
-    InvoiceSummaryProjection getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    InvoiceSummaryProjection getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId,
+                                               @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
     @Query(value = """
             SELECT
