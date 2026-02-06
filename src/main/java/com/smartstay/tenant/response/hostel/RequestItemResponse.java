@@ -12,6 +12,7 @@ public class RequestItemResponse implements Comparable<RequestItemResponse> {
     private String requestId;
     private String type;
     private String requestedDate;
+    private String requestedTime;
     private String requestedDateDisplay;
     private String status;
     private String title;
