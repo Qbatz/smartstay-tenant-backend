@@ -104,12 +104,26 @@ public class HostelService {
         BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
 
 
-        InvoiceSummaryResponse previousMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(), previousBillingDates.currentBillEndDate());
-        InvoiceSummaryResponse currentMonthInvoices = invoiceService.getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(), currentMonthBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse previousMonthInvoices = invoiceService
+                .getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(),
+                        previousBillingDates.currentBillEndDate());
+        InvoiceSummaryResponse currentMonthInvoices = invoiceService
+                .getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(),
+                        currentMonthBillingDates.currentBillEndDate());
 
-        InvoiceSummary previousSummary = previousMonthInvoices != null ? new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(), previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(), previousMonthInvoices.getCurrentInvoiceEndDate(), false, buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
+        InvoiceSummary previousSummary = previousMonthInvoices != null ?
+                new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(),
+                        previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(),
+                        previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(),
+                        previousMonthInvoices.getCurrentInvoiceEndDate(), false, buildHint(previousMonthInvoices),
+                        buildMessage(previousMonthInvoices)) : null;
 
-        InvoiceSummary currentSummary = currentMonthInvoices != null ? new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(), currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(), currentMonthInvoices.getCurrentInvoiceEndDate(), isToday(currentMonthInvoices.getInvoiceGeneratedDate()), buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;
+        InvoiceSummary currentSummary = currentMonthInvoices != null ?
+                new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getPaidAmount(),
+                        currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
+                        currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(),
+                        currentMonthInvoices.getCurrentInvoiceEndDate(), isToday(currentMonthInvoices.getInvoiceGeneratedDate()),
+                        buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
         HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaints);
