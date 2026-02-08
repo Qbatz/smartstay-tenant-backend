@@ -42,6 +42,7 @@ public class InvoicesV1 {
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
     List<String> cancelledInvoices;
+    String invoiceUrl;
     String createdBy;
     String updatedBy;
     Date invoiceGeneratedDate;

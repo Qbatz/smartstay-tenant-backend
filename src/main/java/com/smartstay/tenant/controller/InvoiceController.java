@@ -44,9 +44,13 @@ public class InvoiceController {
         return invoiceService.getInvoicesById(hostelId,invoiceId);
     }
 
-
     @GetMapping("payment-list/{hostelId}")
     public ResponseEntity<?> getPaymentList(@PathVariable String hostelId) {
         return transactionService.getTransactionList(hostelId);
+    }
+
+    @GetMapping("/pdf/{hostelId}/{invoiceId}")
+    public ResponseEntity<?> downloadInvoicePdf(@PathVariable("hostelId") String hostelId, @PathVariable("invoiceId") String invoiceId) {
+        return invoiceService.downloadPdf(hostelId, invoiceId);
     }
 }

@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.InvoiceUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.config.RestTemplateLoggingInterceptor;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BedDetails;
 import com.smartstay.tenant.dto.BillingDates;
@@ -12,6 +13,7 @@ import com.smartstay.tenant.dto.invoice.*;
 import com.smartstay.tenant.ennum.BankAccountType;
 import com.smartstay.tenant.ennum.BillConfigTypes;
 import com.smartstay.tenant.ennum.InvoiceType;
+import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.invoice.InvoiceItemMapper;
 import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
 import com.smartstay.tenant.repository.HostelRepository;
@@ -23,22 +25,26 @@ import com.smartstay.tenant.response.receipt.ReceiptConfigInfo;
 import com.smartstay.tenant.response.receipt.ReceiptDetails;
 import com.smartstay.tenant.response.receipt.ReceiptInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class InvoiceService {
 
-
+    @Value("${REPORTS_URL}")
+    private String reportsUrl;
+    private final RestTemplate restTemplate;
     @Autowired
     private Authentication authentication;
 
@@ -72,6 +78,11 @@ public class InvoiceService {
     @Autowired
     private UserService userService;
     private HostelService hostelService;
+
+    public InvoiceService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        restTemplate.setInterceptors(Collections.singletonList(new RestTemplateLoggingInterceptor()));
+    }
 
     public static long calculateBillableDays(Date invoiceStartDate, Date joiningDate, Date invoiceEndDate) {
         if (invoiceStartDate == null || joiningDate == null || invoiceEndDate == null) {
@@ -901,4 +912,48 @@ public class InvoiceService {
 
     }
 
+    public ResponseEntity<?> downloadPdf(String hostelId, String invoiceId) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        InvoicesV1 invoicesV1 = invoicesV1Repository.getReferenceById(invoiceId);
+        if (invoicesV1 == null) {
+            return new ResponseEntity<>(Utils.INVALID_INVOICE_ID, HttpStatus.BAD_REQUEST);
+        }
+        if (invoicesV1.getPaymentStatus().equalsIgnoreCase(PaymentStatus.PAID.name())) {
+            if (invoicesV1.getInvoiceUrl() != null) {
+                return new ResponseEntity<>(invoicesV1.getInvoiceUrl(), HttpStatus.OK);
+            }
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        String endpoint = reportsUrl + "/v2/reports/invoices/"+ hostelId + "/" +  invoiceId;
+        HttpEntity<Void> request =
+                new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                endpoint,
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+        if (response.getStatusCode() == HttpStatus.OK) {
+            if (invoicesV1.getPaymentStatus().equalsIgnoreCase(PaymentStatus.PAID.name())) {
+                invoicesV1.setInvoiceUrl(response.getBody());
+
+                invoicesV1Repository.save(invoicesV1);
+            }
+            return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(Utils.TRY_AGAIN, HttpStatus.BAD_REQUEST);
+        }
+    }
 }
