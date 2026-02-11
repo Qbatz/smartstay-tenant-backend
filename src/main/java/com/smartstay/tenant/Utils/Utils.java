@@ -19,6 +19,7 @@ public final class Utils {
     public static final String UNAUTHORIZED = "Unauthorized";
     public static final String SUCCESS = "Success";
     public static final String FAILED = "Failed";
+    public static final String TRY_AGAIN = "Try again";
     public static final String CUSTOMER_NOT_FOUND = "Customer not found.";
     public static final String COMPLAINTS_NOT_FOUND = "Complaints not found.";
     public static final String NOTIFICATION_NOT_FOUND = "Notifications not found.";
