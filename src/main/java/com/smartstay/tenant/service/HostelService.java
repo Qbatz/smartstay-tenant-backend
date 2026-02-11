@@ -8,6 +8,8 @@ import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.ennum.RequestType;
+import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
+import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.BedsRepository;
 import com.smartstay.tenant.repository.FloorRepository;
 import com.smartstay.tenant.repository.HostelRepository;
@@ -126,7 +128,11 @@ public class HostelService {
                         buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
-        HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaints);
+        ComplaintDateResponseMapper complaintDateResponseMapper = new ComplaintDateResponseMapper();
+        List<ComplaintDateResponse> complaintDateResponseList = complaints.stream()
+                .map(complaintDateResponseMapper).toList();
+
+        HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaintDateResponseList);
         return new ResponseEntity<>(hostelDetails, HttpStatus.OK);
 
     }
