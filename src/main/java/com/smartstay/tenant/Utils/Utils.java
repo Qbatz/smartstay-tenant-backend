@@ -56,7 +56,10 @@ public final class Utils {
 
     public static Date findLastDate(Integer cycleStartDay, Date date) {
         LocalDate today = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate startDate = LocalDate.of(today.getYear(), today.getMonth(), cycleStartDay);
+        //LocalDate startDate = LocalDate.of(today.getYear(), today.getMonth(), cycleStartDay);
+        YearMonth currentMonth = YearMonth.of(today.getYear(), today.getMonth());
+        int safeStartDay = Math.min(cycleStartDay, currentMonth.lengthOfMonth());
+        LocalDate startDate = currentMonth.atDay(safeStartDay);
 
         LocalDate cycleEnd;
         if (cycleStartDay == 1) {

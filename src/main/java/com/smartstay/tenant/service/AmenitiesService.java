@@ -5,13 +5,11 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
-import com.smartstay.tenant.response.amenity.AmenitiesStatusResponse;
-import com.smartstay.tenant.response.amenity.AmenityDetails;
-import com.smartstay.tenant.response.amenity.AmenityInfoProjection;
-import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
+import com.smartstay.tenant.response.amenity.*;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,6 +37,9 @@ public class AmenitiesService {
     private CustomerService customerService;
     @Autowired
     private UserHostelService userHostelService;
+
+    @Autowired
+    private HostelConfigService hostelConfigService;
 
     public ResponseEntity<?> getAllAmenities(String hostelId) {
         if (!authentication.isAuthenticated()) {
@@ -83,7 +84,9 @@ public class AmenitiesService {
         AmenityDetails amenityInfo = amenityRepository
                 .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
         if (amenityInfo != null) {
-            return new ResponseEntity<>(amenityInfo, HttpStatus.OK);
+            AmenityResponseMapper amenityResponseMapper = new AmenityResponseMapper(hostelConfigService);
+            AmenityDetailsResponse amenityDetailsResponse = amenityResponseMapper.apply(amenityInfo);
+            return new ResponseEntity<>(amenityDetailsResponse, HttpStatus.OK);
         }
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }
