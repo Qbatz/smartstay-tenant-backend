@@ -62,6 +62,7 @@ public class CustomerMapper {
                 c.getProfilePic(),
                 initials.toString(),
                 c.getExpJoiningDate() != null ? Utils.dateToString(c.getExpJoiningDate()) : null,
+                c.getCurrentStatus(),
                 c.getDateOfBirth(),
                 c.getGender(),
 

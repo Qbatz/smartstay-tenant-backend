@@ -2,12 +2,8 @@ package com.smartstay.tenant.response.customer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartstay.tenant.dto.BookingDetailsDto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Date;
-
 
 public record CustomerDetails(
 
@@ -25,6 +21,7 @@ public record CustomerDetails(
         String initials,
 
         String expJoiningDate,
+        String currentStatus,
 
         @JsonFormat(pattern = "dd/MM/yyyy")
         Date dateOfBirth,
