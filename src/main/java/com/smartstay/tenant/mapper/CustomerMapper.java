@@ -1,16 +1,20 @@
 package com.smartstay.tenant.mapper;
 
 import com.smartstay.tenant.Utils.Utils;
+import com.smartstay.tenant.dao.CustomerDocuments;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BookingDetailsDto;
 import com.smartstay.tenant.response.customer.CustomerDetails;
+import com.smartstay.tenant.response.customer.CustomerDocumentsResponse;
 import com.smartstay.tenant.response.customer.CustomerKycDetails;
 import com.smartstay.tenant.response.customer.CustomersBookingDetails;
+
+import java.util.List;
 
 
 public class CustomerMapper {
 
-    public CustomerDetails toDetailsDto(Customers c, CustomersBookingDetails b) {
+    public CustomerDetails toDetailsDto(Customers c, CustomersBookingDetails b, List<CustomerDocuments> documents) {
 
         BookingDetailsDto bookingDto = null;
 
@@ -49,10 +53,23 @@ public class CustomerMapper {
             );
         }
 
+        List<CustomerDocumentsResponse> customerDocumentsResponses = null;
+        if (documents != null && !documents.isEmpty()) {
+            customerDocumentsResponses = documents.stream()
+                    .map(document -> new CustomerDocumentsResponse(
+                            document.getDocumentId(),
+                            document.getDocumentType(),
+                            document.getDocumentUrl(),
+                            document.getDocumentFileType()
+                    )).toList();
+        }
+
         return new CustomerDetails(
                 c.getCustomerId(),
                 c.getFirstName(),
                 c.getLastName(),
+                c.getEmailId(),
+                c.getMobile(),
                 c.getHouseNo(),
                 c.getStreet(),
                 c.getLandmark(),
@@ -72,7 +89,8 @@ public class CustomerMapper {
                         c.getKycDetails() != null ? c.getKycDetails().getReferenceId() : null
                 ),
 
-                bookingDto
+                bookingDto,
+                customerDocumentsResponses
         );
     }
 }

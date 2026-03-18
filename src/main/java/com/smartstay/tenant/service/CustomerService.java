@@ -6,6 +6,7 @@ import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dao.BookingsV1;
+import com.smartstay.tenant.dao.CustomerDocuments;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.mapper.CustomerMapper;
@@ -28,35 +29,39 @@ public class CustomerService {
 
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
-
     @Autowired
     private HostelConfigService hostelConfigService;
-
     @Autowired
     CustomerRepository customersRepository;
     @Autowired
-    UserHostelService userHostelService;
-    @Autowired
     Authentication authentication;
-
     @Autowired
     private BookingsService bookingsService;
     @Autowired
     private UploadFileToS3 uploadToS3;
+    @Autowired
+    private CustomerDocumentService customerDocumentService;
 
     public ResponseEntity<?> getCustomerDetails() {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
-        Customers customers = customersRepository.findById(customerId).orElse(null);
-        if (customers == null) {
+        Customers customer = customersRepository.findById(customerId).orElse(null);
+        if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
-        return new ResponseEntity<>(new CustomerMapper()
-                .toDetailsDto(customers, bookingsService.getCustomerBookingDetails(customerId)), HttpStatus.OK);
 
+        List<CustomerDocuments> customerDocuments = customerDocumentService
+                .getDocumentsByCustomerId(customerId);
+
+        return new ResponseEntity<>(new CustomerMapper()
+                .toDetailsDto(customer, bookingsService.getCustomerBookingDetails(customerId),
+                        customerDocuments), HttpStatus.OK);
     }
+
     public List<Customers> getCustomerDetails(List<String> customerIds) {
         if (!customerIds.isEmpty()) {
             return customersRepository.findByCustomerIdIn(customerIds);
@@ -67,7 +72,6 @@ public class CustomerService {
     public Customers getCustomerInformation(String customerId) {
         return customersRepository.findById(customerId).orElse(null);
     }
-
 
     boolean existsByCustomerIdAndHostelId(String customerId, String hostelId) {
         return customersRepository.existsByCustomerIdAndHostelId(customerId, hostelId);
@@ -82,6 +86,7 @@ public class CustomerService {
     }
 
     public ResponseEntity<?> updateCustomerInfo(EditCustomer updateInfo, MultipartFile file) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
@@ -106,7 +111,12 @@ public class CustomerService {
             if (updateInfo.lastName() != null && !updateInfo.lastName().equalsIgnoreCase("")) {
                 customers.setLastName(updateInfo.lastName());
             }
-
+            if (updateInfo.emailId() != null && !updateInfo.emailId().equalsIgnoreCase("")) {
+                customers.setEmailId(updateInfo.emailId());
+            }
+            if (updateInfo.mobile() != null && !updateInfo.mobile().equalsIgnoreCase("")) {
+                customers.setMobile(updateInfo.mobile());
+            }
             if (updateInfo.houseNo() != null && !updateInfo.houseNo().equalsIgnoreCase("")) {
                 customers.setHouseNo(updateInfo.houseNo());
             }
@@ -116,7 +126,6 @@ public class CustomerService {
             if (updateInfo.landmark() != null && !updateInfo.landmark().equalsIgnoreCase("")) {
                 customers.setLandmark(updateInfo.landmark());
             }
-
             if (updateInfo.city() != null && !updateInfo.city().equalsIgnoreCase("")) {
                 customers.setCity(updateInfo.city());
             }
@@ -140,7 +149,6 @@ public class CustomerService {
             return new ResponseEntity<>(Utils.PAYLOADS_REQUIRED, HttpStatus.BAD_REQUEST);
         }
     }
-
 
     public ResponseEntity<?> getRentDetails(String hostelId) {
 
@@ -179,7 +187,6 @@ public class CustomerService {
             }else {
                 dueDateText =billingRules.getBillingStartDate()+ "th of every month";
             }
-
         }
 
         Map<String, Object> response = new HashMap<>();
@@ -194,5 +201,4 @@ public class CustomerService {
     public List<Customers> findAllByListOfCustomers(List<String> customerIds) {
         return customersRepository.findAllById(customerIds);
     }
-
 }

@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartstay.tenant.dto.BookingDetailsDto;
 
 import java.util.Date;
+import java.util.List;
 
 public record CustomerDetails(
 
         String customerId,
         String firstName,
         String lastName,
+        String emailId,
+        String mobile,
         String houseNo,
         String street,
         String landmark,
@@ -30,6 +33,7 @@ public record CustomerDetails(
 
         CustomerKycDetails kyc,
 
-        BookingDetailsDto bookingDetails
-) {}
+        BookingDetailsDto bookingDetails,
 
+        List<CustomerDocumentsResponse> customerDocuments
+) {}
