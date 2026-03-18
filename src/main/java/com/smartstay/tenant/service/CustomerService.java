@@ -4,10 +4,7 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.BookingsV1;
-import com.smartstay.tenant.dao.CustomerDocuments;
-import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -41,6 +38,8 @@ public class CustomerService {
     private UploadFileToS3 uploadToS3;
     @Autowired
     private CustomerDocumentService customerDocumentService;
+    @Autowired
+    private CustomerCredentialsService customerCredentialsService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -115,6 +114,17 @@ public class CustomerService {
                 customers.setEmailId(updateInfo.emailId());
             }
             if (updateInfo.mobile() != null && !updateInfo.mobile().equalsIgnoreCase("")) {
+                CustomerCredentials credentials = customerCredentialsService
+                        .getCustomerCredentialsByMobile(updateInfo.mobile());
+                if (credentials == null) {
+                    CustomerCredentials newCredentials = new CustomerCredentials();
+                    newCredentials.setCustomerMobile(updateInfo.mobile());
+                    newCredentials.setPinVerified(false);
+                    newCredentials.setCreatedAt(new Date());
+
+                    credentials = customerCredentialsService.save(newCredentials);
+                }
+                customers.setXuid(credentials.getXuid());
                 customers.setMobile(updateInfo.mobile());
             }
             if (updateInfo.houseNo() != null && !updateInfo.houseNo().equalsIgnoreCase("")) {
