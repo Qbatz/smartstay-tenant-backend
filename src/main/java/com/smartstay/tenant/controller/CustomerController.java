@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,23 +22,19 @@ public class CustomerController {
     @Autowired
     CustomerService customerService;
 
-
     @GetMapping("/details")
     public ResponseEntity<?> customerDetails() {
         return customerService.getCustomerDetails();
     }
 
-    @PutMapping("/")
-    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo, @RequestPart(value = "profilePic",required = false) MultipartFile file) {
+    @PutMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo,
+                                            @RequestPart(value = "profilePic",required = false) MultipartFile file) {
         return customerService.updateCustomerInfo(customerInfo, file);
     }
 
     @GetMapping("/rentDetails/{hostelId}")
-    public ResponseEntity<?> getRentDetails(
-            @PathVariable String hostelId
-    ) {
+    public ResponseEntity<?> getRentDetails(@PathVariable String hostelId) {
         return customerService.getRentDetails(hostelId);
     }
-
-
 }
