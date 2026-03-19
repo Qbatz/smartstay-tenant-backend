@@ -40,7 +40,6 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             """, nativeQuery = true)
     List<CustomerHostels> findHostels(String customerId);
 
-
     @Query(value = """
             SELECT 
                 c.customer_id AS customerId,
@@ -73,10 +72,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             """, nativeQuery = true)
     List<CustomerHostels> findHostelsByMobile(String mobile);
 
-
     HostelV1 findByHostelIdAndIsActiveTrueAndIsDeletedFalse(String hostelId);
 
     HostelV1 findByHostelId(String hostelId);
-
-
 }
