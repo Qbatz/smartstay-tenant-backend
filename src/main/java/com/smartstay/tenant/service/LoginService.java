@@ -118,7 +118,6 @@ public class LoginService {
 
     public List<CustomerHostels> getHostels(String mobileNo) {
         return hostelRepository.findHostelsByMobile(mobileNo);
-
     }
 
     public ResponseEntity<?> getHostelsListWithToken(String xuid) {

@@ -51,6 +51,16 @@ public final class Utils {
     public static final String ENVIRONMENT_PROD = "PROD";
 
     public static final String CANNOT_MAKE_BED_CHANGE_REQUEST_NOTICE_CUSTOMER = "Bed change is not allowed during the notice period.";
+    public static final String NO_DOCUMENT_ID_PROVIDED = "No document ID provided";
+    public static final String NO_CONTACT_ID_PROVIDED = "No contact ID provided";
+    public static final String INVALID_GENDER_VALUE = "Invalid gender value";
+    public static final String NAME_IS_REQUIRED = "Name is required";
+    public static final String MOBILE_IS_REQUIRED = "Mobile is required";
+    public static final String CONTACT_ID_REQUIRED = "Contact ID is required";
+    public static final String CONTACT_ID_CANT_BE_ZERO_OR_LESS = "Contact ID can't be 0 or less";
+    public static final String DOCUMENT_ID_REQUIRED = "Document ID is required";
+    public static final String DOCUMENT_ID_CANT_BE_ZERO_OR_LESS = "Document ID can't be 0 or less";
+
     private Utils() {
     }
 

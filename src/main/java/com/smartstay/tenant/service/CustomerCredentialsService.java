@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.dao.CustomerCredentials;
 import com.smartstay.tenant.repository.CustomerCredentialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +25,5 @@ public class CustomerCredentialsService {
 
     public void saveCustomerCredentials(CustomerCredentials credentials) {
         repository.save(credentials);
-    }
-
-    public CustomerCredentials save(CustomerCredentials credentials) {
-        return repository.save(credentials);
     }
 }

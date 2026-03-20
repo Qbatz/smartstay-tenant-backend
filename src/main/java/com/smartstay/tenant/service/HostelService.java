@@ -7,7 +7,6 @@ import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
-import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.BedsRepository;
@@ -25,54 +24,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class HostelService {
 
-
     @Autowired
     private HostelConfigService hostelConfigService;
-
-
     @Autowired
     private ComplaintService complaintService;
-
     @Autowired
     private CustomerService customerService;
-
-
     @Autowired
     private InvoiceService invoiceService;
-
-
     @Autowired
     private HostelRepository hostelRepository;
-
     @Autowired
     private Authentication authentication;
-
-    @Autowired
-    private UserHostelService userHostelService;
-
-
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private FloorRepository floorRepository;
-
-    @Autowired
-    private BedsRepository bedsRepository;
-
     @Autowired
     private AmenityRequestService amenityRequestService;
-
     @Autowired
     private BedChangeRequestService bedChangeRequestService;
 
@@ -83,7 +55,6 @@ public class HostelService {
         String customerId = authentication.getName();
         List<CustomerHostels> hostels = hostelRepository.findHostels(customerId);
         return new ResponseEntity<>(hostels, HttpStatus.OK);
-
     }
 
     public ResponseEntity<?> getHostelDetails(String hostelId) {
@@ -102,9 +73,7 @@ public class HostelService {
         calendar.setTime(startDate);
         calendar.add(Calendar.MONTH, -1);
 
-
         BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
-
 
         InvoiceSummaryResponse previousMonthInvoices = invoiceService
                 .getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(),
@@ -214,7 +183,6 @@ public class HostelService {
                 .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 
-
     public ResponseEntity<?> getCustomerRequests(String hostelId) {
 
         if (!authentication.isAuthenticated()) {
@@ -249,8 +217,6 @@ public class HostelService {
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
-
-
 
     public ResponseEntity<?> getCustomerRequestById(String hostelId, String requestId) {
 
@@ -302,7 +268,4 @@ public class HostelService {
     public HostelV1 getHostelById(String hostelId) {
         return hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
     }
-
-
-
 }
