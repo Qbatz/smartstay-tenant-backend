@@ -6,7 +6,9 @@ import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.ennum.Gender;
+import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.CustomerMapper;
+import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsEditPayload;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
@@ -16,10 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -39,7 +39,9 @@ public class CustomerService {
     @Autowired
     private CustomerDocumentService customerDocumentService;
     @Autowired
-    private CustomerCredentialsService customerCredentialsService;
+    private HostelDuplicateService hostelService;
+    @Autowired
+    private CustomerAdditionalContactsService customerAdditionalContactsService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -53,12 +55,18 @@ public class CustomerService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
+        List<CustomerAdditionalContacts> additionalContacts = customerAdditionalContactsService
+                .getAdditionalContactsByCustomerId(customerId);
+
+        HostelV1 hostel = hostelService.getHostelById(customer.getHostelId());
+
         List<CustomerDocuments> customerDocuments = customerDocumentService
                 .getDocumentsByCustomerId(customerId);
 
         return new ResponseEntity<>(new CustomerMapper()
-                .toDetailsDto(customer, bookingsService.getCustomerBookingDetails(customerId),
-                        customerDocuments), HttpStatus.OK);
+                .toDetailsDto(customer, additionalContacts,
+                        bookingsService.getCustomerBookingDetails(customerId),
+                        hostel, customerDocuments), HttpStatus.OK);
     }
 
     public List<Customers> getCustomerDetails(List<String> customerIds) {
@@ -113,20 +121,6 @@ public class CustomerService {
             if (updateInfo.emailId() != null && !updateInfo.emailId().equalsIgnoreCase("")) {
                 customers.setEmailId(updateInfo.emailId());
             }
-            if (updateInfo.mobile() != null && !updateInfo.mobile().equalsIgnoreCase("")) {
-                CustomerCredentials credentials = customerCredentialsService
-                        .getCustomerCredentialsByMobile(updateInfo.mobile());
-                if (credentials == null) {
-                    CustomerCredentials newCredentials = new CustomerCredentials();
-                    newCredentials.setCustomerMobile(updateInfo.mobile());
-                    newCredentials.setPinVerified(false);
-                    newCredentials.setCreatedAt(new Date());
-
-                    credentials = customerCredentialsService.save(newCredentials);
-                }
-                customers.setXuid(credentials.getXuid());
-                customers.setMobile(updateInfo.mobile());
-            }
             if (updateInfo.houseNo() != null && !updateInfo.houseNo().equalsIgnoreCase("")) {
                 customers.setHouseNo(updateInfo.houseNo());
             }
@@ -147,11 +141,61 @@ public class CustomerService {
                 customers.setDateOfBirth(Utils.stringToDate(formattedDate, Utils.USER_INPUT_DATE_FORMAT));
             }
             if (updateInfo.gender() != null && !updateInfo.gender().equalsIgnoreCase("")) {
-                Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
-                customers.setGender(gender.getLabel());
+                try {
+                    Gender gender = Gender.valueOf(updateInfo.gender().toUpperCase());
+                    customers.setGender(gender.getLabel());
+                } catch (IllegalArgumentException e) {
+                    return new ResponseEntity<>(Utils.INVALID_GENDER_VALUE, HttpStatus.BAD_REQUEST);
+                }
             }
 
             customersRepository.save(customers);
+
+            if (updateInfo.additionalContacts() != null && !updateInfo.additionalContacts().isEmpty()) {
+
+                Set<Long> contactIds = updateInfo.additionalContacts().stream()
+                        .map(CustomerAdditionalContactsEditPayload::contactId)
+                        .collect(Collectors.toSet());
+
+                List<CustomerAdditionalContacts> additionalContacts = customerAdditionalContactsService
+                        .getAdditionalContactsByCustomerIdAndContactIds(customerId, contactIds);
+
+                Map<Long, CustomerAdditionalContacts> additionalContactsMap = additionalContacts.stream()
+                        .collect(Collectors.toMap(CustomerAdditionalContacts::getContactId,
+                                additionalContact -> additionalContact));
+
+                for (CustomerAdditionalContactsEditPayload additionalContactPayload :  updateInfo.additionalContacts()) {
+
+                    CustomerAdditionalContacts additionalContact = additionalContactsMap
+                            .getOrDefault(additionalContactPayload.contactId(), null);
+
+                    if (additionalContact != null) {
+                        if (additionalContactPayload.name() != null && !additionalContactPayload.name().equalsIgnoreCase("")) {
+                            additionalContact.setName(additionalContactPayload.name());
+                        }
+                        if (additionalContactPayload.relationship() != null && !additionalContactPayload.relationship().equalsIgnoreCase("")) {
+                            additionalContact.setRelationship(additionalContactPayload.relationship());
+                        }
+                        if (additionalContactPayload.occupation() != null && !additionalContactPayload.occupation().equalsIgnoreCase("")) {
+                            additionalContact.setOccupation(additionalContactPayload.occupation());
+                        }
+                        if (additionalContactPayload.mobile() != null && !additionalContactPayload.mobile().equalsIgnoreCase("")) {
+                            additionalContact.setMobile(additionalContactPayload.mobile());
+                        }
+                        if (additionalContactPayload.fullAddress() != null && !additionalContactPayload.fullAddress().equalsIgnoreCase("")) {
+                            additionalContact.setFullAddress(additionalContactPayload.fullAddress());
+                        }
+                        if (additionalContactPayload.countryCode() != null && !additionalContactPayload.countryCode().equalsIgnoreCase("")) {
+                            additionalContact.setCountryCode(additionalContactPayload.countryCode());
+                        }
+                        additionalContact.setUpdatedByUserType(UserType.TENANT.name());
+                        additionalContact.setUpdatedBy(customerId);
+                        additionalContact.setUpdatedAt(new Date());
+                    }
+                }
+
+                customerAdditionalContactsService.saveAll(additionalContacts);
+            }
 
             return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
 

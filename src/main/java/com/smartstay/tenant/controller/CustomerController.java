@@ -27,9 +27,9 @@ public class CustomerController {
         return customerService.getCustomerDetails();
     }
 
-    @PutMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateCustomer(@Valid @RequestPart(value = "payloads") EditCustomer customerInfo,
-                                            @RequestPart(value = "profilePic",required = false) MultipartFile file) {
+                                            @RequestPart(value = "profilePic", required = false) MultipartFile file) {
         return customerService.updateCustomerInfo(customerInfo, file);
     }
 

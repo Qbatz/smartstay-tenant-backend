@@ -26,12 +26,8 @@ public interface BookingsRepository extends JpaRepository<BookingsV1, String> {
             """, nativeQuery = true)
     CustomersBookingDetails getCustomerBookingDetails(@Param("customerId") String customerId);
 
-    ;
-
     BookingsV1 findTopByCustomerIdAndHostelIdOrderByJoiningDateDesc(
             String customerId,
             String hostelId
     );
-
-
 }

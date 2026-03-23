@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dto.BillingDates;
@@ -27,11 +26,9 @@ public class HostelConfigService {
         return billingRuleRepository.findByHostel_hostelId(hostelId);
     }
 
-
     public void saveBillingRule(BillingRules billingRule) {
         billingRuleRepository.save(billingRule);
     }
-
 
     public void updateExistingBillRule(BillingRules latestBillingRules) {
         billingRuleRepository.save(latestBillingRules);
