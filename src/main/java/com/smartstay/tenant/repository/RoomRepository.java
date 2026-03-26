@@ -4,12 +4,11 @@ import com.smartstay.tenant.dao.Rooms;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Set;
+
 @Repository
 public interface RoomRepository extends JpaRepository<Rooms, Integer> {
 
-    Rooms findByRoomIdAndParentIdAndHostelId(int roomId, String parentId, String hostelId);
-
-    Rooms findByRoomIdAndParentIdAndHostelIdAndFloorId(int roomId, String parentId, String hostelId,int floorId);
-
-
+    List<Rooms> findAllByRoomIdIn(Set<Integer> roomIds);
 }

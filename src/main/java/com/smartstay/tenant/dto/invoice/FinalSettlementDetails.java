@@ -1,6 +1,8 @@
 package com.smartstay.tenant.dto.invoice;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartstay.tenant.response.eb.InvoiceEbResponse;
+import com.smartstay.tenant.response.invoices.UnpaidInvoices;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -44,6 +46,8 @@ public class FinalSettlementDetails {
     private AdvanceInfo advanceInfo;
     private CurrentMonthInfo currentMonthInfo;
 
+    private List<UnpaidInvoices> unpaidInvoices;
+    private InvoiceEbResponse ebInfo;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date lastPaidDate;
