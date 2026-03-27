@@ -42,9 +42,6 @@ public class FilesConfig {
             throw new RuntimeException(e);
         }
 
-
         return convFile;
     }
-
-
 }

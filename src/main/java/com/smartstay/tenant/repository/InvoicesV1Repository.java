@@ -4,10 +4,8 @@ import com.smartstay.tenant.dao.InvoicesV1;
 import com.smartstay.tenant.dto.invoice.InvoiceItemDTO;
 import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceSummaryProjection;
-import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import com.smartstay.tenant.response.invoices.InvoiceSummary;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,7 +43,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             ORDER BY i.invoiceGeneratedDate DESC
             """)
     List<InvoiceItems> getInvoiceItemDetails(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("itemTypes") List<String> itemTypes);
-
 
     @Query(value = """
             SELECT
@@ -109,7 +106,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """, nativeQuery = true)
     List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
 
-
     @Query("""
                 SELECT i 
                 FROM InvoicesV1 i
@@ -118,14 +114,12 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId, @Param("customerId") String customerId);
 
-
     @Query("""
                 SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
                 FROM InvoiceItems ii
                 WHERE ii.invoice.invoiceId = :invoiceId
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
-
 
     @Query("SELECT SUM(i.paidAmount) FROM InvoicesV1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
     Double findAdvancePaidAmount(@Param("customerId") String customerId);
@@ -171,7 +165,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoicesV1> findCurrentMonthInvoices(String customerId, Date startDate, Date endDate);
 
-
     @Query(
             value = """
         SELECT 
@@ -201,7 +194,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """, nativeQuery = true)
     InvoicesV1 findCurrentRunningInvoice(@Param("customerId") String customerId, @Param("startDate") Date startDate);
 
-
     @Query(value = """
         SELECT COALESCE(SUM(paid_amount), 0)
         FROM invoicesv1
@@ -216,4 +208,5 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             @Param("startDate") Date startDate
     );
 
+    List<InvoicesV1> findAllByInvoiceIdIn(List<String> invoiceIds);
 }

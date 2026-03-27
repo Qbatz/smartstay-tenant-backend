@@ -10,7 +10,6 @@ import com.smartstay.tenant.dto.files.UploadFiles;
 import com.smartstay.tenant.ennum.DocumentType;
 import com.smartstay.tenant.ennum.FileFormat;
 import com.smartstay.tenant.ennum.UserType;
-import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsIdPayload;
 import com.smartstay.tenant.payload.customer.CustomerDocumentsIdPayload;
 import com.smartstay.tenant.payload.customer.UploadDocuments;
 import com.smartstay.tenant.repository.CustomerDocumentRepository;
@@ -54,7 +53,7 @@ public class CustomerDocumentService {
         List<UploadFiles> uploadLists = listFiles
                 .stream()
                 .map(i -> uploadFileToS3.uploadCustomerFiles(
-                        FilesConfig.convertMultipartToFile(i), "customer/additional"))
+                        FilesConfig.convertMultipartToFileNew(i), "customer/additional"))
                 .toList();
 
         if (uploadLists != null && !uploadLists.isEmpty()) {

@@ -1,19 +1,13 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.BedChangeRequest;
+import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BedDetails;
 import com.smartstay.tenant.ennum.CustomerStatus;
-import com.smartstay.tenant.ennum.RequestStatus;
-import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
-import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.repository.BedsRepository;
-import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,27 +15,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class BedsService {
 
     @Autowired
     private Authentication authentication;
-
     @Autowired
     private BedChangeRequestService bedChangeRequestService;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private BedsRepository bedsRepository;
-
     @Autowired
     private NotificationService notificationService;
-
     @Autowired
     private FCMNotificationService fcmNotificationService;
 
@@ -96,5 +85,9 @@ public class BedsService {
 
     public BedDetails getBedDetails(Integer bedId) {
         return bedsRepository.findByBedId(bedId);
+    }
+
+    public List<Beds> findAllByBedIdIn(Set<Integer> bedIds) {
+        return bedsRepository.findAllByBedIdIn(bedIds);
     }
 }

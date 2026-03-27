@@ -19,6 +19,8 @@ import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
+import com.smartstay.tenant.response.eb.EbReadingsResponse;
+import com.smartstay.tenant.response.eb.InvoiceEbResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import com.smartstay.tenant.response.invoices.*;
 import com.smartstay.tenant.response.receipt.ReceiptConfigInfo;
@@ -34,10 +36,8 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceService {
@@ -45,39 +45,40 @@ public class InvoiceService {
     @Value("${REPORTS_URL}")
     private String reportsUrl;
     private final RestTemplate restTemplate;
+
     @Autowired
     private Authentication authentication;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
-
     @Autowired
     private TransactionService transactionService;
-
     @Autowired
     private HostelRepository hostelRepository;
-
     @Autowired
     private HostelConfigService hostelConfigService;
-
     @Autowired
     private TemplatesService templatesService;
-
     @Autowired
     private BankingService bankingService;
-
     @Autowired
     private CustomerBedHistoryService customerBedHistoryService;
-
+    @Autowired
+    private FloorsService floorsService;
+    @Autowired
+    private RoomsService roomsService;
     @Autowired
     private BedsService bedService;
-
     @Autowired
     private UserService userService;
+    @Autowired
+    @Lazy
     private HostelService hostelService;
+    @Autowired
+    private ElectricityReadingsService electricityReadingsService;
+    @Autowired
+    private CustomerEbHistoryService customerEbHistoryService;
 
     public InvoiceService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -151,31 +152,35 @@ public class InvoiceService {
     }
 
     public ResponseEntity<?> getInvoicesById(String hostelId, String invoiceId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         InvoicesV1 invoice = invoicesV1Repository.getInvoiceByIdAndCustomerId(invoiceId, customerId);
-
         if (invoice == null) {
             return new ResponseEntity<>(Utils.INVOICE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         if (invoice.getInvoiceType().equalsIgnoreCase(InvoiceType.SETTLEMENT.name())) {
             return getFinalSettlementInvoiceDetails(customerId, invoice);
         }
+
         InvoiceDetailsDTO invoiceItem = getInvoiceDetails(invoiceId, invoice);
         if (invoiceItem == null) {
             return new ResponseEntity<>(Utils.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(invoiceItem, HttpStatus.OK);
 
+        return new ResponseEntity<>(invoiceItem, HttpStatus.OK);
     }
 
     private ResponseEntity<?> getFinalSettlementInvoiceDetails(String customerId, InvoicesV1 invoice) {
+
         FinalSettlementDetails finalSettlementDetails = new FinalSettlementDetails();
 
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoice.getInvoiceId());
@@ -249,19 +254,23 @@ public class InvoiceService {
         totalAdvancePaid = advancePaid + bookingAmount;
         advanceInfo = new AdvanceInfo(advanceAmount, advancePaid, advanceInvoiceNumber, bookingAmount, totalAdvancePaid, listDeductions);
 
-        BillingDates billingDates = hostelService.getBillStartDate(invoice.getHostelId(), invoice.getInvoiceStartDate());
+        BillingDates billingDates = hostelService
+                .getBillStartDate(invoice.getHostelId(), invoice.getInvoiceStartDate());
         List<InvoicesV1> currentMonthRentalInvoices = null;
         if (billingDates != null) {
-            currentMonthRentalInvoices = invoicesV1Repository.findCurrentMonthInvoices(customerId, billingDates.currentBillStartDate(), billingDates.currentBillEndDate());
+            currentMonthRentalInvoices = invoicesV1Repository
+                    .findCurrentMonthInvoices(customerId, billingDates.currentBillStartDate(), billingDates.currentBillEndDate());
         }
 
         CurrentMonthInfo currentMonthInfo = null;
 
         Date invoiceStartDate = invoice.getInvoiceStartDate();
 
-        BillingDates billingDate = hostelService.getBillStartAndEndDateBasedOnDate(invoice.getHostelId(), invoiceStartDate);
+        BillingDates billingDate = hostelService
+                .getBillStartAndEndDateBasedOnDate(invoice.getHostelId(), invoiceStartDate);
 
-        List<CustomersBedHistory> customersBedHistories = customerBedHistoryService.getCustomerBedByDates(customerId, billingDate.currentBillStartDate(), invoice.getInvoiceEndDate());
+        List<CustomersBedHistory> customersBedHistories = customerBedHistoryService
+                .getCustomerBedByDates(customerId, billingDate.currentBillStartDate(), invoice.getInvoiceEndDate());
 
         Date billingStart = billingDate.currentBillStartDate(); // Dec 01
         Date billingEnd = billingDate.currentBillEndDate();     // Dec 31
@@ -292,21 +301,22 @@ public class InvoiceService {
             noOfDaysStayed += noOfDays;
         }
 
+        List<InvoicesV1> currentMonthInvoices = invoicesV1Repository
+                .findAllCurrentMonthInvoices(customers.getCustomerId(), customers.getHostelId(), billingDate.currentBillStartDate());
 
-        List<InvoicesV1> currentMonthInvoices = invoicesV1Repository.findAllCurrentMonthInvoices(customers.getCustomerId(), customers.getHostelId(), billingDate.currentBillStartDate());
-
-        InvoicesV1 findLatestInvoice = invoicesV1Repository.findCurrentRunningInvoice(customers.getCustomerId(), billingDate.currentBillStartDate());
+        InvoicesV1 findLatestInvoice = invoicesV1Repository
+                .findCurrentRunningInvoice(customers.getCustomerId(), billingDate.currentBillStartDate());
 
         List<InvoicesV1> currentMonthInvoicesBeforeBedChange;
 
         if (findLatestInvoice != null) {
-            currentMonthInvoicesBeforeBedChange = currentMonthInvoices.stream().filter(i -> !i.getInvoiceId().equalsIgnoreCase(findLatestInvoice.getInvoiceId())).toList();
+            currentMonthInvoicesBeforeBedChange = currentMonthInvoices.stream()
+                    .filter(i -> !i.getInvoiceId().equalsIgnoreCase(findLatestInvoice.getInvoiceId())).toList();
         } else {
             currentMonthInvoicesBeforeBedChange = currentMonthInvoices;
         }
 
         double payableRent = 0.0;
-
 
         CustomersBedHistory latestBedHistory = customerBedHistoryService.getLatestRentAmount(customerId);
 
@@ -335,9 +345,12 @@ public class InvoiceService {
             }
         }
 
-        double lastRentPaid = invoicesV1Repository.getTotalPaidAmountForCurrentMonth(customerId, invoice.getHostelId(), billingDate.currentBillStartDate());
+        double lastRentPaid = invoicesV1Repository
+                .getTotalPaidAmountForCurrentMonth(customerId, invoice.getHostelId(), billingDate.currentBillStartDate());
 
-        List<BedHistory> customersBedHistoriesForLastMonth = customerBedHistoryService.getBedHistory(invoice.getInvoiceGeneratedDate(),customerId, invoice.getHostelId(), billingDate.currentBillStartDate(), billingDate.currentBillEndDate());
+        List<BedHistory> customersBedHistoriesForLastMonth = customerBedHistoryService
+                .getBedHistory(invoice.getInvoiceGeneratedDate(),customerId, invoice.getHostelId(),
+                        billingDate.currentBillStartDate(), billingDate.currentBillEndDate());
 
         payableRent = customersBedHistoriesForLastMonth
                 .stream()
@@ -346,12 +359,101 @@ public class InvoiceService {
         currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed,
                 (double)Math.round(payableRent), lastRentPaid, customersBedHistoriesForLastMonth);
 
+        List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
+        if (invoice.isCancelled() && invoice.getCancelledInvoices() != null &&
+                !invoice.getCancelledInvoices().isEmpty()) {
+            List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
+
+            List<InvoicesV1> cancelledInvoices = invoicesV1Repository.findAllByInvoiceIdIn(cancelledInvoiceIds);
+
+            unpaidInvoices = cancelledInvoices.stream()
+                    .map(cancelledInvoice -> new UnpaidInvoices(
+                            cancelledInvoice.getInvoiceId(),
+                            cancelledInvoice.getInvoiceNumber(),
+                            cancelledInvoice.getInvoiceType(),
+                            cancelledInvoice.getTotalAmount(),
+                            cancelledInvoice.getPaidAmount(),
+                            Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount() - cancelledInvoice.getPaidAmount())
+                    )).toList();
+        }
+
+        HostelV1 hostel = hostelService.getHostelById(invoice.getHostelId());
+        ElectricityConfig ebConfig = hostel != null ? hostel.getElectricityConfig() : null;
+
+        Date startDate = invoice.getInvoiceStartDate();
+
+        Calendar calendarPreviousBillsStartDate = Calendar.getInstance();
+        calendarPreviousBillsStartDate.setTime(startDate);
+        calendarPreviousBillsStartDate.add(Calendar.MONTH, -1);
+
+        Date calendarPreviousBillsEndDate = Utils
+                .findLastDate(calendarPreviousBillsStartDate.get(Calendar.DAY_OF_MONTH),
+                        calendarPreviousBillsStartDate.getTime());
+
+        List<CustomersEbHistory> listCustomerEb = customerEbHistoryService
+                .getAllByCustomerIdAndDateBetween(invoice.getCustomerId(), calendarPreviousBillsStartDate.getTime(),
+                        calendarPreviousBillsEndDate);
+
+        double ebAmount = listCustomerEb
+                .stream()
+                .mapToDouble(CustomersEbHistory::getAmount)
+                .sum();
+
+        if (ebAmount > 0) {
+            ebAmount = Utils.roundOffWithTwoDigit(ebAmount);
+        }
+
+        Set<Integer> floorIds = new HashSet<>();
+        Set<Integer> roomIds = new HashSet<>();
+        Set<Integer> bedIds = new HashSet<>();
+        for (CustomersEbHistory customerEb : listCustomerEb) {
+            floorIds.add(customerEb.getFloorId());
+            roomIds.add(customerEb.getRoomId());
+            bedIds.add(customerEb.getBedId());
+        }
+
+        List<Floors> floors = floorsService.findAllByFloorIdIn(floorIds);
+        List<Rooms> rooms = roomsService.findAllByRoomIdIn(roomIds);
+        List<Beds> beds = bedService.findAllByBedIdIn(bedIds);
+
+        Map<Integer, Floors> floorMap = floors.stream()
+                .collect(Collectors.toMap(Floors::getFloorId, floor -> floor));
+        Map<Integer, Rooms> roomMap = rooms.stream()
+                .collect(Collectors.toMap(Rooms::getRoomId, room -> room));
+        Map<Integer, Beds> bedMap = beds.stream()
+                .collect(Collectors.toMap(Beds::getBedId, bed -> bed));
+
+        List<EbReadingsResponse> ebReadings = new  ArrayList<>();
+        if (!listCustomerEb.isEmpty()){
+            ebReadings = listCustomerEb.stream()
+                    .map(customerEb -> {
+                        Floors floor = floorMap.getOrDefault(customerEb.getFloorId(), null);
+                        Rooms room = roomMap.getOrDefault(customerEb.getRoomId(), null);
+                        Beds bed = bedMap.getOrDefault(customerEb.getBedId(), null);
+                        return new EbReadingsResponse(
+                                floor != null ? floor.getFloorName() : null,
+                                room != null ? room.getRoomName() : null,
+                                bed != null ? bed.getBedName() : null,
+                                Utils.dateToString(customerEb.getStartDate()),
+                                Utils.dateToString(customerEb.getEndDate())
+                        );
+                    }).toList();
+        }
+
+        InvoiceEbResponse invoiceEbResponse = null;
+        if (ebConfig != null) {
+            invoiceEbResponse = new InvoiceEbResponse(ebConfig.getCharge(), ebConfig.getTypeOfReading(),
+                    ebAmount, ebReadings);
+        }
 
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(),
-                invoice.getInvoiceNumber(),
-                Utils.capitalize(invoice.getInvoiceType()),
-                invoice.getInvoiceGeneratedDate(),
-                invoice.getInvoiceDueDate(), invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo, currentMonthInfo, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+                invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
+                invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
+                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(),
+                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(),
+                invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo,
+                currentMonthInfo, unpaidInvoices, invoiceEbResponse, lastPaidDate, lastPaymentMode,
+                referenceId, showMessage);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }
@@ -375,7 +477,6 @@ public class InvoiceService {
         }
 
         double dueAmount = invoice.getTotalAmount() - totalPaid;
-
 
         String status = "";
         if (invoice != null) {
@@ -419,6 +520,93 @@ public class InvoiceService {
             showMessage = true;
         }
 
+        List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
+        if (invoice.isCancelled() && invoice.getCancelledInvoices() != null &&
+                !invoice.getCancelledInvoices().isEmpty()) {
+            List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
+
+            List<InvoicesV1> cancelledInvoices = invoicesV1Repository.findAllByInvoiceIdIn(cancelledInvoiceIds);
+
+            unpaidInvoices = cancelledInvoices.stream()
+                    .map(cancelledInvoice -> new UnpaidInvoices(
+                            cancelledInvoice.getInvoiceId(),
+                            cancelledInvoice.getInvoiceNumber(),
+                            cancelledInvoice.getInvoiceType(),
+                            cancelledInvoice.getTotalAmount(),
+                            cancelledInvoice.getPaidAmount(),
+                            Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount() - cancelledInvoice.getPaidAmount())
+                    )).toList();
+        }
+
+        HostelV1 hostel = hostelService.getHostelById(invoice.getHostelId());
+        ElectricityConfig ebConfig = hostel != null ? hostel.getElectricityConfig() : null;
+
+        Date startDate = invoice.getInvoiceStartDate();
+
+        Calendar calendarPreviousBillsStartDate = Calendar.getInstance();
+        calendarPreviousBillsStartDate.setTime(startDate);
+        calendarPreviousBillsStartDate.add(Calendar.MONTH, -1);
+
+        Date calendarPreviousBillsEndDate = Utils
+                .findLastDate(calendarPreviousBillsStartDate.get(Calendar.DAY_OF_MONTH),
+                        calendarPreviousBillsStartDate.getTime());
+
+        List<CustomersEbHistory> listCustomerEb = customerEbHistoryService
+                .getAllByCustomerIdAndDateBetween(invoice.getCustomerId(), calendarPreviousBillsStartDate.getTime(),
+                        calendarPreviousBillsEndDate);
+
+        double ebAmount = listCustomerEb
+                .stream()
+                .mapToDouble(CustomersEbHistory::getAmount)
+                .sum();
+
+        if (ebAmount > 0) {
+            ebAmount = Utils.roundOffWithTwoDigit(ebAmount);
+        }
+
+        Set<Integer> floorIds = new HashSet<>();
+        Set<Integer> roomIds = new HashSet<>();
+        Set<Integer> bedIds = new HashSet<>();
+        for (CustomersEbHistory customerEb : listCustomerEb) {
+            floorIds.add(customerEb.getFloorId());
+            roomIds.add(customerEb.getRoomId());
+            bedIds.add(customerEb.getBedId());
+        }
+
+        List<Floors> floors = floorsService.findAllByFloorIdIn(floorIds);
+        List<Rooms> rooms = roomsService.findAllByRoomIdIn(roomIds);
+        List<Beds> beds = bedService.findAllByBedIdIn(bedIds);
+
+        Map<Integer, Floors> floorMap = floors.stream()
+                .collect(Collectors.toMap(Floors::getFloorId, floor -> floor));
+        Map<Integer, Rooms> roomMap = rooms.stream()
+                .collect(Collectors.toMap(Rooms::getRoomId, room -> room));
+        Map<Integer, Beds> bedMap = beds.stream()
+                .collect(Collectors.toMap(Beds::getBedId, bed -> bed));
+
+        List<EbReadingsResponse> ebReadings = new  ArrayList<>();
+        if (!listCustomerEb.isEmpty()){
+            ebReadings = listCustomerEb.stream()
+                    .map(customerEb -> {
+                        Floors floor = floorMap.getOrDefault(customerEb.getFloorId(), null);
+                        Rooms room = roomMap.getOrDefault(customerEb.getRoomId(), null);
+                        Beds bed = bedMap.getOrDefault(customerEb.getBedId(), null);
+                        return new EbReadingsResponse(
+                                floor != null ? floor.getFloorName() : null,
+                                room != null ? room.getRoomName() : null,
+                                bed != null ? bed.getBedName() : null,
+                                Utils.dateToString(customerEb.getStartDate()),
+                                Utils.dateToString(customerEb.getEndDate())
+                        );
+                    }).toList();
+        }
+
+        InvoiceEbResponse invoiceEbResponse = null;
+        if (ebConfig != null) {
+            invoiceEbResponse = new InvoiceEbResponse(ebConfig.getCharge(), ebConfig.getTypeOfReading(),
+                    ebAmount, ebReadings);
+        }
+
         return new InvoiceDetailsDTO(invoice.getInvoiceId(),
                 invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()),
@@ -426,8 +614,9 @@ public class InvoiceService {
                 Utils.dateToString(invoice.getInvoiceDueDate()),
                 Utils.dateToString(invoice.getInvoiceStartDate()),
                 Utils.dateToString(invoice.getInvoiceEndDate()),
-                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
-                invoice.getGstPercentile(), invoiceItems, receipts, Utils.dateToString(lastPaidDate),
+                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(),
+                invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), invoiceItems,
+                receipts, unpaidInvoices, invoiceEbResponse, Utils.dateToString(lastPaidDate),
                 lastPaymentMode, referenceId, showMessage);
     }
 
