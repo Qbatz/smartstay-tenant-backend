@@ -54,7 +54,7 @@ public class CustomerDocumentService {
         List<UploadFiles> uploadLists = listFiles
                 .stream()
                 .map(i -> uploadFileToS3.uploadCustomerFiles(
-                        FilesConfig.convertMultipartToFile(i), "customer/additional"))
+                        FilesConfig.convertMultipartToFileNew(i), "customer/additional"))
                 .toList();
 
         if (uploadLists != null && !uploadLists.isEmpty()) {
