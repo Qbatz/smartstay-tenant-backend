@@ -255,4 +255,23 @@ public class CustomerService {
     public List<Customers> findAllByListOfCustomers(List<String> customerIds) {
         return customersRepository.findAllById(customerIds);
     }
+
+    public ResponseEntity<?> removeProfilePicture() {
+
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+        Customers customers = customersRepository.findById(customerId).orElse(null);
+        if (customers == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        customers.setProfilePic(null);
+
+        customersRepository.save(customers);
+
+        return new ResponseEntity<>(Utils.PROFILE_PICTURE_REMOVED, HttpStatus.OK);
+    }
 }
