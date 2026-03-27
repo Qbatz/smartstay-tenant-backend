@@ -1,6 +1,5 @@
 package com.smartstay.tenant.controller;
 
-
 import com.smartstay.tenant.service.InvoiceService;
 import com.smartstay.tenant.service.TransactionService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -19,10 +18,8 @@ public class InvoiceController {
 
     @Autowired
     private InvoiceService invoiceService;
-
     @Autowired
     private TransactionService transactionService;
-
 
     @GetMapping("/{hostelId}")
     public ResponseEntity<?> getInvoicesList(@PathVariable String hostelId) {

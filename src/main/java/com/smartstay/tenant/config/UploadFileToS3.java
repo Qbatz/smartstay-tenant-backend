@@ -31,9 +31,8 @@ public class UploadFileToS3 {
         PutObjectRequest request = new PutObjectRequest(bucketName, "general_user_profile/" + file.getName(), file);
         PutObjectResult result = s3.putObject(request);
 
-
         String fileName = s3.getUrl(bucketName, "general_user_profile/" + file.getName()).toString();
-//
+
         try {
             Files.delete(Paths.get(file.toURI()));
         } catch (IOException e) {
@@ -51,7 +50,7 @@ public class UploadFileToS3 {
         PutObjectResult result = s3.putObject(request);
 
         String fileName = s3.getUrl(bucketName, folderName + "/" + file.getName()).toString();
-//
+
         try {
             Files.delete(Paths.get(file.toURI()));
         } catch (IOException e) {
@@ -68,7 +67,7 @@ public class UploadFileToS3 {
         PutObjectResult result = s3.putObject(request);
 
         String fileName = s3.getUrl(bucketName, folderName + "/" + file.getName()).toString();
-//
+
         String mimeType = null;
         try {
             mimeType = Files.probeContentType(file.toPath());

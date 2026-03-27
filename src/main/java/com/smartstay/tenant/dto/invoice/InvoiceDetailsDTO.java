@@ -1,11 +1,11 @@
 package com.smartstay.tenant.dto.invoice;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartstay.tenant.response.eb.InvoiceEbResponse;
+import com.smartstay.tenant.response.invoices.UnpaidInvoices;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -38,6 +38,8 @@ public class InvoiceDetailsDTO {
     private List<InvoiceItemDTO> invoiceItems;
     private List<ReceiptDTO> receipts;
 
+    private List<UnpaidInvoices> unpaidInvoices;
+    private InvoiceEbResponse ebInfo;
 
     private String lastPaidDate;
     private String lastPaymentMode;
