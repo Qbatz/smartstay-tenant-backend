@@ -3,20 +3,24 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.config.RestTemplateLoggingInterceptor;
 import com.smartstay.tenant.dao.BankingV1;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
+import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
 import com.smartstay.tenant.repository.BankingV1Repository;
 import com.smartstay.tenant.repository.TransactionV1Repository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -33,6 +37,14 @@ public class TransactionService {
 
     @Autowired
     private Authentication authentication;
+    @Value("${REPORTS_URL}")
+    private String reportsUrl;
+    private final RestTemplate restTemplate;
+
+    public TransactionService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        restTemplate.setInterceptors(Collections.singletonList(new RestTemplateLoggingInterceptor()));
+    }
 
     public TransactionV1 getTransactionById(String transactionId) {
         return transactionV1Repository.findById(transactionId).orElse(null);
@@ -113,5 +125,52 @@ public class TransactionService {
 
     public List<TransactionV1> getAllTransactionsByInvoiceId(String invoiceId) {
         return transactionV1Repository.findByInvoiceId(invoiceId);
+    }
+
+    public ResponseEntity<?> downloadPdf(String hostelId, String receiptId) {
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+        String customerId = authentication.getName();
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        TransactionV1 transactionV1 = transactionV1Repository.getReferenceById(receiptId);
+        if (transactionV1 != null) {
+            if (transactionV1.getTransactionId() == null) {
+                return new ResponseEntity<>(Utils.INVALID_TRANSACTION_ID, HttpStatus.BAD_REQUEST);
+            }
+            if (transactionV1.getReceiptUrl() != null) {
+                return new ResponseEntity<>(transactionV1.getReceiptUrl(), HttpStatus.OK);
+            }
+            else {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+                String endpoint = reportsUrl + "/v2/reports/receipts/"+ hostelId + "/" +  receiptId;
+                HttpEntity<Void> request =
+                        new HttpEntity<>(headers);
+
+                ResponseEntity<String> response = restTemplate.exchange(
+                        endpoint,
+                        HttpMethod.GET,
+                        request,
+                        String.class
+                );
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    transactionV1.setReceiptUrl(response.getBody());
+                    transactionV1Repository.save(transactionV1);
+                    return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+                }
+                else {
+                    return new ResponseEntity<>(Utils.TRY_AGAIN, HttpStatus.BAD_REQUEST);
+                }
+            }
+        }
+        else {
+            return new ResponseEntity<>(Utils.INVALID_TRANSACTION_ID, HttpStatus.BAD_REQUEST);
+        }
+
     }
 }

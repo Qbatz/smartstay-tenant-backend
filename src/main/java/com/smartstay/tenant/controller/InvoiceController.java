@@ -50,4 +50,11 @@ public class InvoiceController {
     public ResponseEntity<?> downloadInvoicePdf(@PathVariable("hostelId") String hostelId, @PathVariable("invoiceId") String invoiceId) {
         return invoiceService.downloadPdf(hostelId, invoiceId);
     }
+
+    @GetMapping("/pdf/receipts/{hostelId}/{receiptId}")
+    public ResponseEntity<?> downloadReceiptPdf(@PathVariable("hostelId") String hostelId, @PathVariable("receiptId") String receiptId) {
+        return transactionService.downloadPdf(hostelId, receiptId);
+    }
 }
+
+
