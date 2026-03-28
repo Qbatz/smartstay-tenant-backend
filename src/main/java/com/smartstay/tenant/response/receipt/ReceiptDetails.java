@@ -10,6 +10,7 @@ public record ReceiptDetails(
         String invoiceDate,
         String invoiceId,
         Double invoiceAmount,
+        Double discountAmount,
         Double paidAmount,
         Double dueAmount,
         String emailId,

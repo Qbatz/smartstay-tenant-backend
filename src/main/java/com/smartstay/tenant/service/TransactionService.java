@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.RestTemplateLoggingInterceptor;
@@ -9,7 +8,6 @@ import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
-import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
 import com.smartstay.tenant.repository.BankingV1Repository;
 import com.smartstay.tenant.repository.TransactionV1Repository;
@@ -28,15 +26,13 @@ public class TransactionService {
 
     @Autowired
     private TransactionV1Repository transactionV1Repository;
-
     @Autowired
     private BankingV1Repository bankingV1Repository;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private Authentication authentication;
+
     @Value("${REPORTS_URL}")
     private String reportsUrl;
     private final RestTemplate restTemplate;
@@ -50,21 +46,23 @@ public class TransactionService {
         return transactionV1Repository.findById(transactionId).orElse(null);
     }
 
-
     public ResponseEntity<?> getTransactionList(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         List<TransactionDto> transactionDtos = getTransactionInfoByCustomerId(customerId, hostelId);
         if (transactionDtos.isEmpty()) {
             return new ResponseEntity<>(Utils.PAYMENTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(transactionDtos, HttpStatus.OK);
 
+        return new ResponseEntity<>(transactionDtos, HttpStatus.OK);
     }
 
     public List<TransactionDto> getTransactionInfoByCustomerId(String customerId, String hostelId) {
@@ -87,7 +85,6 @@ public class TransactionService {
 
         return receipts;
     }
-
 
     public Double getTotalPaidAmountByInvoiceId(String invoiceId) {
         return transactionV1Repository.getTotalPaid(invoiceId);
@@ -128,9 +125,11 @@ public class TransactionService {
     }
 
     public ResponseEntity<?> downloadPdf(String hostelId, String receiptId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -158,6 +157,7 @@ public class TransactionService {
                         request,
                         String.class
                 );
+
                 if (response.getStatusCode() == HttpStatus.OK) {
                     transactionV1.setReceiptUrl(response.getBody());
                     transactionV1Repository.save(transactionV1);
@@ -171,6 +171,5 @@ public class TransactionService {
         else {
             return new ResponseEntity<>(Utils.INVALID_TRANSACTION_ID, HttpStatus.BAD_REQUEST);
         }
-
     }
 }

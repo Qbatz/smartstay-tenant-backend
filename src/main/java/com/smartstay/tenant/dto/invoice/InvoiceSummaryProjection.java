@@ -8,6 +8,8 @@ public interface InvoiceSummaryProjection {
 
     Double getEbAmount();
 
+    Double getDiscountAmount();
+
     Double getPaidAmount();
 
     String getInvoiceNumber();
