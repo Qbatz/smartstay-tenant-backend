@@ -18,7 +18,6 @@ public class DashboardController {
     @Autowired
     private HostelService hostelService;
 
-
     @GetMapping("")
     public ResponseEntity<?> getHostels() {
         return hostelService.getHostels();
@@ -38,8 +37,4 @@ public class DashboardController {
     public ResponseEntity<?> getCustomerRequestById(@PathVariable("hostelId") String hostelId, @PathVariable("requestId") String requestId) {
         return hostelService.getCustomerRequestById(hostelId, requestId);
     }
-
-
-
-
 }

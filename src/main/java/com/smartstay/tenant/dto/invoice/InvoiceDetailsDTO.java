@@ -26,6 +26,7 @@ public class InvoiceDetailsDTO {
     private String endDate;
 
     private Double totalAmount;
+    private Double discountAmount;
     private Double paidAmount;
     private Double dueAmount;
     private String status;

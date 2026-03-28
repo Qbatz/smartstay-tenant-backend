@@ -1,7 +1,6 @@
 package com.smartstay.tenant.dto.invoice;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 public interface InvoiceItemProjection {
 
@@ -10,6 +9,8 @@ public interface InvoiceItemProjection {
     String getInvoiceNumber();
 
     Double getTotalAmount();
+    Double getDiscountAmount();
+
     LocalDate getInvoiceDueDate();
     LocalDate getInvoiceGeneratedDate();
 

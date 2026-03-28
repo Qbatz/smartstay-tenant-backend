@@ -27,17 +27,20 @@ public class InvoiceController {
     }
 
     @GetMapping("receipt-details/{hostelId}/{transactionId}")
-    public ResponseEntity<?> getReceiptDetails(@PathVariable("hostelId") String hostelId, @PathVariable("transactionId") String transactionId) {
+    public ResponseEntity<?> getReceiptDetails(@PathVariable("hostelId") String hostelId,
+                                               @PathVariable("transactionId") String transactionId) {
         return invoiceService.getReceiptDetailsByTransactionId(hostelId, transactionId);
     }
 
     @GetMapping("invoice-details/{hostelId}/{invoiceId}")
-    public ResponseEntity<?> getInvoiceInfo(@PathVariable("hostelId") String hostelId, @PathVariable("invoiceId") String invoiceId) {
+    public ResponseEntity<?> getInvoiceInfo(@PathVariable("hostelId") String hostelId,
+                                            @PathVariable("invoiceId") String invoiceId) {
         return invoiceService.getInvoiceDetailsByInvoiceId(hostelId, invoiceId);
     }
 
     @GetMapping("/{hostelId}/{invoiceId}")
-    public ResponseEntity<?> getInvoiceById(@PathVariable String hostelId, @PathVariable String invoiceId) {
+    public ResponseEntity<?> getInvoiceById(@PathVariable String hostelId,
+                                            @PathVariable String invoiceId) {
         return invoiceService.getInvoicesById(hostelId,invoiceId);
     }
 
@@ -47,12 +50,14 @@ public class InvoiceController {
     }
 
     @GetMapping("/pdf/{hostelId}/{invoiceId}")
-    public ResponseEntity<?> downloadInvoicePdf(@PathVariable("hostelId") String hostelId, @PathVariable("invoiceId") String invoiceId) {
+    public ResponseEntity<?> downloadInvoicePdf(@PathVariable("hostelId") String hostelId,
+                                                @PathVariable("invoiceId") String invoiceId) {
         return invoiceService.downloadPdf(hostelId, invoiceId);
     }
 
     @GetMapping("/pdf/receipts/{hostelId}/{receiptId}")
-    public ResponseEntity<?> downloadReceiptPdf(@PathVariable("hostelId") String hostelId, @PathVariable("receiptId") String receiptId) {
+    public ResponseEntity<?> downloadReceiptPdf(@PathVariable("hostelId") String hostelId,
+                                                @PathVariable("receiptId") String receiptId) {
         return transactionService.downloadPdf(hostelId, receiptId);
     }
 }

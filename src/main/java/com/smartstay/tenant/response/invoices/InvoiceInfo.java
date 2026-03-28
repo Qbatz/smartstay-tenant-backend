@@ -1,6 +1,5 @@
 package com.smartstay.tenant.response.invoices;
 
-
 import com.smartstay.tenant.dao.Deductions;
 
 import java.util.List;
@@ -8,6 +7,7 @@ import java.util.List;
 public record InvoiceInfo(Double subTotal,
                           Double taxAmount,
                           Double taxPercentage,
+                          Double discountAmount,
                           Double totalAmount,
                           Double paidAmount,
                           Double balanceAmount,
