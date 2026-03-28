@@ -60,6 +60,7 @@ public final class Utils {
     public static final String CONTACT_ID_CANT_BE_ZERO_OR_LESS = "Contact ID can't be 0 or less";
     public static final String DOCUMENT_ID_REQUIRED = "Document ID is required";
     public static final String DOCUMENT_ID_CANT_BE_ZERO_OR_LESS = "Document ID can't be 0 or less";
+    public static final String PROFILE_PICTURE_REMOVED = "Profile picture is removed";
 
     private Utils() {
     }

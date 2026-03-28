@@ -37,4 +37,9 @@ public class CustomerController {
     public ResponseEntity<?> getRentDetails(@PathVariable String hostelId) {
         return customerService.getRentDetails(hostelId);
     }
+
+    @PutMapping("/remove-profile-picture")
+    public ResponseEntity<?> removeProfilePicture() {
+        return customerService.removeProfilePicture();
+    }
 }
