@@ -55,15 +55,18 @@ public class HostelService {
     }
 
     public ResponseEntity<?> getHostelDetails(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        BillingDates currentMonthBillingDates =  hostelConfigService.getBillingRuleOnDate(hostelId, new Date());
+        BillingDates currentMonthBillingDates =  hostelConfigService
+                .getBillingRuleOnDate(hostelId, new Date());
         Date startDate = currentMonthBillingDates.currentBillStartDate();
 
         Calendar calendar = Calendar.getInstance();
@@ -80,15 +83,15 @@ public class HostelService {
                         currentMonthBillingDates.currentBillEndDate());
 
         InvoiceSummary previousSummary = previousMonthInvoices != null ?
-                new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getPaidAmount(),
-                        previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(),
+                new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getDiscountAmount(),
+                        previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(),
                         previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(),
                         previousMonthInvoices.getCurrentInvoiceEndDate(), false, buildHint(previousMonthInvoices),
                         buildMessage(previousMonthInvoices)) : null;
 
         InvoiceSummary currentSummary = currentMonthInvoices != null ?
-                new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getPaidAmount(),
-                        currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
+                new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getDiscountAmount(),
+                        currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
                         currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(),
                         currentMonthInvoices.getCurrentInvoiceEndDate(), isToday(currentMonthInvoices.getInvoiceGeneratedDate()),
                         buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;

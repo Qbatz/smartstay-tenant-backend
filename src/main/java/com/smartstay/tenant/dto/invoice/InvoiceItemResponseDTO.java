@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Data
 @AllArgsConstructor
@@ -15,6 +14,7 @@ public class InvoiceItemResponseDTO {
     private String invoiceType;
     private String invoiceNumber;
     private Double amount;
+    private Double discountAmount;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate invoiceDueDate;
     @JsonFormat(pattern = "dd/MM/yyyy")

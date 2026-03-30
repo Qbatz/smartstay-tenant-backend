@@ -33,7 +33,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             WHERE i.customerId = :customerId
               AND ii.invoiceItem IN (:itemTypes)
               AND i.invoiceGeneratedDate BETWEEN :startDate AND :endDate
-            GROUP BY 
+            GROUP BY
                    i.invoiceId,
                    i.invoiceNumber,
                    i.invoiceType,
@@ -48,6 +48,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             SELECT
                 SUM(CASE WHEN ii.invoice_item = 'RENT' THEN ii.amount ELSE 0 END) AS rentAmount,
                 SUM(CASE WHEN ii.invoice_item = 'EB' THEN ii.amount ELSE 0 END) AS ebAmount,
+                SUM(COALESCE(id.discount_amount, 0)) as discountAmount,
                 SUM(COALESCE(t.paid_amount, 0)) AS paidAmount,
                 i.invoice_number AS invoiceNumber,
                 i.invoice_generated_date AS invoiceGeneratedDate,
@@ -56,6 +57,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_end_date AS invoiceEndDate
             FROM invoicesv1 i
             JOIN invoice_items ii ON ii.invoice_id = i.invoice_id
+            LEFT JOIN invoice_discounts id ON id.invoice_id = i.invoice_id
             LEFT JOIN transactionv1 t ON t.invoice_id = i.invoice_id
             WHERE i.customer_id = :customerId
              AND i.hostel_id = :hostelId
@@ -81,6 +83,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_type          AS invoiceType,
                 i.invoice_number        AS invoiceNumber,
                 i.total_amount          AS totalAmount,
+                SUM(COALESCE(id.discount_amount, 0)) as discountAmount,
                 i.invoice_due_date      AS invoiceDueDate,
                 i.invoice_generated_date AS invoiceGeneratedDate,
                 i.invoice_start_date    AS invoiceStartDate,
@@ -91,6 +94,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 t.payment_date    AS paymentDate,
                 i.is_cancelled       AS isCancelled
             FROM invoicesv1 i
+            LEFT JOIN invoice_discounts id ON id.invoice_id = i.invoice_id
             LEFT JOIN transactionv1 t
                    ON t.invoice_id = i.invoice_id
                    AND t.paid_at = (
@@ -107,7 +111,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
 
     @Query("""
-                SELECT i 
+                SELECT i
                 FROM InvoicesV1 i
                 WHERE i.invoiceId = :invoiceId
                   AND i.customerId = :customerId
@@ -160,14 +164,14 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     InvoicesV1 findBookingInvoice(String customerId, String hostelId);
 
     @Query("""
-            SELECT inv from InvoicesV1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate) 
+            SELECT inv from InvoicesV1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate)
             AND DATE(inv.invoiceEndDate) >= DATE(:startDate) AND inv.invoiceType in ('RENT', 'REASSIGN_RENT')
             """)
     List<InvoicesV1> findCurrentMonthInvoices(String customerId, Date startDate, Date endDate);
 
     @Query(
             value = """
-        SELECT 
+        SELECT
             i.invoice_number AS invoiceNumber,
             i.total_amount AS totalAmount,
             DATE_FORMAT(i.invoice_start_date, '%d/%m/%Y') AS invoiceStartDate,

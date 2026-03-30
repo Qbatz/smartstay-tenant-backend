@@ -18,6 +18,7 @@ public class InvoiceSummaryMapper
         return new InvoiceSummaryResponse(
                 p.getRentAmount(),
                 p.getEbAmount(),
+                p.getDiscountAmount(),
                 p.getPaidAmount(),
                 p.getInvoiceNumber(),
                 p.getInvoiceGeneratedDate(),

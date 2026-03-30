@@ -14,6 +14,7 @@ public class InvoiceSummaryResponse {
 
     private Double rent;
     private Double eb;
+    private Double discountAmount;
     private Double paidAmount;
     private String invoiceNumber;
 
