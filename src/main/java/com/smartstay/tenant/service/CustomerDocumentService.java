@@ -7,6 +7,7 @@ import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.CustomerDocuments;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.files.UploadFiles;
+import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.DocumentType;
 import com.smartstay.tenant.ennum.FileFormat;
 import com.smartstay.tenant.ennum.UserType;
@@ -50,6 +51,18 @@ public class CustomerDocumentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
+        List<String> allowedStatuses = List.of(
+                CustomerStatus.CHECK_IN.name(),
+                CustomerStatus.NOTICE.name(),
+                CustomerStatus.ACTIVE.name(),
+                CustomerStatus.SETTLEMENT_GENERATED.name()
+        );
+
+        if (customer.getCurrentStatus() == null ||
+                !allowedStatuses.contains(customer.getCurrentStatus())) {
+            return new ResponseEntity<>(Utils.DOCUMENT_CAN_BE_UPLOADED_BY_CHECK_IN_CUSTOMER, HttpStatus.BAD_REQUEST);
+        }
+
         List<UploadFiles> uploadLists = listFiles
                 .stream()
                 .map(i -> uploadFileToS3.uploadCustomerFiles(
@@ -63,7 +76,7 @@ public class CustomerDocumentService {
                     .map(i -> {
                         CustomerDocuments cd = new CustomerDocuments();
                         cd.setCustomerId(customerId);
-                        cd.setHostelId(customer.getHostelId() != null ? customer.getHostelId() : null);
+                        cd.setHostelId(customer.getHostelId());
                         cd.setDocumentUrl(i.fileName());
                         cd.setIsDeleted(false);
                         cd.setIsActive(true);
@@ -109,6 +122,18 @@ public class CustomerDocumentService {
         Customers customer = customerService.getCustomerById(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        List<String> allowedStatuses = List.of(
+                CustomerStatus.CHECK_IN.name(),
+                CustomerStatus.NOTICE.name(),
+                CustomerStatus.ACTIVE.name(),
+                CustomerStatus.SETTLEMENT_GENERATED.name()
+        );
+
+        if (customer.getCurrentStatus() == null ||
+                !allowedStatuses.contains(customer.getCurrentStatus())) {
+            return new ResponseEntity<>(Utils.DOCUMENT_CAN_BE_DELETED_BY_CHECK_IN_CUSTOMER, HttpStatus.BAD_REQUEST);
         }
 
         if (customerDocumentsIdPayloads == null || customerDocumentsIdPayloads.isEmpty()) {
