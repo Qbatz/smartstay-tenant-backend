@@ -23,4 +23,5 @@ public interface CustomersBookingDetails {
     String getRoomName();
     String getFloorName();
     String getBedName();
+    int getSharingType();
 }

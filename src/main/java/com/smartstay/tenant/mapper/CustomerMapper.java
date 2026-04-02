@@ -51,7 +51,8 @@ public class CustomerMapper {
                     b.getReasonForLeaving(),
                     b.getRoomName(),
                     b.getFloorName(),
-                    b.getBedName()
+                    b.getBedName(),
+                    b.getSharingType()
             );
         }
 
