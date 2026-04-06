@@ -10,13 +10,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class BedChangeRequest {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

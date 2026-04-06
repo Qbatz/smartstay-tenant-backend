@@ -10,7 +10,6 @@ import java.util.List;
 
 public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, Long> {
 
-
     @Query("""
                 SELECT COUNT(ar) > 0 
                 FROM AmenityRequest ar
@@ -20,7 +19,6 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
                   AND ar.isActive = TRUE
             """)
     boolean existsPendingRequest(@Param("customerId") String customerId, @Param("amenityId") String amenityId, @Param("currentStatus") List<String> currentStatus);
-
 
     @Query("""
                 SELECT new com.smartstay.tenant.response.amenity.AmenityRequestResponse(

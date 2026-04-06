@@ -1,7 +1,6 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
-import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.service.AmenitiesService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,15 +26,15 @@ public class AmenityController {
     }
 
     @GetMapping("/{hostelId}/{amenityId}")
-    public ResponseEntity<?> getAmenityById(
-            @PathVariable("hostelId") String hostelId,
-            @PathVariable("amenityId") String amenityId
-    ) {
+    public ResponseEntity<?> getAmenityById(@PathVariable("hostelId") String hostelId,
+                                            @PathVariable("amenityId") String amenityId) {
         return amenitiesService.getAmenityByAmenityId(hostelId, amenityId);
     }
 
     @PostMapping("/request-amenity/{hostelId}/{amenityId}")
-    public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId,@PathVariable("amenityId") String amenityId, @Valid @RequestBody RequestAmenity amenityRequest) {
+    public ResponseEntity<?> createRequest(@PathVariable("hostelId") String hostelId,
+                                           @PathVariable("amenityId") String amenityId,
+                                           @Valid @RequestBody RequestAmenity amenityRequest) {
         return amenitiesService.createAmenityRequest(hostelId,amenityId, amenityRequest);
     }
 
@@ -43,8 +42,4 @@ public class AmenityController {
     public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAmenityRequest(hostelId);
     }
-
-
-
-
 }

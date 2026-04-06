@@ -35,8 +35,11 @@ public class BedChangeRequestService {
     }
 
     public List<RequestItemResponse> getRequests(String hostelId, String customerId) {
-        List<BedChangeRequest> listBedChangeReguest = requestRepo.findByHostelIdAndCustomerId(hostelId, customerId);
-        return listBedChangeReguest.stream()
+
+        List<BedChangeRequest> listBedChangeRequest = requestRepo
+                .findByHostelIdAndCustomerId(hostelId, customerId);
+
+        return listBedChangeRequest.stream()
                 .map(i -> new BedChangeRequestMapper(bedsRepository).apply(i))
                 .toList();
     }
@@ -45,8 +48,8 @@ public class BedChangeRequestService {
         return requestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
     }
 
-
     public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId, BedChangePayload request) {
+
         BedChangeRequest bedRequest = new BedChangeRequest();
         bedRequest.setHostelId(hostelId);
         bedRequest.setCustomerId(customerId);
@@ -60,7 +63,6 @@ public class BedChangeRequestService {
             bedRequest.setRoomId(request.roomId());
         }
         bedRequest.setCurrentStatus(RequestStatus.OPEN.name());
-
         if (request.startFrom() != null) {
             bedRequest.setStartsFrom(Utils.addDaysToDate(new Date(), request.startFrom()));
         }
@@ -75,9 +77,4 @@ public class BedChangeRequestService {
         bedRequest.setDeleted(false);
         return requestRepo.save(bedRequest);
     }
-
-
-
-
-
 }

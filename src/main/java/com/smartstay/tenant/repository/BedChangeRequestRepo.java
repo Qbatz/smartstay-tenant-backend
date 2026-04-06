@@ -10,7 +10,9 @@ import java.util.List;
 
 public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Long> {
 
-    boolean existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(String customerId, String hostelId, List<String> statusList);
+    boolean existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(String customerId,
+                                                                                            String hostelId,
+                                                                                            List<String> statusList);
 
     @Query("""
                 SELECT new com.smartstay.tenant.dto.BedChangeRequestResponse(
@@ -36,7 +38,8 @@ public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Lo
                   AND b.isDeleted = false
                 ORDER BY b.createdAt DESC
             """)
-    List<BedChangeRequestResponse> findBedChangeRequests(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
+    List<BedChangeRequestResponse> findBedChangeRequests(@Param("hostelId") String hostelId,
+                                                         @Param("customerId") String customerId);
 
     @Query("""
                 SELECT new com.smartstay.tenant.dto.BedChangeRequestResponse(
@@ -63,9 +66,9 @@ public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Lo
                   AND b.isDeleted = false
                 ORDER BY b.createdAt DESC
             """)
-    BedChangeRequestResponse findBedChangeRequestsById(@Param("hostelId") String hostelId, @Param("customerId") String customerId, @Param("requestId") Long requestId);
+    BedChangeRequestResponse findBedChangeRequestsById(@Param("hostelId") String hostelId,
+                                                       @Param("customerId") String customerId,
+                                                       @Param("requestId") Long requestId);
 
     List<BedChangeRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
-
-
 }

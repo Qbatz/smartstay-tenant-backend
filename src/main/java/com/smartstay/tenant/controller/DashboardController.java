@@ -34,7 +34,8 @@ public class DashboardController {
     }
 
     @GetMapping("requests/{hostelId}/{requestId}")
-    public ResponseEntity<?> getCustomerRequestById(@PathVariable("hostelId") String hostelId, @PathVariable("requestId") String requestId) {
+    public ResponseEntity<?> getCustomerRequestById(@PathVariable("hostelId") String hostelId,
+                                                    @PathVariable("requestId") String requestId) {
         return hostelService.getCustomerRequestById(hostelId, requestId);
     }
 }
