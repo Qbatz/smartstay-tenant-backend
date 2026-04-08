@@ -1,6 +1,5 @@
 package com.smartstay.tenant.dao;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

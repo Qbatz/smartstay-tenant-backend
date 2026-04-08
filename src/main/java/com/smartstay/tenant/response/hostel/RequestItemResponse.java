@@ -1,6 +1,5 @@
 package com.smartstay.tenant.response.hostel;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +18,7 @@ public class RequestItemResponse implements Comparable<RequestItemResponse> {
     private String description;
     private String requestedItem;
     private int statusCode;
+    private String reason;
 
     @Override
     public int compareTo(RequestItemResponse o) {

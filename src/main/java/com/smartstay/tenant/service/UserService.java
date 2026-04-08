@@ -1,12 +1,9 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.payload.login.Login;
-import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
-import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
 import com.smartstay.tenant.repository.UserRepository;
 import com.smartstay.tenant.response.VerifyOtpResponse;
@@ -16,27 +13,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
 public class UserService {
 
-    @Autowired
-    AuthenticationManager authManager;
-    @Autowired
-    JWTService jwtService;
-    @Autowired
-    CustomerRepository customersRepository;
     @Autowired
     CustomersOtpRepository customersOtpRepository;
     @Autowired
@@ -87,22 +73,16 @@ public class UserService {
                         ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
                 otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
 
-
                 return new ResponseEntity<>(new VerifyPhoneProdResponse(credentials.getXuid()), HttpStatus.OK);
             }else {
                 return new ResponseEntity<>(new VerifyMobileResponse(
                         credentials.getXuid(), customersOtp.getOtp()
                 ), HttpStatus.OK);
             }
-
-
-
         } else {
             return new ResponseEntity<>("You are not belongs to any hostels.", HttpStatus.BAD_REQUEST);
         }
-
     }
-
 
     public ResponseEntity<?> resendOtp(String xuid) {
         CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
@@ -114,7 +94,6 @@ public class UserService {
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setUpdatedAt(new Date());
                 customersOtpRepository.save(customersOtp);
-
             } else {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
@@ -124,16 +103,13 @@ public class UserService {
                         ". Use this OTP to verify your login. Do not share it with anyone. - SmartStay";
                 otpService.sendOtp(credentials.getCustomerMobile(), otpMessage);
 
-
                 return new ResponseEntity<>("Otp sent to your mobile number", HttpStatus.OK);
             }else {
                 return new ResponseEntity<>(customersOtp.getOtp(), HttpStatus.OK);
             }
-
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-
     }
 
     public ResponseEntity<?> verifyOtp(VerifyOtp verifyOtp) {
@@ -167,7 +143,6 @@ public class UserService {
     private int generateSixDigitOtp() {
         return (int) (100000 + Math.random() * 900000);
     }
-
 
     public Users findUserByUserId(String userId) {
         return userRepository.findUserByUserId(userId);

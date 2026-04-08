@@ -1,12 +1,10 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.login.Login;
-import com.smartstay.tenant.payload.login.TokenLogin;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +16,6 @@ public class UserController {
     @Autowired
     UserService userService;
 
-
     @PostMapping("/verify-mobile")
     public ResponseEntity<?> login(@Valid @RequestBody Login login) {
         return userService.login(login);
@@ -29,12 +26,8 @@ public class UserController {
         return userService.resendOtp(xuid);
     }
 
-
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtp verifyOtp) {
         return userService.verifyOtp(verifyOtp);
     }
-
-
-
 }

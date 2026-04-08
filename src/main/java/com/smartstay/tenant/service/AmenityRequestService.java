@@ -35,7 +35,6 @@ public class AmenityRequestService {
         this.amenitiesService = amenitiesService;
     }
 
-
     public void createAmenityEntry(String customerId, String hostelId, String amenityId, RequestAmenity request) {
         AmenityRequest amenityRequest = new AmenityRequest();
         amenityRequest.setCustomerId(customerId);
@@ -70,17 +69,22 @@ public class AmenityRequestService {
     }
 
     public List<RequestItemResponse> getRequests(String customerId, String hostelId) {
-        List<AmenityRequest> listAmenities = amenityRequestRepository.findByHostelIdAndCustomerId(hostelId, customerId);
-        List<String> listAmenitiesId = listAmenities.stream().map(AmenityRequest::getAmenityId).toList();
 
-        List<AmenitiesV1> listAmenitis = amenitiesService.findByAmenityIds(listAmenitiesId);
+        List<AmenityRequest> listAmenitiesRequests = amenityRequestRepository
+                .findByHostelIdAndCustomerId(hostelId, customerId);
 
-        return listAmenities.stream().map(i -> new AmenityRequestMapper(listAmenitis).apply(i)).toList();
+        List<String> listAmenitiesId = listAmenitiesRequests.stream()
+                .map(AmenityRequest::getAmenityId)
+                .toList();
+
+        List<AmenitiesV1> listAmenities = amenitiesService.findByAmenityIds(listAmenitiesId);
+
+        return listAmenitiesRequests.stream()
+                .map(i -> new AmenityRequestMapper(listAmenities).apply(i))
+                .toList();
     }
 
     public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
         return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
     }
-
-
 }

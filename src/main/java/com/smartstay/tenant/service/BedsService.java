@@ -35,15 +35,17 @@ public class BedsService {
     private FCMNotificationService fcmNotificationService;
 
     public ResponseEntity<?> requestBedChange(String hostelId, BedChangePayload request) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
-        String customerId = authentication.getName();
 
+        String customerId = authentication.getName();
         Customers customers = customerService.getCustomerInformation(customerId);
         if (customers == null) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         if (customers.getCurrentStatus().equalsIgnoreCase(CustomerStatus.NOTICE.name())) {
             return new ResponseEntity<>(Utils.CANNOT_MAKE_BED_CHANGE_REQUEST_NOTICE_CUSTOMER, HttpStatus.BAD_REQUEST);
         }
@@ -51,15 +53,18 @@ public class BedsService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
         boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
         if (!customerExist) {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         boolean requested = bedChangeRequestService.existsPendingRequest(customerId, hostelId);
         if (requested) {
             return new ResponseEntity<>(Utils.PENDING_REQUEST_EXISTS, HttpStatus.BAD_REQUEST);
         }
+
         bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
         fcmNotificationService.sendNotificationBedChangeRequest(hostelId);

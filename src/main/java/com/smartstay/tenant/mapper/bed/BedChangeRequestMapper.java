@@ -59,6 +59,10 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
             }
         }
 
+        String reason = null;
+        if (bedChangeRequest.getReason() != null) {
+            reason = bedChangeRequest.getReason();
+        }
 
         return new RequestItemResponse(String.valueOf(bedChangeRequest.getId()),
                 Utils.capitalize(RequestType.CHANGE_BED.name().replace("_", " ")),
@@ -69,6 +73,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
                 "Requested bed change",
                 bedChangeRequest.getReason(),
                 requestedItem,
-                statusCode);
+                statusCode,
+                reason);
     }
 }

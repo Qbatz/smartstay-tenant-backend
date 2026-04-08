@@ -34,6 +34,7 @@ public record BookingDetailsDto(
 
         String roomName,
         String floorName,
-        String bedName
+        String bedName,
+        int roomSharingType
 ) {
 }

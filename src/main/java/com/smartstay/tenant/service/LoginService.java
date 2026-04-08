@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.BillingRules;
@@ -23,12 +22,10 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class LoginService {
-
 
     @Autowired
     CustomerRepository customersRepository;
@@ -38,16 +35,12 @@ public class LoginService {
     JWTService jwtService;
     @Autowired
     CustomerCredentialsService customerCredentialsService;
-
     @Autowired
     BookingsService bookingsService;
-
     @Autowired
     private HostelRepository hostelRepository;
-
     @Autowired
     private HostelConfigService hostelConfigService;
-
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
 
@@ -187,8 +180,4 @@ public class LoginService {
 
         return rentalDetailsDTO;
     }
-
-
-
-
 }

@@ -27,32 +27,25 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
         if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.OPEN.name())) {
             status = "Open";
             statusCode = 1;
-        }
-        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.PENDING.name())) {
+        } else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.PENDING.name())) {
             status = "Pending";
             statusCode = 2;
-        }
-        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.INPROGRESS.name())) {
+        } else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.INPROGRESS.name())) {
             status = "In Progress";
             statusCode = 3;
-        }
-        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.ONHOLD.name())) {
+        } else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.ONHOLD.name())) {
             status = "On Hold";
             statusCode = 4;
-        }
-        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.CLOSED.name())) {
+        } else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.CLOSED.name())) {
             status = "Closed";
             statusCode = 5;
-        }
-        else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.REJECTED.name())) {
+        } else if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.REJECTED.name())) {
             status = "Rejected";
             statusCode = 6;
-        }
-        else {
+        } else {
             status = "Unknown";
             statusCode = 7;
         }
-
 
         if (listAmenities != null) {
             AmenitiesV1 amenitiesV1 = listAmenities
@@ -66,6 +59,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
             }
         }
 
+        String reason = null;
 
         return new RequestItemResponse(String.valueOf(amenityRequest.getAmenityRequestId()),
                 Utils.capitalize(RequestType.AMENITY_REQUEST.name().replace("_", " ")),
@@ -76,6 +70,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
                 "Requested " + amenityName,
                 amenityRequest.getDescription(),
                 amenityRequest.getAmenityId(),
-                statusCode);
+                statusCode,
+                reason);
     }
 }

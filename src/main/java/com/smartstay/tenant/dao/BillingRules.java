@@ -1,13 +1,13 @@
 package com.smartstay.tenant.dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
-@Getter
-@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,6 +19,14 @@ public class BillingRules {
     private Integer billDueDays;
     private Integer noticePeriod;
     private boolean isInitial;
+    private boolean hasGracePeriod;
+    private Integer gracePeriodDays;
+    //From billing type enum
+    private String typeOfBilling;
+    //Billing model enum
+    private String billingModel;
+    private List<Integer> reminderDays;
+    private boolean shouldNotify;
     private Date startFrom;
     private Date endTill;
     private Date createdAt;
@@ -26,6 +34,6 @@ public class BillingRules {
 
     @ManyToOne
     @JoinColumn(name = "hostel_id")
+    @JsonIgnore
     private HostelV1 hostel;
-
 }

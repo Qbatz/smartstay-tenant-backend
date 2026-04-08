@@ -20,7 +20,6 @@ public class LoginController {
     @Autowired
     LoginService loginService;
 
-
     @PostMapping("/request-token")
     public ResponseEntity<?> requestToken(@Valid @RequestBody RequestToken requestToken) {
         return loginService.requestToken(requestToken);
@@ -50,6 +49,4 @@ public class LoginController {
     public ResponseEntity<?> getHostelsWithOutToken(@PathVariable String xuid) {
         return loginService.getHostelsListWithToken(xuid);
     }
-
-
 }
