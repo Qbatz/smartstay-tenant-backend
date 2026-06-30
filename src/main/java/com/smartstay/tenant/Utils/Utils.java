@@ -94,7 +94,6 @@ public final class Utils {
 
     }
 
-
     public static Date getFirstDayOfPreviousMonth() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.MONTH, -1);
@@ -127,7 +126,6 @@ public final class Utils {
         }
         return new SimpleDateFormat(OUTPUT_TIME_FORMAT).format(date);
     }
-
 
     public static Date convertStringToDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) return null;
@@ -230,9 +228,8 @@ public final class Utils {
 
         return localDate.lengthOfMonth();
     }
+
     public static Double roundOffWithTwoDigit(double number) {
         return Math.round(number * 100.0) / 100.0;
     }
-
-
 }
