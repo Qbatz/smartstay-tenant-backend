@@ -1,7 +1,6 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
-import com.smartstay.tenant.payload.notification.NotificationRequest;
 import com.smartstay.tenant.service.NotificationService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,7 +40,4 @@ public class NotificationController {
     public ResponseEntity<?> deleteNotification(@PathVariable("hostelId") String hostelId, @PathVariable("notificationId")Long notificationId) {
         return notificationService.deleteNotification(hostelId, notificationId);
     }
-
-
-
 }
