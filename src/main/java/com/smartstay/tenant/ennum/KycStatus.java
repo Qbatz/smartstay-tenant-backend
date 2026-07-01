@@ -4,6 +4,7 @@ public enum KycStatus {
     PENDING("Pending"),
     REQUESTED("Requested"),
     VERIFIED("Verified"),
+    EXPIRED("Request expired"),
     NOT_AVAILABLE("Not Available");
 
     private final String status;

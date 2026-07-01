@@ -621,9 +621,14 @@ public class InvoiceService {
         boolean showRedeemedTo = false;
         if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType())){
             showRedeemedTo = true;
+        } else if (InvoiceType.ADVANCE.name().equals(invoice.getInvoiceType())) {
+            String customerId = invoice.getCustomerId();
+            if (invoicesV1Repository.existsByCustomerIdAndInvoiceType(customerId, InvoiceType.BOOKING.name())){
+                showRedeemedFrom = true;
+            }
+            showRedeemedTo = true;
         } else {
             showRedeemedFrom = true;
-            showRedeemedTo = true;
         }
 
         List<InvoiceRedemption> invoiceRedemptions = invoiceRedemptionService

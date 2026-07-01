@@ -1,5 +1,6 @@
 package com.smartstay.tenant.dao;
 
+import com.smartstay.tenant.converters.DeductionsConverter;
 import com.smartstay.tenant.handlers.StringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,11 +9,9 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+@Entity(name = "invoicesv1")
 public class InvoicesV1 {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,11 +27,15 @@ public class InvoicesV1 {
     //this includes GST
     Double totalAmount;
     Double paidAmount;
+    //this is for redemption.
+    Double balanceAmount;
+    Double subTotal;
     Double gst;
     Double cgst;
     Double sgst;
     Double gstPercentile;
     String paymentStatus;
+    Double deductionAmount;
     //will be applicable only for additional amount deduction when invoice type is others
     String othersDescription;
     //Mode will be manual and automatic
@@ -42,10 +45,14 @@ public class InvoicesV1 {
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
     List<String> cancelledInvoices;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = DeductionsConverter.class)
+    List<Deductions> deductions;
     String invoiceUrl;
     String createdBy;
     String updatedBy;
     Date invoiceGeneratedDate;
+    Date cancelledDate;
     Date invoiceDueDate;
     Date invoiceStartDate;
     Date invoiceEndDate;
