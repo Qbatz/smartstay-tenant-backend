@@ -5,6 +5,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dao.KycDetails;
+import com.smartstay.tenant.dto.kyc.DigioKycResponse;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.KycStatus;
 import com.smartstay.tenant.repository.KycDetailsRepository;
@@ -74,35 +75,43 @@ public class KycService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth(digioUserName, digioPassword);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<Void> request = new HttpEntity<>(headers);
+            HttpEntity<String> request = new HttpEntity<>("{}", headers);
 
-            ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<DigioKycResponse> response = restTemplate.exchange(
                     digioVerifyUrl,
                     HttpMethod.POST,
                     request,
-                    String.class
+                    DigioKycResponse.class
             );
 
+            DigioKycResponse digioKycResponse = response.getBody();
+            if (digioKycResponse == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No response body found");
+            }
+
+            String status = digioKycResponse.status();
+
             if (response.getStatusCode() == HttpStatus.OK) {
-                if (response.getBody() != null){
-                    if (KycStatus.REQUESTED.name().equals(response.getBody())) {
+                if (status != null){
+                    if (KycStatus.REQUESTED.name().equalsIgnoreCase(status)) {
                         return ResponseEntity.status(HttpStatus.OK).body("Kyc already requested");
-                    } else if (KycStatus.VERIFIED.name().equals(response.getBody())){
+                    } else if (KycStatus.VERIFIED.name().equalsIgnoreCase(status)){
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kyc already verified");
-                    } else if (KycStatus.EXPIRED.name().equals(response.getBody())){
+                    } else if (KycStatus.EXPIRED.name().equalsIgnoreCase(status)){
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kyc request expired");
                     } else {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kyc request pending or not available");
                     }
                 } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No response body found");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No status found");
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
             }
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Server error");
         }
     }
 }
