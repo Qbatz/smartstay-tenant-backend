@@ -27,7 +27,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                    SUM(COALESCE(t.paidAmount, 0)),
                    MAX(COALESCE(t.paidAt, i.invoiceGeneratedDate))
             )
-            FROM InvoicesV1 i
+            FROM invoicesv1 i
             JOIN i.invoiceItems ii
             LEFT JOIN TransactionV1 t ON t.invoiceId = i.invoiceId
             WHERE i.customerId = :customerId
@@ -42,7 +42,10 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                    ii.invoiceItem
             ORDER BY i.invoiceGeneratedDate DESC
             """)
-    List<InvoiceItems> getInvoiceItemDetails(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("itemTypes") List<String> itemTypes);
+    List<InvoiceItems> getInvoiceItemDetails(@Param("customerId") String customerId,
+                                             @Param("startDate") Date startDate,
+                                             @Param("endDate") Date endDate,
+                                             @Param("itemTypes") List<String> itemTypes);
 
     @Query(value = """
             SELECT
@@ -74,8 +77,10 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             ORDER BY i.invoice_start_date DESC
             LIMIT 1
             """, nativeQuery = true)
-    InvoiceSummaryProjection getInvoiceSummary(@Param("hostelId") String hostelId, @Param("customerId") String customerId,
-                                               @Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    InvoiceSummaryProjection getInvoiceSummary(@Param("hostelId") String hostelId,
+                                               @Param("customerId") String customerId,
+                                               @Param("startDate") Date startDate,
+                                               @Param("endDate") Date endDate);
 
     @Query(value = """
             SELECT
@@ -108,15 +113,17 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_id
             ORDER BY i.invoice_generated_date DESC
             """, nativeQuery = true)
-    List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId, @Param("customerId") String customerId);
+    List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId,
+                                                   @Param("customerId") String customerId);
 
     @Query("""
                 SELECT i
-                FROM InvoicesV1 i
+                FROM invoicesv1 i
                 WHERE i.invoiceId = :invoiceId
                   AND i.customerId = :customerId
             """)
-    InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId, @Param("customerId") String customerId);
+    InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId,
+                                           @Param("customerId") String customerId);
 
     @Query("""
                 SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
@@ -125,25 +132,15 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 
-    @Query("SELECT SUM(i.paidAmount) FROM InvoicesV1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
+    @Query("SELECT SUM(i.paidAmount) FROM invoicesv1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
     Double findAdvancePaidAmount(@Param("customerId") String customerId);
 
-    @Query("SELECT i FROM InvoicesV1 i WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE")
+    @Query("SELECT i FROM invoicesv1 i WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE")
     List<InvoicesV1> findInvoicesGeneratedToday();
-
-//    @Query("""
-//        SELECT i
-//        FROM InvoicesV1 i
-//        JOIN Customers c ON c.customerId = i.customerId
-//        JOIN CustomerCredentials cc ON cc.xuid = c.xuid
-//        WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
-//          AND i.isCancelled = false AND c.customerId = '7e994f6a-2031-47e0-abb9-410f3ecb9efd'
-//    """)
-//    List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
     @Query("""
                 SELECT i
-                FROM InvoicesV1 i
+                FROM invoicesv1 i
                 JOIN Customers c ON c.customerId = i.customerId
                 JOIN CustomerCredentials cc ON cc.xuid = c.xuid
                 WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
@@ -152,19 +149,19 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
     @Query("""
-            SELECT inv FROM InvoicesV1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
+            SELECT inv FROM invoicesv1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
             inv.invoiceType='ADVANCE'
             """)
     InvoicesV1 findAdvanceInvoice(String customerId, String hostelId);
 
     @Query("""
-            SELECT inv FROM InvoicesV1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
+            SELECT inv FROM invoicesv1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
             inv.invoiceType='BOOKING'
             """)
     InvoicesV1 findBookingInvoice(String customerId, String hostelId);
 
     @Query("""
-            SELECT inv from InvoicesV1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate)
+            SELECT inv from invoicesv1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate)
             AND DATE(inv.invoiceEndDate) >= DATE(:startDate) AND inv.invoiceType in ('RENT', 'REASSIGN_RENT')
             """)
     List<InvoicesV1> findCurrentMonthInvoices(String customerId, Date startDate, Date endDate);
@@ -188,15 +185,18 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     );
 
     @Query(value = """
-            SELECT * FROM `invoicesv1` WHERE customer_id=:customerId AND hostel_id=:hostelId AND DATE(invoice_start_date) >= DATE(:startDate) 
+            SELECT * FROM invoicesv1 WHERE customer_id=:customerId AND hostel_id=:hostelId AND DATE(invoice_start_date) >= DATE(:startDate) 
              AND  (invoice_type='RENT' OR invoice_type='REASSIGN_RENT')
             """, nativeQuery = true)
-    List<InvoicesV1> findAllCurrentMonthInvoices(@Param("customerId") String customerId, @Param("hostelId") String hostelId, @Param("startDate") Date startDate);
+    List<InvoicesV1> findAllCurrentMonthInvoices(@Param("customerId") String customerId,
+                                                 @Param("hostelId") String hostelId,
+                                                 @Param("startDate") Date startDate);
 
     @Query(value = """
             SELECT * FROM invoicesv1 invc WHERE invc.customer_id=:customerId and DATE(invc.invoice_start_date) >= DATE(:startDate) ORDER BY invc.invoice_start_date DESC LIMIT 1;
             """, nativeQuery = true)
-    InvoicesV1 findCurrentRunningInvoice(@Param("customerId") String customerId, @Param("startDate") Date startDate);
+    InvoicesV1 findCurrentRunningInvoice(@Param("customerId") String customerId,
+                                         @Param("startDate") Date startDate);
 
     @Query(value = """
         SELECT COALESCE(SUM(paid_amount), 0)
@@ -213,4 +213,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     );
 
     List<InvoicesV1> findAllByInvoiceIdIn(List<String> invoiceIds);
+
+    boolean existsByCustomerIdAndInvoiceType(String customerId, String invoiceType);
 }

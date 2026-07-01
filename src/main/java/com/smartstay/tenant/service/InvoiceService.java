@@ -22,6 +22,7 @@ import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.eb.EbReadingsResponse;
 import com.smartstay.tenant.response.eb.InvoiceEbResponse;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
+import com.smartstay.tenant.response.invoiceRedemption.InvRedemptionRes;
 import com.smartstay.tenant.response.invoices.*;
 import com.smartstay.tenant.response.receipt.ReceiptConfigInfo;
 import com.smartstay.tenant.response.receipt.ReceiptDetails;
@@ -79,6 +80,8 @@ public class InvoiceService {
     private CustomerEbHistoryService customerEbHistoryService;
     @Autowired
     private InvoiceDiscountsService invoiceDiscountsService;
+    @Autowired
+    private InvoiceRedemptionService invoiceRedemptionService;
 
     public InvoiceService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -614,6 +617,63 @@ public class InvoiceService {
 
         double invoiceDiscountAmount = invoiceDiscountsService.getDiscountAmountByInvoiceId(invoiceId);
 
+        boolean showRedeemedFrom = false;
+        boolean showRedeemedTo = false;
+        if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType())){
+            showRedeemedTo = true;
+        } else if (InvoiceType.ADVANCE.name().equals(invoice.getInvoiceType())) {
+            String customerId = invoice.getCustomerId();
+            if (invoicesV1Repository.existsByCustomerIdAndInvoiceType(customerId, InvoiceType.BOOKING.name())){
+                showRedeemedFrom = true;
+            }
+            showRedeemedTo = true;
+        } else {
+            showRedeemedFrom = true;
+        }
+
+        List<InvoiceRedemption> invoiceRedemptions = invoiceRedemptionService
+                .getInvoiceRedemptionByInvoiceId(invoiceId);
+
+        Set<String> invoiceIds = new HashSet<>();
+        for (InvoiceRedemption invoiceRedemption : invoiceRedemptions) {
+            if (invoiceRedemption.getSourceInvoiceId() != null){
+                invoiceIds.add(invoiceRedemption.getSourceInvoiceId());
+            }
+            if (invoiceRedemption.getTargetInvoiceId() != null){
+                invoiceIds.add(invoiceRedemption.getTargetInvoiceId());
+            }
+        }
+
+        List<InvoicesV1> invoices = invoicesV1Repository.findAllByInvoiceIdIn(new ArrayList<>(invoiceIds));
+
+        Map<String, InvoicesV1> invoiceMap = invoices.stream()
+                .collect(Collectors.toMap(InvoicesV1::getInvoiceId,
+                        inv -> inv));
+
+        List<InvRedemptionRes> redeemedFrom = new ArrayList<>();
+        List<InvRedemptionRes> redeemedTo = new ArrayList<>();
+        for (InvoiceRedemption invoiceRedemption : invoiceRedemptions) {
+            if (invoiceRedemption.getSourceInvoiceId().equals(invoiceId)){
+                InvoicesV1 targetInvoice = invoiceMap.getOrDefault(invoiceRedemption.getTargetInvoiceId(), null);
+                String targetInvoiceId = targetInvoice != null ? targetInvoice.getInvoiceId() : null;
+                String targetInvoiceNumber = targetInvoice != null ? targetInvoice.getInvoiceNumber() : null;
+                InvRedemptionRes redeemedToRes = new InvRedemptionRes(invoiceRedemption.getId(),
+                        targetInvoiceId, targetInvoiceNumber, invoiceRedemption.getRedemptionAmount(),
+                        Utils.dateToString(invoiceRedemption.getRedeemedAt()), Utils.dateToTime(invoiceRedemption.getRedeemedAt()));
+
+                redeemedTo.add(redeemedToRes);
+            } else if (invoiceRedemption.getTargetInvoiceId().equals(invoiceId)) {
+                InvoicesV1 sourceInvoice = invoiceMap.getOrDefault(invoiceRedemption.getSourceInvoiceId(), null);
+                String sourceInvoiceId = sourceInvoice != null ? sourceInvoice.getInvoiceId() : null;
+                String sourceInvoiceNumber = sourceInvoice != null ? sourceInvoice.getInvoiceNumber() : null;
+                InvRedemptionRes redeemedFromRes = new InvRedemptionRes(invoiceRedemption.getId(),
+                        sourceInvoiceId, sourceInvoiceNumber, invoiceRedemption.getRedemptionAmount(),
+                        Utils.dateToString(invoiceRedemption.getRedeemedAt()), Utils.dateToTime(invoiceRedemption.getRedeemedAt()));
+
+                redeemedFrom.add(redeemedFromRes);
+            }
+        }
+
         return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()),
                 Utils.dateToString(invoice.getInvoiceGeneratedDate()),
@@ -624,7 +684,8 @@ public class InvoiceService {
                 status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
                 invoice.getGstPercentile(), invoiceItems, receipts, unpaidInvoices,
                 invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
-                referenceId, showMessage);
+                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom,
+                redeemedTo);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
