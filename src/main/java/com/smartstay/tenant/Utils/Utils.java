@@ -63,6 +63,8 @@ public final class Utils {
     public static final String PROFILE_PICTURE_REMOVED = "Profile picture is removed";
     public static final String DOCUMENT_CAN_BE_UPLOADED_BY_CHECK_IN_CUSTOMER = "Documents can only be uploaded by checked in customer";
     public static final String DOCUMENT_CAN_BE_DELETED_BY_CHECK_IN_CUSTOMER = "Documents can only be deleted by checked in customer";
+    public static final String KYC_DETAILS_NOT_FOUND = "Kyc details not found";
+    public static final String CUSTOMER_NOT_CHECKED_IN = "Customer not checked in";
 
     private Utils() {
     }

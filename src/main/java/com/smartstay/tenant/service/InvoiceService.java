@@ -1270,8 +1270,7 @@ public class InvoiceService {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         String endpoint = reportsUrl + "/v2/reports/invoices/"+ hostelId + "/" +  invoiceId;
-        HttpEntity<Void> request =
-                new HttpEntity<>(headers);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 endpoint,
