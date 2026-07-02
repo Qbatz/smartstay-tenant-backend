@@ -17,6 +17,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Date;
+
 @Service
 public class KycService {
 
@@ -113,5 +115,57 @@ public class KycService {
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Server error");
         }
+    }
+
+    public ResponseEntity<?> updateStatusToWaitingApproval() {
+
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        if (!(CustomerStatus.CHECK_IN.name().equals(customer.getCurrentStatus()) ||
+                CustomerStatus.NOTICE.name().equals(customer.getCurrentStatus()) ||
+                CustomerStatus.SETTLEMENT_GENERATED.name().equals(customer.getCurrentStatus()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_CHECKED_IN);
+        }
+
+        HostelV1 hostel = hostelService.getHostelById(customer.getHostelId());
+        if (hostel == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.HOSTEL_NOT_FOUND);
+        }
+
+        KycDetails kycDetails = customer.getKycDetails();
+        if (kycDetails == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_DETAILS_NOT_FOUND);
+        }
+
+        String currentStatus = kycDetails.getCurrentStatus();
+
+        if (!KycStatus.REQUESTED.name().equalsIgnoreCase(currentStatus)){
+            String errorMessage = "Kyc status must be requested";
+
+            if (KycStatus.PENDING.name().equalsIgnoreCase(currentStatus)){
+                errorMessage = "Kyc status can not be pending";
+            } else if (KycStatus.VERIFIED.name().equalsIgnoreCase(currentStatus)) {
+                errorMessage = "Kyc status can not be verified";
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
+
+        Date today = new Date();
+
+        kycDetails.setCurrentStatus(KycStatus.WAITING_FOR_APPROVAL.name());
+        kycDetails.setUpdatedAt(today);
+
+        kycDetailsRepository.save(kycDetails);
+
+        return ResponseEntity.status(HttpStatus.OK).body(Utils.SUCCESS);
     }
 }
