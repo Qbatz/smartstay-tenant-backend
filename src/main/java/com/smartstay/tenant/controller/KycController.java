@@ -22,4 +22,9 @@ public class KycController {
     public ResponseEntity<?> verifyKycStatus() {
        return kycService.verifyKycStatus();
     }
+
+    @PostMapping("/status")
+    public ResponseEntity<?> updateStatusToWaitingApproval() {
+        return kycService.updateStatusToWaitingApproval();
+    }
 }
