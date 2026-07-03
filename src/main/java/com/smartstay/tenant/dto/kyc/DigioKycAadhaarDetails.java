@@ -1,7 +1,6 @@
 package com.smartstay.tenant.dto.kyc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.smartstay.tenant.dao.KycAddressDetails;
 
 public record DigioKycAadhaarDetails(@JsonProperty("id_number")
                                      String idNumber,
@@ -34,10 +33,10 @@ public record DigioKycAadhaarDetails(@JsonProperty("id_number")
                                      String permanentAddressString,
 
                                      @JsonProperty("permanent_address_details")
-                                     KycAddressDetails permanentAddress,
+                                     DigioKycAddressDetails permanentAddress,
 
                                      @JsonProperty("current_address_details")
-                                     KycAddressDetails currentAddressDetails,
+                                     DigioKycAddressDetails currentAddressDetails,
 
                                      @JsonProperty("completed_at")
                                      String completedAt) {
