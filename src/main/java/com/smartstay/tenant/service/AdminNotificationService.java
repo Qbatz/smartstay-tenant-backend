@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.dao.AdminNotifications;
 import com.smartstay.tenant.dao.ComplaintsV1;
 import com.smartstay.tenant.dao.CustomerNotifications;
@@ -18,7 +17,6 @@ public class AdminNotificationService {
 
     @Autowired
     private AdminNotificationRepository adminNotificationRepository;
-
     @Autowired
     private CustomerNotificationRepository customerNotificationRepository;
 
@@ -46,9 +44,9 @@ public class AdminNotificationService {
         return customerNotificationRepository.findByIdAndIsDeletedFalse(id).get();
     }
 
-
     public void updateComplaintsOnNotification(ComplaintsV1 complaint, String title) {
-        List<AdminNotifications> listNotifications = adminNotificationRepository.findByUserIdAndSourceId(complaint.getCustomerId(), String.valueOf(complaint.getComplaintId()));
+        List<AdminNotifications> listNotifications = adminNotificationRepository
+                .findByUserIdAndSourceId(complaint.getCustomerId(), String.valueOf(complaint.getComplaintId()));
         if (!listNotifications.isEmpty()) {
             AdminNotifications an = listNotifications
                     .stream()
