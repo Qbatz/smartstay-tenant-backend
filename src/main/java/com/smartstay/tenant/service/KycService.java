@@ -240,13 +240,13 @@ public class KycService {
                 if (kycDetails == null) {
                     kycDetails = new KycDetails();
                     kycDetails.setCustomers(customer);
+                    kycDetails.setCreatedAt(today);
+                    kycDetails.setCreatedBy(authentication.getName());
                 }
                 kycDetails.setCurrentStatus(KycStatus.REQUESTED.name());
                 kycDetails.setTransactionId(digioInitiateKycResponse.transactionId());
                 kycDetails.setTemplateId(digioInitiateKycResponse.templateId());
                 kycDetails.setReferenceId(digioInitiateKycResponse.referenceId());
-                kycDetails.setCreatedAt(today);
-                kycDetails.setCreatedBy(authentication.getName());
 
                 if (kycAccessToken != null) {
                     kycDetails.setEntityId(kycAccessToken.entityId());
