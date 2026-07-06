@@ -3,8 +3,10 @@ package com.smartstay.tenant.Utils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
@@ -12,6 +14,7 @@ import java.util.Date;
 public final class Utils {
 
     public static final String USER_INPUT_DATE_FORMAT = "dd-MM-yyyy";
+    public static final String INPUT_DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final String OUTPUT_DATE_FORMAT = "dd/MM/yyyy";
     public static final String OUTPUT_TIME_FORMAT = "hh:mm:ss aa";
     public static final String OUTPUT_MONTH_FORMAT = "MMM YYYY";
@@ -63,8 +66,22 @@ public final class Utils {
     public static final String PROFILE_PICTURE_REMOVED = "Profile picture is removed";
     public static final String DOCUMENT_CAN_BE_UPLOADED_BY_CHECK_IN_CUSTOMER = "Documents can only be uploaded by checked in customer";
     public static final String DOCUMENT_CAN_BE_DELETED_BY_CHECK_IN_CUSTOMER = "Documents can only be deleted by checked in customer";
-    public static final String KYC_DETAILS_NOT_FOUND = "Kyc details not found";
     public static final String CUSTOMER_NOT_CHECKED_IN = "Customer not checked in";
+    public static final String CUSTOMER_VERIFIED_KYC = "Customer is already verified";
+
+    public static final String SERVER_ERROR = "Server error";
+    public static final String RESPONSE_BODY_NOT_FOUND = "Response body not found";
+    public static final String STATUS_NOT_FOUND = "Status not found";
+
+    public static final String KYC_DETAILS_NOT_FOUND = "Kyc details not found";
+    public static final String KYC_STATUS_MUST_BE_REQUESTED = "Kyc status must be requested";
+    public static final String KYC_STATUS_CAN_NOT_BE_PENDING = "Kyc status can not be pending";
+    public static final String KYC_STATUS_CAN_NOT_BE_VERIFIED = "Kyc status can not be verified";
+    public static final String KYC_VERIFICATION_ALREADY_REQUESTED = "Kyc verification is already requested";
+    public static final String KYC_ALREADY_REQUESTED = "Kyc already requested";
+    public static final String KYC_ALREADY_VERIFIED = "Kyc already verified";
+    public static final String KYC_REQUEST_EXPIRED = "Kyc request expired";
+    public static final String KYC_REQUEST_PENDING_OR_NOT_AVAILABLE = "Kyc request pending or not available";
 
     private Utils() {
     }
@@ -233,5 +250,34 @@ public final class Utils {
 
     public static Double roundOffWithTwoDigit(double number) {
         return Math.round(number * 100.0) / 100.0;
+    }
+
+    public static String getFullName(String firstName, String lastName){
+        StringBuilder fullName = new StringBuilder();
+
+        if (firstName != null) {
+            firstName = firstName.trim();
+            fullName.append(firstName);
+        }
+
+        if (lastName != null && !lastName.isBlank()) {
+            lastName = lastName.trim();
+            fullName.append(" ");
+            fullName.append(lastName);
+        }
+
+        return fullName.toString();
+    }
+
+    public static Date stringDateToDate(String date) {
+
+        if (date == null) {
+            return null;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(INPUT_DATE_TIME_FORMAT);
+        LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 }
