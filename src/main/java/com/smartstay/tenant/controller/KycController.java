@@ -27,4 +27,9 @@ public class KycController {
     public ResponseEntity<?> updateStatusToWaitingApproval() {
         return kycService.updateStatusToWaitingApproval();
     }
+
+    @PostMapping("/initiate")
+    public ResponseEntity<?> initiateKyc(){
+        return kycService.initiateKyc();
+    }
 }
