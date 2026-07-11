@@ -8,5 +8,5 @@ public enum NotificationType {
 
     BED_CHANGE_REQUEST,
     COMPLAINTS_RAISED,
-    KYC_REQUEST;
+    KYC_REQUEST
 }

@@ -1,19 +1,18 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.AdminNotifications;
-import com.smartstay.tenant.dao.ComplaintsV1;
-import com.smartstay.tenant.dao.CustomerNotifications;
-import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dao.*;
+import com.smartstay.tenant.ennum.NotificationType;
 import com.smartstay.tenant.ennum.RequestType;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
 import com.smartstay.tenant.repository.HostelRepository;
+import com.smartstay.tenant.response.kyc.NotificationKycInfo;
 import com.smartstay.tenant.response.notification.NotificationProjection;
+import com.smartstay.tenant.response.notification.NotificationResWrapper;
 import com.smartstay.tenant.response.notification.NotificationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -27,91 +26,165 @@ import java.util.List;
 @Service
 public class NotificationService {
 
-
     @Autowired
     private Authentication authentication;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private HostelRepository hostelRepository;
     @Autowired
     private AdminNotificationService notificationService;
+    @Autowired
+    @Lazy
     private FCMNotificationService fcmNotificationService;
 
-    @Autowired
-    public void setFcmNotificationService(@Lazy FCMNotificationService fcmNotificationService) {
-        this.fcmNotificationService = fcmNotificationService;
-    }
-
     public ResponseEntity<?> getNotificationList(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+        if (hostelV1 == null) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<NotificationProjection> notifications = notificationService.getActiveNotifications(hostelId, customerId);
-        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
-
+        List<NotificationProjection> notifications = notificationService
+                .getActiveNotifications(hostelId, customerId);
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        NotificationResponse notificationResponse = new NotificationResponse(notifications, hostelV1.getHostelName(), Utils.getInitials(hostelV1.getHostelName()), hostelV1.getMainImage());
+
+        List<NotificationResWrapper> resWrappers = notifications.stream()
+                .map(notification -> {
+
+                    NotificationKycInfo kycInfo = null;
+                    boolean isKycRequest = false;
+
+                    if (notification.getFullNotificationType() != null &&
+                            NotificationType.KYC_REQUEST.name().equals(notification.getFullNotificationType())){
+
+                        isKycRequest = true;
+
+                        KycDetails kycDetails = customer.getKycDetails();
+
+                        if (kycDetails != null) {
+                            kycInfo = new NotificationKycInfo(kycDetails.getEntityId(), kycDetails.getAccessTokenId(),
+                                    customer.getMobile());
+                        }
+                    }
+
+                    return new NotificationResWrapper(notification.getId(), notification.getTitle(),
+                            notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
+                            notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+                })
+                .toList();
+
+        NotificationResponse notificationResponse = new NotificationResponse(resWrappers,
+                hostelV1.getHostelName(), Utils.getInitials(hostelV1.getHostelName()), hostelV1.getMainImage());
+
         return new ResponseEntity<>(notificationResponse, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getNotificationById(String hostelId, long notificationId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        NotificationProjection notifications = notificationService.getNotificationById(hostelId, notificationId);
 
-        if (notifications == null) {
+        NotificationProjection notification = notificationService
+                .getNotificationById(hostelId, notificationId);
+
+        if (notification == null) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(notifications, HttpStatus.OK);
+
+        NotificationKycInfo kycInfo = null;
+        boolean isKycRequest = false;
+
+        if (notification.getFullNotificationType() != null &&
+                NotificationType.KYC_REQUEST.name().equals(notification.getFullNotificationType())) {
+
+            isKycRequest = true;
+
+            KycDetails kycDetails = customer.getKycDetails();
+
+            if (kycDetails != null) {
+                kycInfo = new NotificationKycInfo(kycDetails.getEntityId(), kycDetails.getAccessTokenId(),
+                        customer.getMobile());
+            }
+        }
+
+        NotificationResWrapper response = new NotificationResWrapper(notification.getId(), notification.getTitle(),
+                notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
+                notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public ResponseEntity<?> markAsRead(String hostelId, MarkAsReadRequest request) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         String data = markAsRead(request.notificationIds(), hostelId);
+
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
     public ResponseEntity<?> deleteNotification(String hostelId, long id) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         AdminNotifications notification = notificationService.findByIdAndIsDeletedFalse(id);
+
         if (notification == null || !notification.getHostelId().equals(hostelId)) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         notification.setDeleted(true);
         notification.setUpdatedAt(new Date());
+
         notificationService.saveAdminNotification(notification);
+
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
 

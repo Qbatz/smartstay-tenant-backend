@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.CustomerCredentials;
@@ -12,11 +11,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConfigService {
+
     @Autowired
     CustomerCredentialsService customerCredentialsService;
     @Autowired
     Authentication authentication;
-
 
     public ResponseEntity<?> updateFcm(UpdateFcm updateFcm) {
         if (!authentication.isAuthenticated()) {
