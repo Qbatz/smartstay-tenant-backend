@@ -48,10 +48,26 @@ public final class Utils {
     public static final String COMPLAINT_TYPE_NOT_FOUND = "Complaint type not found.";
     public static final String INVALID_COMPLAINT_ID = "Invalid complaint id passed";
     public static final String INVALID_REQUEST = "Invalid request";
+    public static final String INVALID_PINCODE = "Invalid pincode";
     public static final String ENVIRONMENT_LOCAL = "LOCAL";
     public static final String ENVIRONMENT_DEV = "DEV";
     public static final String ENVIRONMENT_QA = "QA";
     public static final String ENVIRONMENT_PROD = "PROD";
+
+    public static final String SERVER_ERROR = "Server error";
+    public static final String RESPONSE_BODY_NOT_FOUND = "Response body not found";
+    public static final String STATUS_NOT_FOUND = "Status not found";
+
+    public static final String CUSTOMER_VERIFIED_KYC = "Customer is already verified";
+    public static final String KYC_DETAILS_NOT_FOUND = "Kyc details not found";
+    public static final String KYC_STATUS_MUST_BE_REQUESTED = "Kyc status must be requested";
+    public static final String KYC_STATUS_CAN_NOT_BE_PENDING = "Kyc status can not be pending";
+    public static final String KYC_STATUS_CAN_NOT_BE_VERIFIED = "Kyc status can not be verified";
+    public static final String KYC_VERIFICATION_ALREADY_REQUESTED = "Kyc verification is already requested";
+    public static final String KYC_ALREADY_REQUESTED = "Kyc already requested";
+    public static final String KYC_ALREADY_VERIFIED = "Kyc already verified";
+    public static final String KYC_REQUEST_EXPIRED = "Kyc request expired";
+    public static final String KYC_REQUEST_PENDING_OR_NOT_AVAILABLE = "Kyc request pending or not available";
 
     public static final String CANNOT_MAKE_BED_CHANGE_REQUEST_NOTICE_CUSTOMER = "Bed change is not allowed during the notice period.";
     public static final String NO_DOCUMENT_ID_PROVIDED = "No document ID provided";
@@ -67,22 +83,6 @@ public final class Utils {
     public static final String DOCUMENT_CAN_BE_UPLOADED_BY_CHECK_IN_CUSTOMER = "Documents can only be uploaded by checked in customer";
     public static final String DOCUMENT_CAN_BE_DELETED_BY_CHECK_IN_CUSTOMER = "Documents can only be deleted by checked in customer";
     public static final String CUSTOMER_NOT_CHECKED_IN = "Customer not checked in";
-    public static final String CUSTOMER_VERIFIED_KYC = "Customer is already verified";
-
-    public static final String SERVER_ERROR = "Server error";
-    public static final String RESPONSE_BODY_NOT_FOUND = "Response body not found";
-    public static final String STATUS_NOT_FOUND = "Status not found";
-
-    public static final String KYC_DETAILS_NOT_FOUND = "Kyc details not found";
-    public static final String KYC_STATUS_MUST_BE_REQUESTED = "Kyc status must be requested";
-    public static final String KYC_STATUS_CAN_NOT_BE_PENDING = "Kyc status can not be pending";
-    public static final String KYC_STATUS_CAN_NOT_BE_VERIFIED = "Kyc status can not be verified";
-    public static final String KYC_VERIFICATION_ALREADY_REQUESTED = "Kyc verification is already requested";
-    public static final String KYC_ALREADY_REQUESTED = "Kyc already requested";
-    public static final String KYC_ALREADY_VERIFIED = "Kyc already verified";
-    public static final String KYC_REQUEST_EXPIRED = "Kyc request expired";
-    public static final String KYC_REQUEST_PENDING_OR_NOT_AVAILABLE = "Kyc request pending or not available";
-    public static final String INVALID_PINCODE = "Invalid pincode";
 
     private Utils() {
     }
