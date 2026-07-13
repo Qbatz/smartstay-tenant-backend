@@ -108,7 +108,8 @@ public class CustomerService {
 
             String profileImage = null;
             if (file != null) {
-                profileImage = uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(file), "customer/profile");
+                profileImage = uploadToS3
+                        .uploadFileToS3(FilesConfig.convertMultipartToFileNew(file), "customer/profile");
                 customers.setProfilePic(profileImage);
             }
 
@@ -129,6 +130,12 @@ public class CustomerService {
             }
             if (updateInfo.landmark() != null && !updateInfo.landmark().equalsIgnoreCase("")) {
                 customers.setLandmark(updateInfo.landmark());
+            }
+            if (updateInfo.pincode() != null){
+                if (updateInfo.pincode() < 0) {
+                    return new ResponseEntity<>(Utils.INVALID_PINCODE, HttpStatus.BAD_REQUEST);
+                }
+                customers.setPincode(updateInfo.pincode());
             }
             if (updateInfo.city() != null && !updateInfo.city().equalsIgnoreCase("")) {
                 customers.setCity(updateInfo.city());
