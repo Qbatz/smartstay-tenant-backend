@@ -3,6 +3,8 @@ package com.smartstay.tenant.mapper.hostel;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dao.BookingsV1;
+import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
@@ -18,25 +20,44 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
     private final BookingsService bookingsService;
     private final HostelConfigService hostelConfigService;
     private final InvoicesV1Repository invoicesV1Repository;
+    private final HostelV1 hostel;
+    private final Customers customer;
 
-    public HostelDetailsMapper(BookingsService bookingsService, HostelConfigService hostelConfigService, InvoicesV1Repository invoicesV1Repository) {
+    public HostelDetailsMapper(BookingsService bookingsService,
+                               HostelConfigService hostelConfigService,
+                               InvoicesV1Repository invoicesV1Repository,
+                               HostelV1 hostel,
+                               Customers customer) {
         this.bookingsService = bookingsService;
         this.hostelConfigService = hostelConfigService;
         this.invoicesV1Repository = invoicesV1Repository;
+        this.hostel = hostel;
+        this.customer = customer;
     }
 
     @Override
     public HostelWithRentDTO apply(CustomerHostels customerHostels) {
 
-        RentalDetailsDTO rentalDetailsDTO = getRentDetails(customerHostels.getHostelId(), customerHostels.getCustomerId());
+        RentalDetailsDTO rentalDetailsDTO = getRentDetails(customerHostels.getHostelId(),
+                customerHostels.getCustomerId());
 
         String hostelInitial = null;
-        if (customerHostels.getHostelName() != null && !customerHostels.getHostelName().trim().equalsIgnoreCase("")) {
+        if (customerHostels.getHostelName() != null &&
+                !customerHostels.getHostelName().trim().equalsIgnoreCase("")) {
             hostelInitial = Utils.getInitials(customerHostels.getHostelName());
         }
-        System.out.println("Hostel Initial: " + hostelInitial);
-        System.out.println("Customer Hostel: " + customerHostels.getHostelName());
-        return new HostelWithRentDTO(customerHostels.getCustomerId(), customerHostels.getHostelId(), customerHostels.getHostelName(),hostelInitial, customerHostels.getHouseNo(), customerHostels.getStreet(), customerHostels.getLandmark(), customerHostels.getPincode(), customerHostels.getCity(), customerHostels.getState(), customerHostels.getHostelPic(), customerHostels.getCurrentStatus(), customerHostels.getStatusCode(), rentalDetailsDTO);
+
+        String hostelFullAddress = null;
+        if (hostel != null) {
+            hostelFullAddress = Utils.buildFullAddress(hostel);
+        }
+
+        return new HostelWithRentDTO(customerHostels.getCustomerId(), customerHostels.getHostelId(),
+                customerHostels.getHostelName(),hostelInitial, customerHostels.getHostelPic(),
+                customerHostels.getHouseNo(), customerHostels.getStreet(), customerHostels.getLandmark(),
+                customerHostels.getPincode(), customerHostels.getCity(), customerHostels.getState(),
+                hostelFullAddress, customerHostels.getCurrentStatus(), customerHostels.getStatusCode(),
+                rentalDetailsDTO);
     }
 
     public RentalDetailsDTO getRentDetails(String hostelId, String customerId) {
@@ -84,5 +105,4 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
 
         return rentalDetailsDTO;
     }
-
 }
