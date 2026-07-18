@@ -6,6 +6,7 @@ import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
 import com.smartstay.tenant.ennum.CustomerBedStatus;
+import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -26,15 +27,15 @@ import java.util.stream.Collectors;
 public class LoginService {
 
     @Autowired
-    CustomerRepository customersRepository;
+    private CustomerRepository customersRepository;
     @Autowired
-    Authentication authentication;
+    private Authentication authentication;
     @Autowired
-    JWTService jwtService;
+    private JWTService jwtService;
     @Autowired
-    CustomerCredentialsService customerCredentialsService;
+    private CustomerCredentialsService customerCredentialsService;
     @Autowired
-    BookingsService bookingsService;
+    private BookingsService bookingsService;
     @Autowired
     private HostelRepository hostelRepository;
     @Autowired
@@ -45,6 +46,16 @@ public class LoginService {
     private UsersService usersService;
     @Autowired
     private CustomerDocumentService customerDocumentService;
+    @Autowired
+    private CustomerBedHistoryService customerBedHistoryService;
+    @Autowired
+    private BedsService bedsService;
+    @Autowired
+    private RoomsService roomsService;
+    @Autowired
+    private FloorsService floorsService;
+    @Autowired
+    private InvoiceService invoiceService;
 
     public ResponseEntity<?> updateMpin(UpdateMpin updateMpin) {
 
@@ -236,6 +247,70 @@ public class LoginService {
         Map<String, List<CustomerDocuments>> customerDocsMap = customerDocuments.stream()
                 .collect(Collectors.groupingBy(CustomerDocuments::getCustomerId));
 
+        List<CustomersBedHistory> latestBedHistories = customerBedHistoryService
+                .getLatestBedHistoriesByCustomerIds(customerIds);
+
+        Map<String, CustomersBedHistory> latestBedHistoryMap = latestBedHistories.stream()
+                .collect(Collectors.toMap(CustomersBedHistory::getCustomerId, Function.identity()));
+
+        Set<Integer> bedIds = latestBedHistories
+                .stream()
+                .map(CustomersBedHistory::getBedId)
+                .collect(Collectors.toSet());
+
+        List<Beds> beds = bedsService.findAllByBedIdIn(bedIds);
+
+        Map<Integer, Beds> bedsMap = beds.stream()
+                .collect(Collectors.toMap(Beds::getBedId,
+                        Function.identity()));
+
+        Set<Integer> roomIds = beds
+                .stream()
+                .map(Beds::getRoomId)
+                .collect(Collectors.toSet());
+
+        List<Rooms> rooms = roomsService.findAllByRoomIdIn(roomIds);
+
+        Map<Integer, Rooms> roomsMap = rooms.stream()
+                .collect(Collectors.toMap(Rooms::getRoomId,
+                        Function.identity()));
+
+        Set<Integer> floorIds = rooms
+                .stream()
+                .map(Rooms::getFloorId)
+                .collect(Collectors.toSet());
+
+        List<Floors> floors = floorsService.findAllByFloorIdIn(floorIds);
+
+        Map<Integer, Floors> floorsMap = floors.stream()
+                .collect(Collectors.toMap(Floors::getFloorId,
+                        floor -> floor));
+
+        List<BookingsV1> bookings = bookingsService
+                .getBookingsByCustomerIds(customerIds);
+
+        Map<String, BookingsV1> bookingsMap = bookings.stream()
+                .collect(Collectors.toMap(BookingsV1::getCustomerId, Function.identity()));
+
+        List<InvoicesV1> bookingAdvanceInvoices = invoiceService
+                .getBookingAdvanceInvoicesByCustomerIds(customerIds);
+
+        List<InvoicesV1> bookingInvoices = bookingAdvanceInvoices.stream()
+                .filter(i -> InvoiceType.BOOKING.name().equals(i.getInvoiceType()))
+                .toList();
+
+        Map<String, InvoicesV1> bookingInvoiceMap = bookingInvoices.stream()
+                .collect(Collectors.toMap(InvoicesV1::getCustomerId,
+                        Function.identity(), (a, b) -> a));
+
+        List<InvoicesV1> advanceInvoices = bookingAdvanceInvoices.stream()
+                .filter(i -> InvoiceType.ADVANCE.name().equals(i.getInvoiceType()))
+                .toList();
+
+        Map<String, InvoicesV1> advanceInvoiceMap = advanceInvoices.stream()
+                .collect(Collectors.toMap(InvoicesV1::getCustomerId,
+                        Function.identity(), (a, b) -> a));
+
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
 
@@ -255,10 +330,14 @@ public class LoginService {
             Users owner = ownersMap.getOrDefault(parentId, null);
             BillingRules billingRules = latestBillingRulesMap.getOrDefault(hostelId, null);
             List<CustomerDocuments> thisCustomerDocs = customerDocsMap.getOrDefault(thisCustomerId, null);
+            CustomersBedHistory latestBedHistory = latestBedHistoryMap.getOrDefault(thisCustomerId, null);
+            BookingsV1 booking = bookingsMap.getOrDefault(thisCustomerId, null);
+            InvoicesV1 bookingInvoice = bookingInvoiceMap.getOrDefault(thisCustomerId, null);
+            InvoicesV1 advanceInvoice = advanceInvoiceMap.getOrDefault(thisCustomerId, null);
 
-            HostelDetailsMapper mapper = new HostelDetailsMapper(bookingsService,
-                    hostelConfigService, invoicesV1Repository, hostel, customer,
-                    owner, billingRules, thisCustomerDocs);
+            HostelDetailsMapper mapper = new HostelDetailsMapper(hostel, customer,
+                    owner, billingRules, thisCustomerDocs, latestBedHistory,
+                    bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice);
 
             if (CustomerBedStatus.BED_ASSIGNED.name().equals(customer.getCustomerBedStatus())){
                 activeStays.add(mapper.apply(customerHostel));

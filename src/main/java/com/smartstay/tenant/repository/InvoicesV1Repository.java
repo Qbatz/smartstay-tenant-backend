@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> {
 
@@ -179,10 +180,8 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
         """,
             nativeQuery = true
     )
-    List<InvoiceSummary> findInvoiceSummariesByHostelId(
-            @Param("hostelId") String hostelId,
-            @Param("invoiceId") List<String> invoiceId
-    );
+    List<InvoiceSummary> findInvoiceSummariesByHostelId(@Param("hostelId") String hostelId,
+                                                        @Param("invoiceId") List<String> invoiceId);
 
     @Query(value = """
             SELECT * FROM invoicesv1 WHERE customer_id=:customerId AND hostel_id=:hostelId AND DATE(invoice_start_date) >= DATE(:startDate) 
@@ -206,13 +205,14 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
           AND DATE(invoice_start_date) >= DATE(:startDate)
           AND invoice_type IN ('RENT', 'REASSIGN_RENT')
         """, nativeQuery = true)
-    Double getTotalPaidAmountForCurrentMonth(
-            @Param("customerId") String customerId,
-            @Param("hostelId") String hostelId,
-            @Param("startDate") Date startDate
-    );
+    Double getTotalPaidAmountForCurrentMonth(@Param("customerId") String customerId,
+                                             @Param("hostelId") String hostelId,
+                                             @Param("startDate") Date startDate);
 
     List<InvoicesV1> findAllByInvoiceIdIn(List<String> invoiceIds);
 
     boolean existsByCustomerIdAndInvoiceType(String customerId, String invoiceType);
+
+    List<InvoicesV1> findAllByCustomerIdInAndInvoiceTypeInAndIsCancelledFalse(Set<String> customerIds,
+                                                                              Set<String> invoiceTypes);
 }

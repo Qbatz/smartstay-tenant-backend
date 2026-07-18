@@ -17,9 +17,11 @@ public class RentalDetailsDTO {
     private String joiningDate;
     private String checkoutDate;
     private String displayDuration;
+    private String checkOutReason;
     private Double rentAmount;
+    private Double bookingPaidAmount;
+    private Double bookingRefundedAmount;
     private Double advancePaidAmount;
     private Double advanceRefundedAmount;
     private String dueDate;
-    private String checkOutReason;
 }
