@@ -7,10 +7,7 @@ import com.smartstay.tenant.repository.BillingRuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class HostelConfigService {
@@ -51,7 +48,9 @@ public class HostelConfigService {
     }
 
     public BillingDates getBillingRuleByDateAndHostelId(String hostelId, Date dateJoiningDate) {
-        BillingRules billingRules = billingRuleRepository.findBillingRulesOnDateAndHostelId(hostelId, dateJoiningDate);
+        
+        BillingRules billingRules = billingRuleRepository
+                .findBillingRulesOnDateAndHostelId(hostelId, dateJoiningDate);
         BillingDates billDates = null;
 
         int billStartDate = 1;
@@ -64,7 +63,8 @@ public class HostelConfigService {
 
         if (billingRules != null) {
             if (billingRules.isInitial()) {
-                List<BillingRules> listBillingRulesExceptInitial = billingRuleRepository.findAllBillingRulesByHostelIdExceptInitial(hostelId);
+                List<BillingRules> listBillingRulesExceptInitial = billingRuleRepository
+                        .findAllBillingRulesByHostelIdExceptInitial(hostelId);
                 if (!listBillingRulesExceptInitial.isEmpty()) {
                     billingRules = listBillingRulesExceptInitial.get(0);
                 }
@@ -72,8 +72,7 @@ public class HostelConfigService {
             billStartDate = billingRules.getBillingStartDate();
             billingRuleDueDate = billingRules.getBillDueDays();
         }
-
-
+        
         calendar.set(Calendar.DAY_OF_MONTH, billStartDate);
 
         if (Utils.compareWithTwoDates(dateJoiningDate, calendar.getTime()) < 0) {
@@ -91,6 +90,12 @@ public class HostelConfigService {
         if (billingRules != null) {
             billDates = new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate);
         }
+        
         return billDates;
+    }
+
+    public List<BillingRules> getLatestBillingRulesByHostelIds(Set<String> hostelIds) {
+        return billingRuleRepository
+                .findAllLatestBillingRulesByHostelIds(hostelIds);
     }
 }

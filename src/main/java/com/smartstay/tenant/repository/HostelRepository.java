@@ -79,4 +79,6 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
 
     List<HostelV1> findAllByHostelIdInAndHostelNameContainingIgnoreCaseAndIsActiveTrueAndIsDeletedFalse(Set<String> hostelIds,
                                                                                                         String name);
+
+    List<HostelV1> findAllByHostelIdInAndIsActiveTrueAndIsDeletedFalse(Set<String> hostelIds);
 }

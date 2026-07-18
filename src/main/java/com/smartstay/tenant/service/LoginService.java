@@ -41,6 +41,10 @@ public class LoginService {
     private HostelConfigService hostelConfigService;
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
+    @Autowired
+    private UsersService usersService;
+    @Autowired
+    private CustomerDocumentService customerDocumentService;
 
     public ResponseEntity<?> updateMpin(UpdateMpin updateMpin) {
 
@@ -178,12 +182,37 @@ public class LoginService {
                 .map(CustomerHostels::getHostelId)
                 .collect(Collectors.toSet());
 
-        if (name != null) {
-            name = !name.isBlank() ? name.trim() : null;
+        Set<String> customerIds = customerHostels.stream()
+                .map(CustomerHostels::getCustomerId)
+                .collect(Collectors.toSet());
+
+        name = (name == null || name.isBlank()) ? null : name.trim();
+
+        List<HostelV1> hostels;
+
+        if (name == null || name.isBlank()) {
+            hostels = hostelRepository
+                    .findAllByHostelIdInAndIsActiveTrueAndIsDeletedFalse(hostelIds);
+        } else {
+            hostels = hostelRepository
+                    .findAllByHostelIdInAndHostelNameContainingIgnoreCaseAndIsActiveTrueAndIsDeletedFalse(
+                            hostelIds, name.trim());
         }
 
-        List<HostelV1> hostels = hostelRepository
-                .findAllByHostelIdInAndHostelNameContainingIgnoreCaseAndIsActiveTrueAndIsDeletedFalse(hostelIds, name);
+        Set<String> filteredHostelIds = hostels.stream()
+                .map(HostelV1::getHostelId)
+                .collect(Collectors.toSet());
+
+        Set<String> parentIds = hostels.stream()
+                .map(HostelV1::getParentId)
+                .collect(Collectors.toSet());
+
+        List<Users> owners = usersService
+                .getOwnersByParentIds(parentIds);
+
+        Map<String, Users> ownersMap = owners.stream()
+                .collect(Collectors.toMap(Users::getParentId,
+                        Function.identity(), (a, b) -> b));
 
         Map<String, HostelV1> hostelMap = hostels.stream()
                 .collect(Collectors.toMap(HostelV1::getHostelId,
@@ -192,6 +221,20 @@ public class LoginService {
         Map<String, Customers> customerMap = customersList.stream()
                 .collect(Collectors.toMap(Customers::getCustomerId,
                         Function.identity()));
+
+        List<BillingRules> latestBillingRules = hostelConfigService
+                .getLatestBillingRulesByHostelIds(filteredHostelIds);
+
+        Map<String, BillingRules> latestBillingRulesMap = latestBillingRules.stream()
+                .filter(br -> br.getHostel() != null && br.getHostel().getHostelId() != null)
+                .collect(Collectors.toMap(br -> br.getHostel().getHostelId(),
+                        br -> br, (a, b) -> a));
+
+        List<CustomerDocuments> customerDocuments = customerDocumentService
+                .getDocumentsByCustomerIds(customerIds);
+
+        Map<String, List<CustomerDocuments>> customerDocsMap = customerDocuments.stream()
+                .collect(Collectors.groupingBy(CustomerDocuments::getCustomerId));
 
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
@@ -205,8 +248,17 @@ public class LoginService {
                 continue;
             }
 
+            String thisCustomerId = customer.getCustomerId();
+            String parentId = hostel.getParentId();
+            String hostelId = hostel.getHostelId();
+
+            Users owner = ownersMap.getOrDefault(parentId, null);
+            BillingRules billingRules = latestBillingRulesMap.getOrDefault(hostelId, null);
+            List<CustomerDocuments> thisCustomerDocs = customerDocsMap.getOrDefault(thisCustomerId, null);
+
             HostelDetailsMapper mapper = new HostelDetailsMapper(bookingsService,
-                    hostelConfigService, invoicesV1Repository, hostel, customer);
+                    hostelConfigService, invoicesV1Repository, hostel, customer,
+                    owner, billingRules, thisCustomerDocs);
 
             if (CustomerBedStatus.BED_ASSIGNED.name().equals(customer.getCustomerBedStatus())){
                 activeStays.add(mapper.apply(customerHostel));

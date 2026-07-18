@@ -167,4 +167,9 @@ public class CustomerDocumentService {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    public List<CustomerDocuments> getDocumentsByCustomerIds(Set<String> customerIds) {
+        return customerDocumentRepository
+                .findAllByCustomerIdInAndIsDeletedFalseAndIsActiveTrueOrderByDocumentIdDesc(customerIds);
+    }
 }
