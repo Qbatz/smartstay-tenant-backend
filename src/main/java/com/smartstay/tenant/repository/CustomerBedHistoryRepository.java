@@ -8,31 +8,50 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface CustomerBedHistoryRepository extends JpaRepository<CustomersBedHistory, Long> {
 
     @Query(value = """
-            SELECT * FROM customers_bed_history WHERE customer_id=:customerId and end_date IS NULL
-            ORDER BY start_date DESC limit 1
+            SELECT * FROM customers_bed_history
+            WHERE customer_id = :customerId
+                and end_date IS NULL
+            ORDER BY start_date DESC
+            limit 1
             """, nativeQuery = true)
-    CustomersBedHistory getLatestRentAmount(@Param("customerId") String customerId, @Param("endDate") Date endDate);
+    CustomersBedHistory getLatestRentAmount(@Param("customerId") String customerId,
+                                            @Param("endDate") Date endDate);
 
     @Query(value = """
-            SELECT * FROM customers_bed_history WHERE customer_id=:customerId and start_date <= DATE(:endDate) and (end_date IS NULL OR DATE(end_date) >= DATE(:startDate))
+            SELECT * FROM customers_bed_history
+            WHERE customer_id = :customerId
+                and start_date <= DATE(:endDate)
+                and (end_date IS NULL OR DATE(end_date) >= DATE(:startDate))
             ORDER BY start_date ASC
             """, nativeQuery = true)
-    List<CustomersBedHistory> findByDates(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    List<CustomersBedHistory> findByDates(@Param("customerId") String customerId,
+                                          @Param("startDate") Date startDate,
+                                          @Param("endDate") Date endDate);
 
     @Query(value = """
-            SELECT * FROM customers_bed_history WHERE customer_id=:customerId and DATE(start_date) <= DATE(:endDate) and (end_date IS NULL OR DATE(end_date) >= DATE(:startDate))
-            ORDER BY start_date DESC LIMIT 1
+            SELECT * FROM customers_bed_history
+            WHERE customer_id=:customerId
+                 and DATE(start_date) <= DATE(:endDate)
+                 and (end_date IS NULL OR DATE(end_date) >= DATE(:startDate))
+            ORDER BY start_date DESC
+            LIMIT 1
             """, nativeQuery = true)
-    CustomersBedHistory findByCustomerIdAndDate(@Param("customerId") String customerId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    CustomersBedHistory findByCustomerIdAndDate(@Param("customerId") String customerId,
+                                                @Param("startDate") Date startDate,
+                                                @Param("endDate") Date endDate);
 
 
     @Query(value = """
-            SELECT * FROM customers_bed_history WHERE customer_id=:customerId AND type='BOOKED' LIMIT 1
+            SELECT * FROM customers_bed_history
+            WHERE customer_id = :customerId
+                AND type = 'BOOKED'
+            LIMIT 1
             """, nativeQuery = true)
     CustomersBedHistory findByCustomerIdAndTypeBooking(@Param("customerId") String customerId);
 
@@ -45,7 +64,20 @@ public interface CustomerBedHistoryRepository extends JpaRepository<CustomersBed
                   AND (h.endDate IS NULL OR h.endDate >= :startDate)
                 ORDER BY h.startDate ASC
             """)
-    List<CustomersBedHistory> findBedHistoryInRange(@Param("customerId") String customerId, @Param("hostelId") String hostelId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    List<CustomersBedHistory> findBedHistoryInRange(@Param("customerId") String customerId,
+                                                    @Param("hostelId") String hostelId,
+                                                    @Param("startDate") Date startDate,
+                                                    @Param("endDate") Date endDate);
 
-
+    @Query("""
+            SELECT cbh
+            FROM CustomersBedHistory cbh
+            WHERE cbh.id = (
+                SELECT MAX(cbh2.id)
+                FROM CustomersBedHistory cbh2
+                WHERE cbh2.customerId = cbh.customerId
+            )
+            AND cbh.customerId IN :customerIds
+            """)
+    List<CustomersBedHistory> findLatestByCustomerIds(@Param("customerIds") Set<String> customerIds);
 }

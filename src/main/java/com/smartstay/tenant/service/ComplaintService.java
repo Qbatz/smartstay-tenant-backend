@@ -1,6 +1,7 @@
 package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.CountriesUtils;
+import com.smartstay.tenant.Utils.CustomerUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
@@ -24,7 +25,6 @@ import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
 import com.smartstay.tenant.repository.*;
 import com.smartstay.tenant.response.complaints.*;
-import jdk.jshell.execution.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,42 +43,28 @@ import java.util.List;
 @Service
 public class ComplaintService {
 
-
     @Autowired
     private UploadFileToS3 uploadToS3;
     @Autowired
     private ComplaintsV1Repository complaintsV1Repository;
-
     @Autowired
     private ComplaintImagesRepository complaintImagesRepository;
-
     @Autowired
     private ComplaintCommentsRepository commentsRepository;
     @Autowired
     private UserService userService;
-
     @Autowired
     private Authentication authentication;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private HostelRepository hostelRepository;
-
-    @Autowired
-    private UserHostelService userHostelService;
-
-
     @Autowired
     private NotificationService notificationService;
-
     @Autowired
     private ComplaintTypeService complaintTypeService;
-
     @Autowired
     private CommentRepository commentRepository;
-
 
     public List<ComplaintDTO> getComplaints(String hostelId, String customerId) {
         return complaintsV1Repository.findComplaintsByHostelAndCustomer(hostelId, customerId, PageRequest.of(0, 5));
@@ -113,13 +99,16 @@ public class ComplaintService {
     }
 
     public ResponseEntity<?> getComplaintById(String hostelId, String c) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         Customers customers = customerService.getCustomerInformation(authentication.getName());
         if (customers == null) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         if (!customerService.existsByCustomerIdAndHostelId(authentication.getName(), hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
@@ -165,7 +154,7 @@ public class ComplaintService {
                 fullName.toString(),
                 customers.getFirstName(),
                 customers.getLastName(),
-                customers.getProfilePic(),
+                CustomerUtils.getProfilePic(customers),
                 intls.toString(),
                 CountriesUtils.COUNTR_CODE_INDIA,
                 customers.getMobile());
@@ -227,6 +216,7 @@ public class ComplaintService {
         List<com.smartstay.tenant.dto.complaint.ComplaintComments> complaintComments = new ArrayList<>();
 
         if (complaintsV1.getComplaintComments() != null) {
+
             List<String> userId = complaintsV1.getComplaintComments()
                     .stream()
                     .filter(i -> !i.getUserType().equalsIgnoreCase(UserType.TENANT.name()))
@@ -245,16 +235,22 @@ public class ComplaintService {
             complaintComments = complaintsV1.getComplaintComments()
                     .stream()
                     .map(i -> {
+
                         StringBuilder initials = new StringBuilder();
                         String profilePic = null;
+
                         if (i.getUserType().equalsIgnoreCase(UserType.TENANT.name())) {
+
                             if (!tenants.isEmpty()) {
+
                                 Customers cus = tenants.stream()
                                         .filter(tnt -> tnt.getCustomerId().equalsIgnoreCase(i.getCreatedBy()))
                                         .findFirst()
                                         .orElse(null);
+
                                 if (cus != null) {
-                                    profilePic = cus.getProfilePic();
+                                    profilePic = CustomerUtils.getProfilePic(cus);
+
                                     if (cus.getFirstName() != null) {
                                         initials.append(cus.getFirstName().trim().toUpperCase().charAt(0));
                                     }
@@ -266,18 +262,20 @@ public class ComplaintService {
                                             initials.append(cus.getFirstName().trim().toUpperCase().charAt(1));
                                         }
                                     }
-
                                 }
                             }
                         }
                         else {
                             if (!adminUsers.isEmpty()) {
+
                                 Users admUsr = adminUsers.stream()
                                         .filter(tnt -> tnt.getUserId().equalsIgnoreCase(i.getCreatedBy()))
                                         .findFirst()
                                         .orElse(null);
+
                                 if (admUsr != null) {
                                     profilePic = admUsr.getProfileUrl();
+
                                     if (admUsr.getFirstName() != null) {
                                         initials.append(admUsr.getFirstName().trim().toUpperCase().charAt(0));
                                     }
@@ -292,6 +290,7 @@ public class ComplaintService {
                                 }
                             }
                         }
+
                         return new com.smartstay.tenant.dto.complaint.ComplaintComments(i.getComment(),
                                 fullName.toString(),
                                 initials.toString(),
@@ -302,22 +301,22 @@ public class ComplaintService {
                     .toList();
         }
 
-        com.smartstay.tenant.response.complaints.ComplaintDetails complaintDetails = new com.smartstay.tenant.response.complaints.ComplaintDetails(complaintsV1.getComplaintId(),
-                complaintsV1.getDescription(),
-                complaintsV1.getComplaintTypeId(),
-                complaintTypeV1.getComplaintTypeName(),
-                complaintsV1.getStatus(),
-                Utils.dateToString(complaintsV1.getComplaintDate()),
-                Utils.dateToTime(complaintsV1.getComplaintDate()),
-                customerDetails,
-                userDetails,
-                images,
-                complaintComments);
-
+        com.smartstay.tenant.response.complaints.ComplaintDetails complaintDetails =
+                new com.smartstay.tenant.response.complaints.ComplaintDetails(
+                        complaintsV1.getComplaintId(),
+                        complaintsV1.getDescription(),
+                        complaintsV1.getComplaintTypeId(),
+                        complaintTypeV1.getComplaintTypeName(),
+                        complaintsV1.getStatus(),
+                        Utils.dateToString(complaintsV1.getComplaintDate()),
+                        Utils.dateToTime(complaintsV1.getComplaintDate()),
+                        customerDetails,
+                        userDetails,
+                        images,
+                        complaintComments);
 
         return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
     }
-
 
     public ResponseEntity<?> getComplaintList(String hostelId, int page, int size) {
         if (!authentication.isAuthenticated()) {
@@ -341,7 +340,6 @@ public class ComplaintService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     public ResponseEntity<?> addComplaint(List<MultipartFile> complaintImages, AddComplaints request, String hostelId) {
 
@@ -549,7 +547,6 @@ public class ComplaintService {
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
 
-
     public ResponseEntity<?> deleteComplaint(Integer complaintId, String hostelId, DeleteComplaintRequest request) {
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
@@ -581,7 +578,6 @@ public class ComplaintService {
         }
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
-
 
     public ResponseEntity<?> addComplaintComments(@RequestBody AddComplaintComment request, int complaintId) {
         if (!authentication.isAuthenticated()) {

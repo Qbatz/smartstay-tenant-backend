@@ -149,11 +149,14 @@ public class UserService {
     }
 
     public List<Users> findMasters(String hostelId) {
+
         List<Integer> materRoleIds = new ArrayList<>();
         materRoleIds.add(1);
         materRoleIds.add(2);
 
-        List<UserHostel> findAllUsers = userHostelService.findAllUsersByHostelId(hostelId);
+        List<UserHostel> findAllUsers = userHostelService
+                .findAllUsersByHostelId(hostelId);
+
         List<String> userIds = findAllUsers
                 .stream()
                 .map(UserHostel::getUserId)

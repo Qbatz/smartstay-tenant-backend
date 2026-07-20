@@ -1,5 +1,6 @@
 package com.smartstay.tenant.mapper;
 
+import com.smartstay.tenant.Utils.CustomerUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.CustomerAdditionalContacts;
 import com.smartstay.tenant.dao.CustomerDocuments;
@@ -98,7 +99,7 @@ public class CustomerMapper {
                 c.getPincode(),
                 c.getCity(),
                 c.getState(),
-                c.getProfilePic(),
+                CustomerUtils.getProfilePic(c),
                 initials.toString(),
                 c.getExpJoiningDate() != null ? Utils.dateToString(c.getExpJoiningDate()) : null,
                 c.getCurrentStatus(),
@@ -122,6 +123,7 @@ public class CustomerMapper {
     }
 
     private static StringBuilder getInitials(Customers c) {
+
         StringBuilder initials = new StringBuilder();
         if (c.getFirstName() != null) {
             initials.append(c.getFirstName().toUpperCase().charAt(0));
@@ -134,6 +136,7 @@ public class CustomerMapper {
                 initials.append(c.getFirstName().toUpperCase().charAt(1));
             }
         }
+
         return initials;
     }
 }

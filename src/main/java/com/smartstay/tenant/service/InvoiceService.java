@@ -1291,4 +1291,14 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.TRY_AGAIN, HttpStatus.BAD_REQUEST);
         }
     }
+
+    public List<InvoicesV1> getBookingAdvanceInvoicesByCustomerIds(Set<String> customerIds) {
+
+        Set<String> invoiceTypes = new HashSet<>();
+        invoiceTypes.add(InvoiceType.BOOKING.name());
+        invoiceTypes.add(InvoiceType.ADVANCE.name());
+
+        return invoicesV1Repository
+                .findAllByCustomerIdInAndInvoiceTypeInAndIsCancelledFalse(customerIds, invoiceTypes);
+    }
 }

@@ -1,5 +1,8 @@
 package com.smartstay.tenant.Utils;
 
+import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.dao.HostelV1;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -253,7 +256,20 @@ public final class Utils {
         return Math.round(number * 100.0) / 100.0;
     }
 
+    public static Date stringDateToDate(String date) {
+
+        if (date == null) {
+            return null;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(INPUT_DATE_TIME_FORMAT);
+        LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
     public static String getFullName(String firstName, String lastName){
+
         StringBuilder fullName = new StringBuilder();
 
         if (firstName != null) {
@@ -270,15 +286,145 @@ public final class Utils {
         return fullName.toString();
     }
 
-    public static Date stringDateToDate(String date) {
+    public static String getInitials(String firstName, String lastName){
 
-        if (date == null) {
+        StringBuilder initials = new StringBuilder();
+
+        if (firstName != null) {
+            firstName = firstName.trim();
+            initials.append(firstName.toUpperCase().charAt(0));
+        }
+
+        if (lastName != null && !lastName.isBlank()) {
+            lastName = lastName.trim();
+            initials.append(lastName.toUpperCase().charAt(0));
+        }
+        else {
+            if (firstName != null) {
+                String[] nameArr = firstName.split(" ");
+                if (nameArr.length > 1) {
+                    initials.append(nameArr[nameArr.length - 1].toUpperCase().charAt(0));
+                }
+                else {
+                    String lastPart = nameArr[nameArr.length - 1].toUpperCase();
+
+                    if (lastPart.length() > 1) {
+                        initials.append(lastPart.charAt(1));
+                    }
+                }
+            }
+        }
+
+        return initials.toString();
+    }
+
+    public static String getInitials2(String name){
+
+        StringBuilder initials = new StringBuilder();
+
+        if (name != null) {
+            String[] arrName = name.split(" ");
+            if (arrName.length > 0) {
+                initials.append(arrName[0].toUpperCase().charAt(0));
+            }
+            if (arrName.length > 1) {
+                initials.append(arrName[arrName.length - 1].toUpperCase().charAt(0));
+            }
+            else {
+                String lastPart = arrName[arrName.length - 1].toUpperCase();
+
+                if (lastPart.length() > 1) {
+                    initials.append(lastPart.charAt(1));
+                }
+            }
+        }
+
+        return initials.toString();
+    }
+
+    public static String buildFullAddress(HostelV1 hostelV1) {
+
+        if (hostelV1 == null){
             return null;
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(INPUT_DATE_TIME_FORMAT);
-        LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+        StringBuilder fullAddress = new StringBuilder();
 
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        if (hostelV1.getHouseNo() != null &&
+                !hostelV1.getHouseNo().trim().equalsIgnoreCase("")) {
+            fullAddress.append(hostelV1.getHouseNo());
+        }
+        if (hostelV1.getStreet() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(hostelV1.getStreet());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(hostelV1.getStreet());
+            }
+        }
+        if (hostelV1.getCity() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(hostelV1.getCity());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(hostelV1.getCity());
+            }
+        }
+        if (hostelV1.getState() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(hostelV1.getState());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(hostelV1.getState());
+            }
+        }
+
+        return fullAddress.toString();
+    }
+
+    public static String buildFullAddress(Customers customer) {
+
+        if (customer == null){
+            return null;
+        }
+
+        StringBuilder fullAddress = new StringBuilder();
+
+        if (customer.getHouseNo() != null &&
+                !customer.getHouseNo().trim().equalsIgnoreCase("")) {
+            fullAddress.append(customer.getHouseNo());
+        }
+        if (customer.getStreet() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(customer.getStreet());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(customer.getStreet());
+            }
+        }
+        if (customer.getCity() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(customer.getCity());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(customer.getCity());
+            }
+        }
+        if (customer.getState() != null) {
+            if (fullAddress.isEmpty()) {
+                fullAddress.append(customer.getState());
+            }
+            else {
+                fullAddress.append(", ");
+                fullAddress.append(customer.getState());
+            }
+        }
+
+        return fullAddress.toString();
     }
 }

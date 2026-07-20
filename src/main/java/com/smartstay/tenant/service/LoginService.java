@@ -2,110 +2,156 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.BookingsV1;
-import com.smartstay.tenant.dao.CustomerCredentials;
-import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
+import com.smartstay.tenant.ennum.CustomerBedStatus;
+import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
+import com.smartstay.tenant.response.customer.CustomerHostelListWrapper;
 import com.smartstay.tenant.response.customer.CustomerHostels;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class LoginService {
 
     @Autowired
-    CustomerRepository customersRepository;
+    private CustomerRepository customersRepository;
     @Autowired
-    Authentication authentication;
+    private Authentication authentication;
     @Autowired
-    JWTService jwtService;
+    private JWTService jwtService;
     @Autowired
-    CustomerCredentialsService customerCredentialsService;
+    private CustomerCredentialsService customerCredentialsService;
     @Autowired
-    BookingsService bookingsService;
+    private BookingsService bookingsService;
     @Autowired
     private HostelRepository hostelRepository;
     @Autowired
     private HostelConfigService hostelConfigService;
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
+    @Autowired
+    private UsersService usersService;
+    @Autowired
+    private CustomerDocumentService customerDocumentService;
+    @Autowired
+    private CustomerBedHistoryService customerBedHistoryService;
+    @Autowired
+    private BedsService bedsService;
+    @Autowired
+    private RoomsService roomsService;
+    @Autowired
+    private FloorsService floorsService;
+    @Autowired
+    private InvoiceService invoiceService;
 
     public ResponseEntity<?> updateMpin(UpdateMpin updateMpin) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(updateMpin.xuid());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(updateMpin.xuid());
         if (credentials == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Customer not found.");
         }
+
         credentials.setPinVerified(true);
         credentials.setCustomerPin(updateMpin.mPin());
+
         customerCredentialsService.saveCustomerCredentials(credentials);
+
         List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getHostelsList(String xuid) {
+
 //        if (!authentication.isAuthenticated()){
 //            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
 //        }
+
         CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
         if (credentials == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
+
         List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
 
     public ResponseEntity<?> requestToken(RequestToken requestToken) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(requestToken.xuid());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(requestToken.xuid());
         if (credentials == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Customer not found.");
         }
-        Customers customers = customersRepository.findByMobileAndHostelId(credentials.getCustomerMobile(), requestToken.hostelId());
+
+        Customers customers = customersRepository
+                .findByMobileAndHostelId(credentials.getCustomerMobile(), requestToken.hostelId());
         if (customers == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found for the specified hostel. Please register first.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Customer not found for the specified hostel. Please register first.");
         }
+
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", credentials.getCustomerMobile());
         claims.put("mPin", credentials.getCustomerPin());
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
+
         return new ResponseEntity<>(token, HttpStatus.OK);
     }
 
     public ResponseEntity<?> verifyMpin(VerifyMpin verifyMpin) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(verifyMpin.xuid());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(verifyMpin.xuid());
+
         if (credentials == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found. Please register first.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Customer not found. Please register first.");
         }
+
         if (!credentials.getCustomerPin().equals(verifyMpin.mPin())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid M-Pin. Please try again.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid M-Pin. Please try again.");
         }
+
         List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
 
     public ResponseEntity<?> logOut(LogOut logOut) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
         }
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(logOut.xuid());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(logOut.xuid());
         if (credentials == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
+
         credentials.setFcmToken("");
+
         customerCredentialsService.saveCustomerCredentials(credentials);
+
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
 
@@ -113,12 +159,16 @@ public class LoginService {
         return hostelRepository.findHostelsByMobile(mobileNo);
     }
 
-    public ResponseEntity<?> getHostelsListWithToken(String xuid) {
+    public ResponseEntity<?> getHostelsListWithToken(String xuid, String name) {
+
         if (!authentication.isAuthenticated()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+
         List<Customers> customersList = customersRepository.findByXuid(xuid);
+
         CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
         if (credentials == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
@@ -136,14 +186,169 @@ public class LoginService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Access denied. XUID does not belong to the authenticated customer.");
         }
-        HostelDetailsMapper mapper = new HostelDetailsMapper(bookingsService, hostelConfigService, invoicesV1Repository);
+
         List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
 
-        List<HostelWithRentDTO> mappedList = customerHostels
+        Set<String> hostelIds = customerHostels.stream()
+                .map(CustomerHostels::getHostelId)
+                .collect(Collectors.toSet());
+
+        Set<String> customerIds = customerHostels.stream()
+                .map(CustomerHostels::getCustomerId)
+                .collect(Collectors.toSet());
+
+        name = (name == null || name.isBlank()) ? null : name.trim();
+
+        List<HostelV1> hostels;
+
+        if (name == null || name.isBlank()) {
+            hostels = hostelRepository
+                    .findAllByHostelIdInAndIsActiveTrueAndIsDeletedFalse(hostelIds);
+        } else {
+            hostels = hostelRepository
+                    .findAllByHostelIdInAndHostelNameContainingIgnoreCaseAndIsActiveTrueAndIsDeletedFalse(
+                            hostelIds, name.trim());
+        }
+
+        Set<String> filteredHostelIds = hostels.stream()
+                .map(HostelV1::getHostelId)
+                .collect(Collectors.toSet());
+
+        Set<String> parentIds = hostels.stream()
+                .map(HostelV1::getParentId)
+                .collect(Collectors.toSet());
+
+        List<Users> owners = usersService
+                .getOwnersByParentIds(parentIds);
+
+        Map<String, Users> ownersMap = owners.stream()
+                .collect(Collectors.toMap(Users::getParentId,
+                        Function.identity(), (a, b) -> b));
+
+        Map<String, HostelV1> hostelMap = hostels.stream()
+                .collect(Collectors.toMap(HostelV1::getHostelId,
+                        Function.identity()));
+
+        Map<String, Customers> customerMap = customersList.stream()
+                .collect(Collectors.toMap(Customers::getCustomerId,
+                        Function.identity()));
+
+        List<BillingRules> latestBillingRules = hostelConfigService
+                .getLatestBillingRulesByHostelIds(filteredHostelIds);
+
+        Map<String, BillingRules> latestBillingRulesMap = latestBillingRules.stream()
+                .filter(br -> br.getHostel() != null && br.getHostel().getHostelId() != null)
+                .collect(Collectors.toMap(br -> br.getHostel().getHostelId(),
+                        br -> br, (a, b) -> a));
+
+        List<CustomerDocuments> customerDocuments = customerDocumentService
+                .getDocumentsByCustomerIds(customerIds);
+
+        Map<String, List<CustomerDocuments>> customerDocsMap = customerDocuments.stream()
+                .collect(Collectors.groupingBy(CustomerDocuments::getCustomerId));
+
+        List<CustomersBedHistory> latestBedHistories = customerBedHistoryService
+                .getLatestBedHistoriesByCustomerIds(customerIds);
+
+        Map<String, CustomersBedHistory> latestBedHistoryMap = latestBedHistories.stream()
+                .collect(Collectors.toMap(CustomersBedHistory::getCustomerId, Function.identity()));
+
+        Set<Integer> bedIds = latestBedHistories
                 .stream()
-                .map(mapper)
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(mappedList, HttpStatus.OK);
+                .map(CustomersBedHistory::getBedId)
+                .collect(Collectors.toSet());
+
+        List<Beds> beds = bedsService.findAllByBedIdIn(bedIds);
+
+        Map<Integer, Beds> bedsMap = beds.stream()
+                .collect(Collectors.toMap(Beds::getBedId,
+                        Function.identity()));
+
+        Set<Integer> roomIds = beds
+                .stream()
+                .map(Beds::getRoomId)
+                .collect(Collectors.toSet());
+
+        List<Rooms> rooms = roomsService.findAllByRoomIdIn(roomIds);
+
+        Map<Integer, Rooms> roomsMap = rooms.stream()
+                .collect(Collectors.toMap(Rooms::getRoomId,
+                        Function.identity()));
+
+        Set<Integer> floorIds = rooms
+                .stream()
+                .map(Rooms::getFloorId)
+                .collect(Collectors.toSet());
+
+        List<Floors> floors = floorsService.findAllByFloorIdIn(floorIds);
+
+        Map<Integer, Floors> floorsMap = floors.stream()
+                .collect(Collectors.toMap(Floors::getFloorId,
+                        floor -> floor));
+
+        List<BookingsV1> bookings = bookingsService
+                .getBookingsByCustomerIds(customerIds);
+
+        Map<String, BookingsV1> bookingsMap = bookings.stream()
+                .collect(Collectors.toMap(BookingsV1::getCustomerId, Function.identity()));
+
+        List<InvoicesV1> bookingAdvanceInvoices = invoiceService
+                .getBookingAdvanceInvoicesByCustomerIds(customerIds);
+
+        List<InvoicesV1> bookingInvoices = bookingAdvanceInvoices.stream()
+                .filter(i -> InvoiceType.BOOKING.name().equals(i.getInvoiceType()))
+                .toList();
+
+        Map<String, InvoicesV1> bookingInvoiceMap = bookingInvoices.stream()
+                .collect(Collectors.toMap(InvoicesV1::getCustomerId,
+                        Function.identity(), (a, b) -> a));
+
+        List<InvoicesV1> advanceInvoices = bookingAdvanceInvoices.stream()
+                .filter(i -> InvoiceType.ADVANCE.name().equals(i.getInvoiceType()))
+                .toList();
+
+        Map<String, InvoicesV1> advanceInvoiceMap = advanceInvoices.stream()
+                .collect(Collectors.toMap(InvoicesV1::getCustomerId,
+                        Function.identity(), (a, b) -> a));
+
+        List<HostelWithRentDTO> activeStays = new ArrayList<>();
+        List<HostelWithRentDTO> previousStays = new ArrayList<>();
+
+        for (CustomerHostels customerHostel : customerHostels) {
+
+            Customers customer = customerMap.getOrDefault(customerHostel.getCustomerId(), null);
+            HostelV1 hostel = hostelMap.getOrDefault(customerHostel.getHostelId(), null);
+
+            if (customer == null || hostel == null) {
+                continue;
+            }
+
+            String thisCustomerId = customer.getCustomerId();
+            String parentId = hostel.getParentId();
+            String hostelId = hostel.getHostelId();
+
+            Users owner = ownersMap.getOrDefault(parentId, null);
+            BillingRules billingRules = latestBillingRulesMap.getOrDefault(hostelId, null);
+            List<CustomerDocuments> thisCustomerDocs = customerDocsMap.getOrDefault(thisCustomerId, null);
+            CustomersBedHistory latestBedHistory = latestBedHistoryMap.getOrDefault(thisCustomerId, null);
+            BookingsV1 booking = bookingsMap.getOrDefault(thisCustomerId, null);
+            InvoicesV1 bookingInvoice = bookingInvoiceMap.getOrDefault(thisCustomerId, null);
+            InvoicesV1 advanceInvoice = advanceInvoiceMap.getOrDefault(thisCustomerId, null);
+
+            HostelDetailsMapper mapper = new HostelDetailsMapper(hostel, customer,
+                    owner, billingRules, thisCustomerDocs, latestBedHistory,
+                    bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice);
+
+            if (CustomerBedStatus.BED_ASSIGNED.name().equals(customer.getCustomerBedStatus())){
+                activeStays.add(mapper.apply(customerHostel));
+            } else {
+                previousStays.add(mapper.apply(customerHostel));
+            }
+        }
+
+        CustomerHostelListWrapper response = new CustomerHostelListWrapper(activeStays, previousStays);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public RentalDetailsDTO getRentDetails(String hostelId, String customerId, BookingsV1 bookingDetails) {

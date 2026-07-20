@@ -48,5 +48,4 @@ public class HostelV1 {
 
     @OneToOne(mappedBy = "hostel", cascade = CascadeType.ALL, orphanRemoval = true)
     private ElectricityConfig electricityConfig;
-
 }

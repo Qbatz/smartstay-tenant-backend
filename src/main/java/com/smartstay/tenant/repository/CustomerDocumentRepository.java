@@ -13,4 +13,6 @@ public interface CustomerDocumentRepository extends JpaRepository<CustomerDocume
     List<CustomerDocuments> findAllByCustomerIdAndIsDeletedFalseAndIsActiveTrueOrderByDocumentIdDesc(String customerId);
 
     List<CustomerDocuments> findAllByDocumentIdInAndCustomerIdAndIsDeletedFalseAndIsActiveTrue(Set<Long> documentIds, String customerId);
+
+    List<CustomerDocuments> findAllByCustomerIdInAndIsDeletedFalseAndIsActiveTrueOrderByDocumentIdDesc(Set<String> customerIds);
 }

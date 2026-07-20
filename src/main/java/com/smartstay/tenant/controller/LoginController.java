@@ -46,7 +46,8 @@ public class LoginController {
     }
 
     @GetMapping("/hostels-list/{xuid}")
-    public ResponseEntity<?> getHostelsWithOutToken(@PathVariable String xuid) {
-        return loginService.getHostelsListWithToken(xuid);
+    public ResponseEntity<?> getHostelsWithOutToken(@PathVariable("xuid") String xuid,
+                                                    @RequestParam(required = false) String name) {
+        return loginService.getHostelsListWithToken(xuid, name);
     }
 }

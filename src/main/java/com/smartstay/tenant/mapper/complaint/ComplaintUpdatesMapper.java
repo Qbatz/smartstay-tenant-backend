@@ -1,5 +1,6 @@
 package com.smartstay.tenant.mapper.complaint;
 
+import com.smartstay.tenant.Utils.CustomerUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.ComplaintComments;
 import com.smartstay.tenant.dao.ComplaintUpdates;
@@ -21,7 +22,12 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
     String description = null;
     String complaintType = null;
 
-    public ComplaintUpdatesMapper(List<Customers> listCustomers, List<Users> listUsers, List<ComplaintComments> complaintComments, String title, List<Users> assignedUsers, String complaintType) {
+    public ComplaintUpdatesMapper(List<Customers> listCustomers,
+                                  List<Users> listUsers,
+                                  List<ComplaintComments> complaintComments,
+                                  String title,
+                                  List<Users> assignedUsers,
+                                  String complaintType) {
         this.listCustomers = listCustomers;
         this.listUsers = listUsers;
         this.complaintComments = complaintComments;
@@ -32,6 +38,7 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
 
     @Override
     public ComplaintUpdatesList apply(ComplaintUpdates complaintUpdates) {
+
         StringBuilder initials = new StringBuilder();
         StringBuilder fullName = new StringBuilder();
         String profilePic = null;
@@ -55,7 +62,6 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
             }
         }
 
-
         if (complaintUpdates.getUserType().equalsIgnoreCase(UserType.TENANT.name())) {
             if (listCustomers != null) {
                 Customers customer = listCustomers
@@ -65,7 +71,7 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
                         .orElse(null);
 
                 if (customer != null) {
-                    profilePic = customer.getProfilePic();
+                    profilePic = CustomerUtils.getProfilePic(customer);
                     initials.append(customer.getFirstName().toUpperCase().charAt(0));
                     fullName.append(customer.getFirstName());
                     if (customer.getLastName() != null && !customer.getLastName().trim().equalsIgnoreCase("")) {
@@ -183,9 +189,6 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
                         })
                         .toList();
 
-
-
-
         return new ComplaintUpdatesList(update,
                 description,
                 fullName.toString(),
@@ -196,5 +199,4 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
                 complaintUpdates.getStatus(),
                 listComments);
     }
-
 }

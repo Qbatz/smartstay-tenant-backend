@@ -8,8 +8,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RentalDetailsDTO {
+    private Integer bedId;
+    private String bedName;
+    private Integer roomId;
+    private String roomName;
+    private Integer floorId;
+    private String floorName;
     private String joiningDate;
+    private String checkoutDate;
+    private String displayDuration;
+    private String checkOutReason;
     private Double rentAmount;
+    private Double bookingPaidAmount;
+    private Double bookingRefundedAmount;
     private Double advancePaidAmount;
+    private Double advanceRefundedAmount;
     private String dueDate;
 }

@@ -12,29 +12,25 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CustomerBedHistoryService {
 
-
     @Autowired
     private CustomerBedHistoryRepository customerBedHistoryRepository;
-
+    @Autowired
     private BedHistoryMapper bedHistoryMapper;
-
     @Autowired
     private RoomRepository roomRepository;
-
     @Autowired
     private FloorRepository floorRepository;
-
     @Autowired
     private BedsRepository bedsRepository;
 
-
     public CustomersBedHistory getCustomerBedByStartDate(String customerId, Date startDate, Date endDate) {
-        CustomersBedHistory cbh = customerBedHistoryRepository.findByCustomerIdAndDate(customerId, startDate, endDate);
-        return cbh;
+        return customerBedHistoryRepository
+                .findByCustomerIdAndDate(customerId, startDate, endDate);
     }
 
     public CustomersBedHistory getCustomerBookedBed(String customerId) {
@@ -49,12 +45,21 @@ public class CustomerBedHistoryService {
         return customerBedHistoryRepository.getLatestRentAmount(customerId, null);
     }
 
-    public List<BedHistory> getBedHistory(Date invoiceGenDate, String customerId, String hostelId, Date startDate, Date endDate) {
+    public List<BedHistory> getBedHistory(Date invoiceGenDate, String customerId,
+                                          String hostelId, Date startDate, Date endDate) {
+
         bedHistoryMapper = new BedHistoryMapper(roomRepository, floorRepository, bedsRepository);
 
-        List<CustomersBedHistory> customersBedHistories = customerBedHistoryRepository.findBedHistoryInRange(customerId, hostelId, startDate, endDate);
+        List<CustomersBedHistory> customersBedHistories = customerBedHistoryRepository
+                .findBedHistoryInRange(customerId, hostelId, startDate, endDate);
 
-        List<BedHistory> result = customersBedHistories.stream().map(h -> bedHistoryMapper.map(h, startDate, endDate, invoiceGenDate)).toList();
-        return result;
+        return customersBedHistories.stream()
+                .map(h -> bedHistoryMapper
+                        .map(h, startDate, endDate, invoiceGenDate))
+                .toList();
+    }
+
+    public List<CustomersBedHistory> getLatestBedHistoriesByCustomerIds(Set<String> customerIds) {
+        return customerBedHistoryRepository.findLatestByCustomerIds(customerIds);
     }
 }

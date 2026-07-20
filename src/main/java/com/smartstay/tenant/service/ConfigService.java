@@ -18,15 +18,21 @@ public class ConfigService {
     Authentication authentication;
 
     public ResponseEntity<?> updateFcm(UpdateFcm updateFcm) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
         }
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(updateFcm.xuid());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(updateFcm.xuid());
         if (credentials == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
+
         credentials.setFcmToken(updateFcm.fcmToken());
+
         customerCredentialsService.saveCustomerCredentials(credentials);
+
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
 }

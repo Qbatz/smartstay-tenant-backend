@@ -46,11 +46,15 @@ public class HostelService {
     private BedChangeRequestService bedChangeRequestService;
 
     public ResponseEntity<?> getHostels() {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+
         List<CustomerHostels> hostels = hostelRepository.findHostels(customerId);
+
         return new ResponseEntity<>(hostels, HttpStatus.OK);
     }
 
@@ -102,8 +106,8 @@ public class HostelService {
                 .map(complaintDateResponseMapper).toList();
 
         HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaintDateResponseList);
-        return new ResponseEntity<>(hostelDetails, HttpStatus.OK);
 
+        return new ResponseEntity<>(hostelDetails, HttpStatus.OK);
     }
 
     public boolean isToday(LocalDate date) {
@@ -160,7 +164,8 @@ public class HostelService {
         String monthName = invoiceMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
         if (isEb) {
-            String previousMonthName = invoiceMonth.minusMonths(1).getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+            String previousMonthName = invoiceMonth.minusMonths(1).getMonth()
+                    .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
             return previousMonthName + " EB bill generated";
         } else {

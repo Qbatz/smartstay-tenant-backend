@@ -6,6 +6,9 @@ import com.smartstay.tenant.response.customer.CustomersBookingDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 @Service
 public class BookingsService {
 
@@ -18,5 +21,9 @@ public class BookingsService {
 
     public BookingsV1 getLatestBooking(String customerId, String hostelId) {
         return bookingsRepository.findTopByCustomerIdAndHostelIdOrderByJoiningDateDesc(customerId, hostelId);
+    }
+
+    public List<BookingsV1> getBookingsByCustomerIds(Set<String> customerIds) {
+        return bookingsRepository.findAllByCustomerIdIn(customerIds);
     }
 }

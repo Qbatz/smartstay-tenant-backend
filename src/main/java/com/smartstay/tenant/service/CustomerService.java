@@ -238,15 +238,15 @@ public class CustomerService {
         String dueDateText =  " 1st of every month";
         if (billingRules != null) {
             if (billingRules.getBillingStartDate() == 1) {
-                dueDateText =billingRules.getBillingStartDate()+ "st of every month";
+                dueDateText = billingRules.getBillingStartDate()+ "st of every month";
             }
             else if (billingRules.getBillingStartDate() == 2){
-                dueDateText =billingRules.getBillingStartDate()+ "nd of every month";
+                dueDateText = billingRules.getBillingStartDate()+ "nd of every month";
             }
             else if (billingRules.getBillingStartDate() == 3){
-                dueDateText =billingRules.getBillingStartDate()+ "rd of every month";
+                dueDateText = billingRules.getBillingStartDate()+ "rd of every month";
             }else {
-                dueDateText =billingRules.getBillingStartDate()+ "th of every month";
+                dueDateText = billingRules.getBillingStartDate()+ "th of every month";
             }
         }
 
