@@ -9,6 +9,5 @@ public record ReceiptInfo(String receiptNumber,
                           String transactionId,
                           String receivedBy,
                           String invoiceMonth,
-                          String paymentMode
-                          ) {
+                          String paymentMode) {
 }

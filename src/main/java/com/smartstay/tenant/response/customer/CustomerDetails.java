@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 
 public record CustomerDetails(
-
         String customerId,
         String firstName,
         String lastName,

@@ -1,6 +1,5 @@
 package com.smartstay.tenant.controller;
 
-
 import com.smartstay.tenant.payload.login.UpdateFcm;
 import com.smartstay.tenant.service.ConfigService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -20,7 +19,6 @@ public class ConfigController {
 
     @Autowired
     ConfigService configService;
-
 
     @PostMapping("/update-fcm")
     public ResponseEntity<?> updateFcm(@Valid @RequestBody UpdateFcm updateFcm) {

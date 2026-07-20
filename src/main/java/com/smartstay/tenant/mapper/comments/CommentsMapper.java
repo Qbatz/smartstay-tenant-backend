@@ -7,6 +7,7 @@ import com.smartstay.tenant.dto.comment.ComplaintCommentProjection;
 import java.util.function.Function;
 
 public class CommentsMapper implements Function<ComplaintCommentProjection, CommentsListResponse> {
+
     @Override
     public CommentsListResponse apply(ComplaintCommentProjection complaintCommentProjection) {
 

@@ -1,6 +1,5 @@
 package com.smartstay.tenant.controller;
 
-
 import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
@@ -27,7 +26,6 @@ public class ComplaintsController {
     @Autowired
     private ComplaintService complaintsService;
 
-
     @GetMapping("/{hostelId}")
     public ResponseEntity<?> getAllComplaints(@PathVariable String hostelId,
                                               @RequestParam(defaultValue = "0") int page,
@@ -36,51 +34,54 @@ public class ComplaintsController {
     }
 
     @GetMapping("/old/{hostelId}/{complaintId}")
-    public ResponseEntity<?> getComplaintById(
-            @PathVariable String hostelId,
-            @PathVariable Integer complaintId
-
-    ) {
+    public ResponseEntity<?> getComplaintById(@PathVariable String hostelId,
+                                              @PathVariable Integer complaintId) {
         return complaintsService.getComplaintByIdOld(hostelId, complaintId);
     }
 
     @GetMapping("/{hostelId}/{complaintId}")
-    public ResponseEntity<?> getComplaintDetails(@PathVariable("hostelId") String hostelId, @PathVariable("complaintId") String complaintId) {
+    public ResponseEntity<?> getComplaintDetails(@PathVariable("hostelId") String hostelId,
+                                                 @PathVariable("complaintId") String complaintId) {
         return complaintsService.getComplaintById(hostelId, complaintId);
     }
 
     @GetMapping("/updates/{hostelId}/{complaintId}")
-    public ResponseEntity<?> getComplaintUpdates(@PathVariable("hostelId") String hostelId, @PathVariable("complaintId") String complaintId) {
+    public ResponseEntity<?> getComplaintUpdates(@PathVariable("hostelId") String hostelId,
+                                                 @PathVariable("complaintId") String complaintId) {
         return complaintsService.getUpdates(hostelId, complaintId);
     }
 
     @PostMapping("/{hostelId}")
-    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,  @RequestPart(value = "payloads", required = false) AddComplaints payloads, @PathVariable("hostelId") String hostelId) {
+    public ResponseEntity<?> addComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,
+                                          @RequestPart(value = "payloads", required = false) AddComplaints payloads,
+                                          @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
     @PutMapping("/{hostelId}/{complaintId}")
-    public ResponseEntity<?> editComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages, @RequestPart(value = "payloads", required = false) UpdateComplaint payloads, @PathVariable("hostelId") String hostelId, @PathVariable("complaintId") Integer complaintId) {
+    public ResponseEntity<?> editComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,
+                                           @RequestPart(value = "payloads", required = false) UpdateComplaint payloads,
+                                           @PathVariable("hostelId") String hostelId,
+                                           @PathVariable("complaintId") Integer complaintId) {
         return complaintsService.updateComplaint(complaintImages, payloads, hostelId,complaintId);
     }
 
     @DeleteMapping("/{hostelId}/{complaintId}")
-    public ResponseEntity<?> deleteComplaint(@PathVariable("complaintId") Integer complaintId, @PathVariable("hostelId") String hostelId, @RequestBody DeleteComplaintRequest deleteComplaintRequest) {
+    public ResponseEntity<?> deleteComplaint(@PathVariable("complaintId") Integer complaintId,
+                                             @PathVariable("hostelId") String hostelId,
+                                             @RequestBody DeleteComplaintRequest deleteComplaintRequest) {
         return complaintsService.deleteComplaint(complaintId,hostelId,deleteComplaintRequest);
     }
 
     @PostMapping("/comment/{complaintId}")
-    public ResponseEntity<?> addComplaintComments(@PathVariable("complaintId") int complaintId,@Valid @RequestBody AddComplaintComment comment) {
+    public ResponseEntity<?> addComplaintComments(@PathVariable("complaintId") int complaintId,
+                                                  @Valid @RequestBody AddComplaintComment comment) {
         return complaintsService.addComplaintComments(comment,complaintId);
     }
 
     @DeleteMapping("/image/{complaintId}/{hostelId}/{imageId}")
-    public ResponseEntity<?> deactivateComplaintImage(
-            @PathVariable("complaintId") Integer complaintId,
-            @PathVariable("imageId") Integer imageId,
-            @PathVariable("hostelId") String hostelId
-    ) {
+    public ResponseEntity<?> deactivateComplaintImage(@PathVariable("complaintId") Integer complaintId,
+                                                      @PathVariable("imageId") Integer imageId,
+                                                      @PathVariable("hostelId") String hostelId) {
         return complaintsService.deactivateComplaintImage(complaintId, imageId, hostelId);
     }
-
-
 }
