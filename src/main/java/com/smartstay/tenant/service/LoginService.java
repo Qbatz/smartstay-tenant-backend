@@ -159,6 +159,10 @@ public class LoginService {
         return hostelRepository.findHostelsByMobile(mobileNo);
     }
 
+    public List<CustomerHostels> getAllHostels(String mobileNo) {
+        return hostelRepository.findAllHostelsByMobile(mobileNo);
+    }
+
     public ResponseEntity<?> getHostelsListWithToken(String xuid, String name) {
 
         if (!authentication.isAuthenticated()){
@@ -187,7 +191,7 @@ public class LoginService {
                     .body("Access denied. XUID does not belong to the authenticated customer.");
         }
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         Set<String> hostelIds = customerHostels.stream()
                 .map(CustomerHostels::getHostelId)
