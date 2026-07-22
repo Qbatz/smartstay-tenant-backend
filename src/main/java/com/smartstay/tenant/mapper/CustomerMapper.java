@@ -2,10 +2,7 @@ package com.smartstay.tenant.mapper;
 
 import com.smartstay.tenant.Utils.CustomerUtils;
 import com.smartstay.tenant.Utils.Utils;
-import com.smartstay.tenant.dao.CustomerAdditionalContacts;
-import com.smartstay.tenant.dao.CustomerDocuments;
-import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BookingDetailsDto;
 import com.smartstay.tenant.ennum.DocumentType;
 import com.smartstay.tenant.response.customer.*;
@@ -16,9 +13,12 @@ import java.util.List;
 
 public class CustomerMapper {
 
-    public CustomerDetails toDetailsDto(Customers c, List<CustomerAdditionalContacts> additionalContacts,
-                                        CustomersBookingDetails b, HostelV1 hostel,
-                                        List<CustomerDocuments> documents) {
+    public CustomerDetails toDetailsDto(Customers c,
+                                        List<CustomerAdditionalContacts> additionalContacts,
+                                        CustomersBookingDetails b,
+                                        HostelV1 hostel,
+                                        List<CustomerDocuments> documents,
+                                        List<CustomerJobDetails> customerJobDetailsList) {
 
         BookingDetailsDto bookingDto = null;
 
@@ -87,6 +87,15 @@ public class CustomerMapper {
             }
         }
 
+        List<CustomerJobDetailsResponse> customerJobDetailsResponseList = new ArrayList<>();
+        if (customerJobDetailsList != null && !customerJobDetailsList.isEmpty()) {
+            customerJobDetailsResponseList = customerJobDetailsList.stream()
+                    .map(jd -> new CustomerJobDetailsResponse(jd.getJobId(),
+                            jd.getEmploymentStatus(), jd.getOrganizationName(), jd.getRole(), jd.getWorkLocation(),
+                            jd.getShiftType(), jd.getShiftStartTime(), jd.getShiftEndTime()))
+                    .toList();
+        }
+
         return new CustomerDetails(
                 c.getCustomerId(),
                 c.getFirstName(),
@@ -107,6 +116,7 @@ public class CustomerMapper {
                 c.getGender(),
 
                 additionalContactsList,
+                customerJobDetailsResponseList,
 
                 new CustomerKycDetails(
                         c.getKycDetails() != null ? c.getKycDetails().getCurrentStatus() : null,

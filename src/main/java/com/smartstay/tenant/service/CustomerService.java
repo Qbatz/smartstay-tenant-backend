@@ -42,6 +42,8 @@ public class CustomerService {
     private HostelDuplicateService hostelService;
     @Autowired
     private CustomerAdditionalContactsService customerAdditionalContactsService;
+    @Autowired
+    private CustomerJobDetailsService customerJobDetailsService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -55,18 +57,21 @@ public class CustomerService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
+        HostelV1 hostel = hostelService.getHostelById(customer.getHostelId());
+
         List<CustomerAdditionalContacts> additionalContacts = customerAdditionalContactsService
                 .getAdditionalContactsByCustomerId(customerId);
-
-        HostelV1 hostel = hostelService.getHostelById(customer.getHostelId());
 
         List<CustomerDocuments> customerDocuments = customerDocumentService
                 .getDocumentsByCustomerId(customerId);
 
+        List<CustomerJobDetails> customerJobDetailsList = customerJobDetailsService
+                .getCustomerJobDetailsByCustomerId(customerId);
+
         return new ResponseEntity<>(new CustomerMapper()
                 .toDetailsDto(customer, additionalContacts,
                         bookingsService.getCustomerBookingDetails(customerId),
-                        hostel, customerDocuments), HttpStatus.OK);
+                        hostel, customerDocuments, customerJobDetailsList), HttpStatus.OK);
     }
 
     public List<Customers> getCustomerDetails(List<String> customerIds) {

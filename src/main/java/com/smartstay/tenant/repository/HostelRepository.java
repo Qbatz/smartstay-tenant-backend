@@ -39,6 +39,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             INNER JOIN hostelv1 h
             WHERE c.customer_id = :customerId
                 and h.hostel_id = c.hostel_id
+                and c.current_status != 'DRAFT'
             """, nativeQuery = true)
     List<CustomerHostels> findHostels(String customerId);
 
@@ -71,6 +72,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             FROM customers c
             INNER JOIN hostelv1 h ON h.hostel_id = c.hostel_id and c.current_status not in ('VACATED')
             WHERE c.mobile = :mobile
+                and c.current_status != 'DRAFT'
             """, nativeQuery = true)
     List<CustomerHostels> findHostelsByMobile(String mobile);
 
@@ -103,6 +105,7 @@ public interface HostelRepository extends JpaRepository<HostelV1, String> {
             FROM customers c
             INNER JOIN hostelv1 h ON h.hostel_id = c.hostel_id
             WHERE c.mobile = :mobile
+                and c.current_status != 'DRAFT'
             """, nativeQuery = true)
     List<CustomerHostels> findAllHostelsByMobile(String mobile);
 
