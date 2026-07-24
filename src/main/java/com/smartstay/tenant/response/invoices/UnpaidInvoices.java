@@ -5,5 +5,9 @@ public record UnpaidInvoices(String invoiceId,
                              String invoiceType,
                              Double totalAmount,
                              Double paidAmount,
-                             Double balanceAmount) {
+                             Double balanceAmount,
+                             String cancelledDate,
+                             String generatedDate,
+                             String createdAtDate,
+                             String createdAtTime) {
 }
