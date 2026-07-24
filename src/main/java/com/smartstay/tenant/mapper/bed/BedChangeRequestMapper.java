@@ -64,8 +64,15 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
             reason = bedChangeRequest.getReason();
         }
 
+        String startsFrom = null;
+        if (bedChangeRequest.getStartsFrom() != null) {
+            startsFrom = Utils.dateToString(bedChangeRequest.getStartsFrom());
+        }
+
         return new RequestItemResponse(String.valueOf(bedChangeRequest.getId()),
                 Utils.capitalize(RequestType.CHANGE_BED.name().replace("_", " ")),
+                RequestType.CHANGE_BED.name(),
+                bedChangeRequest.getCreatedAt(),
                 Utils.dateToString(bedChangeRequest.getCreatedAt()),
                 Utils.dateToTime(bedChangeRequest.getCreatedAt()),
                 Utils.formatComplaintDate(bedChangeRequest.getCreatedAt()),
@@ -74,6 +81,10 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
                 bedChangeRequest.getReason(),
                 requestedItem,
                 statusCode,
-                reason);
+                reason,
+                0,
+                false,
+                bedChangeRequest.getPreferredType(),
+                startsFrom);
     }
 }

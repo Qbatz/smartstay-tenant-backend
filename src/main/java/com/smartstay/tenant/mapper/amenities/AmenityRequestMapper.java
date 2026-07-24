@@ -23,6 +23,8 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
         String status = "";
         int statusCode = 0;
         String amenityName = null;
+        double amenityPrice = 0;
+        boolean amenityProRate = false;
 
         if (amenityRequest.getCurrentStatus().equalsIgnoreCase(RequestStatus.OPEN.name())) {
             status = "Open";
@@ -56,6 +58,8 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
             if (amenitiesV1 != null) {
                 amenityName = amenitiesV1.getAmenityName();
+                amenityPrice = amenitiesV1.getAmenityAmount() != null ? amenitiesV1.getAmenityAmount() : 0;
+                amenityProRate = amenitiesV1.getIsProRate() != null ? amenitiesV1.getIsProRate() : false;
             }
         }
 
@@ -63,6 +67,8 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
         return new RequestItemResponse(String.valueOf(amenityRequest.getAmenityRequestId()),
                 Utils.capitalize(RequestType.AMENITY_REQUEST.name().replace("_", " ")),
+                RequestType.AMENITY_REQUEST.name(),
+                amenityRequest.getRequestedDate(),
                 Utils.dateToString(amenityRequest.getRequestedDate()),
                 Utils.dateToTime(amenityRequest.getRequestedDate()),
                 Utils.formatComplaintDate(amenityRequest.getRequestedDate()),
@@ -71,6 +77,10 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
                 amenityRequest.getDescription(),
                 amenityRequest.getAmenityId(),
                 statusCode,
-                reason);
+                reason,
+                amenityPrice,
+                amenityProRate,
+                null,
+                null);
     }
 }
