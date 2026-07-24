@@ -69,15 +69,16 @@ public interface CustomerBedHistoryRepository extends JpaRepository<CustomersBed
                                                     @Param("startDate") Date startDate,
                                                     @Param("endDate") Date endDate);
 
-    @Query("""
-            SELECT cbh
-            FROM CustomersBedHistory cbh
-            WHERE cbh.id = (
-                SELECT MAX(cbh2.id)
-                FROM CustomersBedHistory cbh2
-                WHERE cbh2.customerId = cbh.customerId
-            )
-            AND cbh.customerId IN :customerIds
-            """)
+    @Query(value = """
+            SELECT cbh.*
+            FROM customers_bed_history cbh
+            INNER JOIN (
+                SELECT customer_id, MAX(id) AS max_id
+                FROM customers_bed_history
+                WHERE customer_id IN (:customerIds)
+                GROUP BY customer_id
+            ) latest
+            ON cbh.id = latest.max_id
+            """, nativeQuery = true)
     List<CustomersBedHistory> findLatestByCustomerIds(@Param("customerIds") Set<String> customerIds);
 }

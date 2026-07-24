@@ -28,6 +28,7 @@ public record CustomerDetails(
         String gender,
 
         List<AdditionalContacts> additionalContacts,
+        List<CustomerJobDetailsResponse> customerJobDetails,
 
         CustomerKycDetails kyc,
 
