@@ -5,7 +5,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
-import com.smartstay.tenant.ennum.CustomerBedStatus;
+import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.InvoiceType;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
@@ -317,6 +317,7 @@ public class LoginService {
 
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
+        List<HostelWithRentDTO> otherStays = new ArrayList<>();
 
         for (CustomerHostels customerHostel : customerHostels) {
 
@@ -343,14 +344,22 @@ public class LoginService {
                     owner, billingRules, thisCustomerDocs, latestBedHistory,
                     bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice);
 
-            if (CustomerBedStatus.BED_ASSIGNED.name().equals(customer.getCustomerBedStatus())){
+            if (CustomerStatus.VACATED.name().equals(customer.getCurrentStatus())){
+                previousStays.add(mapper.apply(customerHostel));
+            } else if (CustomerStatus.BOOKED.name().equals(customer.getCurrentStatus()) ||
+                    CustomerStatus.CHECK_IN.name().equals(customer.getCurrentStatus()) ||
+                    CustomerStatus.NOTICE.name().equals(customer.getCurrentStatus()) ||
+                    CustomerStatus.WALKED_IN.name().equals(customer.getCurrentStatus()) ||
+                    CustomerStatus.ACTIVE.name().equals(customer.getCurrentStatus()) ||
+                    CustomerStatus.SETTLEMENT_GENERATED.name().equals(customer.getCurrentStatus())) {
                 activeStays.add(mapper.apply(customerHostel));
             } else {
-                previousStays.add(mapper.apply(customerHostel));
+                otherStays.add(mapper.apply(customerHostel));
             }
         }
 
-        CustomerHostelListWrapper response = new CustomerHostelListWrapper(activeStays, previousStays);
+        CustomerHostelListWrapper response = new CustomerHostelListWrapper(
+                activeStays, previousStays, otherStays);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

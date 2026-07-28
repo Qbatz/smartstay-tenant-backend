@@ -200,6 +200,8 @@ public class HostelService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
+        List<RequestItemResponse> result = new ArrayList<>();
+
         List<RequestItemResponse> amenityRequests =
                 Optional.ofNullable(amenityRequestService.getRequests(customerId, hostelId))
                         .orElse(Collections.emptyList());
@@ -208,7 +210,6 @@ public class HostelService {
                 .peek(req -> req.setRequestId("A" + req.getRequestId()))
                 .toList();
 
-        List<RequestItemResponse> result = new ArrayList<>(mappedAmenityRequests);
         List<RequestItemResponse> bedRequests =
                 Optional.ofNullable(bedChangeRequestService.getRequests(hostelId, customerId))
                         .orElse(Collections.emptyList());
@@ -217,8 +218,10 @@ public class HostelService {
                 .peek(req -> req.setRequestId("B" + req.getRequestId()))
                 .toList();
 
+        result.addAll(mappedAmenityRequests);
         result.addAll(mappedBedRequests);
-        Collections.sort(result);
+
+        result.sort(Comparator.comparing(RequestItemResponse::getDbRequestedDate).reversed());
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

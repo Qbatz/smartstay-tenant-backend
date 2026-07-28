@@ -175,7 +175,7 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.INVOICE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        if (invoice.getInvoiceType().equalsIgnoreCase(InvoiceType.SETTLEMENT.name())) {
+        if (InvoiceType.SETTLEMENT.name().equalsIgnoreCase(invoice.getInvoiceType())) {
             return getFinalSettlementInvoiceDetails(customerId, invoice);
         }
 
@@ -310,7 +310,7 @@ public class InvoiceService {
         }
 
         List<InvoicesV1> currentMonthInvoices = invoicesV1Repository
-                .findAllCurrentMonthInvoices(customers.getCustomerId(), customers.getHostelId(), billingDate.currentBillStartDate());
+                .findAllCurrentMonthInvoices(customerId, customers.getHostelId(), billingDate.currentBillStartDate());
 
         InvoicesV1 findLatestInvoice = invoicesV1Repository
                 .findCurrentRunningInvoice(customers.getCustomerId(), billingDate.currentBillStartDate());
@@ -368,21 +368,40 @@ public class InvoiceService {
                 (double)Math.round(payableRent), lastRentPaid, customersBedHistoriesForLastMonth);
 
         List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
-        if (invoice.isCancelled() && invoice.getCancelledInvoices() != null &&
-                !invoice.getCancelledInvoices().isEmpty()) {
+        if (invoice.getCancelledInvoices() != null && !invoice.getCancelledInvoices().isEmpty()) {
             List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
 
-            List<InvoicesV1> cancelledInvoices = invoicesV1Repository.findAllByInvoiceIdIn(cancelledInvoiceIds);
+            List<InvoicesV1> cancelledInvoices = invoicesV1Repository
+                    .findAllByInvoiceIdIn(cancelledInvoiceIds);
 
             unpaidInvoices = cancelledInvoices.stream()
-                    .map(cancelledInvoice -> new UnpaidInvoices(
-                            cancelledInvoice.getInvoiceId(),
-                            cancelledInvoice.getInvoiceNumber(),
-                            cancelledInvoice.getInvoiceType(),
-                            cancelledInvoice.getTotalAmount(),
-                            cancelledInvoice.getPaidAmount(),
-                            Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount() - cancelledInvoice.getPaidAmount())
-                    )).toList();
+                    .map(cancelledInvoice -> {
+                        Date cancelledDate = cancelledInvoice.getCancelledDate();
+                        String cancelledDateString = cancelledDate != null ?
+                                Utils.dateToString(cancelledDate) : null;
+                        Date generatedDate = cancelledInvoice.getInvoiceDate() != null ?
+                                cancelledInvoice.getInvoiceDate() : cancelledInvoice.getInvoiceStartDate();
+                        String generatedDateString = generatedDate != null ?
+                                Utils.dateToString(generatedDate) : null;
+                        Date createdAt = cancelledInvoice.getCreatedAt();
+                        String createdAtDate = createdAt != null ?
+                                Utils.dateToString(createdAt) : null;
+                        String createdAtTime = createdAt != null ?
+                                Utils.dateToTime(createdAt) : null;
+                        return new UnpaidInvoices(
+                                cancelledInvoice.getInvoiceId(),
+                                cancelledInvoice.getInvoiceNumber(),
+                                cancelledInvoice.getInvoiceType(),
+                                cancelledInvoice.getTotalAmount(),
+                                cancelledInvoice.getPaidAmount(),
+                                Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount()
+                                        - cancelledInvoice.getPaidAmount()),
+                                cancelledDateString,
+                                generatedDateString,
+                                createdAtDate,
+                                createdAtTime
+                        );
+                    }).toList();
         }
 
         HostelV1 hostel = hostelService.getHostelById(invoice.getHostelId());
@@ -529,21 +548,39 @@ public class InvoiceService {
         }
 
         List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
-        if (invoice.isCancelled() && invoice.getCancelledInvoices() != null &&
-                !invoice.getCancelledInvoices().isEmpty()) {
+        if (invoice.getCancelledInvoices() != null && !invoice.getCancelledInvoices().isEmpty()) {
             List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
 
             List<InvoicesV1> cancelledInvoices = invoicesV1Repository.findAllByInvoiceIdIn(cancelledInvoiceIds);
 
             unpaidInvoices = cancelledInvoices.stream()
-                    .map(cancelledInvoice -> new UnpaidInvoices(
-                            cancelledInvoice.getInvoiceId(),
-                            cancelledInvoice.getInvoiceNumber(),
-                            cancelledInvoice.getInvoiceType(),
-                            cancelledInvoice.getTotalAmount(),
-                            cancelledInvoice.getPaidAmount(),
-                            Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount() - cancelledInvoice.getPaidAmount())
-                    )).toList();
+                    .map(cancelledInvoice -> {
+                        Date cancelledDate = cancelledInvoice.getCancelledDate();
+                        String cancelledDateString = cancelledDate != null ?
+                                Utils.dateToString(cancelledDate) : null;
+                        Date generatedDate = cancelledInvoice.getInvoiceDate() != null ?
+                                cancelledInvoice.getInvoiceDate() : cancelledInvoice.getInvoiceStartDate();
+                        String generatedDateString = generatedDate != null ?
+                                Utils.dateToString(generatedDate) : null;
+                        Date createdAt = cancelledInvoice.getCreatedAt();
+                        String createdAtDate = createdAt != null ?
+                                Utils.dateToString(createdAt) : null;
+                        String createdAtTime = createdAt != null ?
+                                Utils.dateToTime(createdAt) : null;
+                        return new UnpaidInvoices(
+                                cancelledInvoice.getInvoiceId(),
+                                cancelledInvoice.getInvoiceNumber(),
+                                cancelledInvoice.getInvoiceType(),
+                                cancelledInvoice.getTotalAmount(),
+                                cancelledInvoice.getPaidAmount(),
+                                Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount()
+                                        - cancelledInvoice.getPaidAmount()),
+                                cancelledDateString,
+                                generatedDateString,
+                                createdAtDate,
+                                createdAtTime
+                        );
+                    }).toList();
         }
 
         HostelV1 hostel = hostelService.getHostelById(invoice.getHostelId());
