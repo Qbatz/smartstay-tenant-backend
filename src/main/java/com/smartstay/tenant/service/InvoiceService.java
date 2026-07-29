@@ -125,7 +125,8 @@ public class InvoiceService {
         return new InvoiceSummaryMapper().apply(projection);
     }
 
-    public ResponseEntity<?> getInvoiceList(String hostelId) {
+    public ResponseEntity<?> getInvoiceList(String hostelId, Date startDate,
+                                            Date endDate, String dateFilterOption) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -136,9 +137,46 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+        HostelV1 hostel = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+        if (hostel == null) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
-        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository.getAllInvoiceItems(hostelId, customerId);
+        Calendar calendar = Calendar.getInstance();
+
+        if (dateFilterOption != null) {
+            switch (dateFilterOption) {
+
+                case "Today" -> {
+                    startDate = Utils.getStartOfDay(new Date());
+                    endDate = Utils.getEndOfDay(new Date());
+                }
+
+                case "This Week" -> {
+                    calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+                    startDate = Utils.getStartOfDay(calendar.getTime());
+
+                    calendar.add(Calendar.DAY_OF_WEEK, 6);
+                    endDate = Utils.getEndOfDay(calendar.getTime());
+                }
+
+                case "This Month" -> {
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                    startDate = Utils.getStartOfDay(calendar.getTime());
+
+                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+                    endDate = Utils.getEndOfDay(calendar.getTime());
+                }
+
+                default -> {
+                    // Invalid option -> ignore dateFilterOption
+                    // startDate/endDate supplied by the request (if any) will be used.
+                }
+            }
+        }
+
+        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository
+                .getAllInvoiceItems(hostelId, customerId, startDate, endDate);
 
         InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
 
@@ -149,9 +187,10 @@ public class InvoiceService {
 
         InvoiceListDto invoiceListDto = new InvoiceListDto();
         invoiceListDto.setInvoices(invoiceItemDTOs);
-        invoiceListDto.setHostelName(hostelV1.getHostelName());
-        invoiceListDto.setHostelUrl(hostelV1.getMainImage());
-        invoiceListDto.setInitials(Utils.getInitials(hostelV1.getHostelName()));
+        invoiceListDto.setHostelName(hostel.getHostelName());
+        invoiceListDto.setHostelUrl(hostel.getMainImage());
+        invoiceListDto.setInitials(Utils.getInitials(hostel.getHostelName()));
+        invoiceListDto.setDateFilterOptions(List.of("Today", "This Week", "This Month"));
 
         return new ResponseEntity<>(invoiceListDto, HttpStatus.OK);
     }

@@ -89,33 +89,37 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_type          AS invoiceType,
                 i.invoice_number        AS invoiceNumber,
                 i.total_amount          AS totalAmount,
-                SUM(COALESCE(id.discount_amount, 0)) as discountAmount,
+                SUM(COALESCE(id.discount_amount, 0)) AS discountAmount,
                 i.invoice_due_date      AS invoiceDueDate,
                 i.invoice_generated_date AS invoiceGeneratedDate,
                 i.invoice_start_date    AS invoiceStartDate,
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
-                t.paid_at         AS paidAt,
-                t.payment_date    AS paymentDate,
-                i.is_cancelled       AS isCancelled
+                t.paid_at               AS paidAt,
+                t.payment_date          AS paymentDate,
+                i.is_cancelled          AS isCancelled
             FROM invoicesv1 i
-            LEFT JOIN invoice_discounts id ON id.invoice_id = i.invoice_id
+            LEFT JOIN invoice_discounts id
+                ON id.invoice_id = i.invoice_id
             LEFT JOIN transactionv1 t
-                   ON t.invoice_id = i.invoice_id
-                   AND t.paid_at = (
-                               SELECT MAX(t2.paid_at)
-                               FROM transactionv1 t2
-                               WHERE t2.invoice_id = i.invoice_id
-                         )
+                ON t.invoice_id = i.invoice_id
+                AND t.paid_at = (
+                    SELECT MAX(t2.paid_at)
+                    FROM transactionv1 t2
+                    WHERE t2.invoice_id = i.invoice_id
+                )
             WHERE i.hostel_id = :hostelId
-              AND i.customer_id = :customerId
-            GROUP BY
-                i.invoice_id
+                AND i.customer_id = :customerId
+                AND (:startDate IS NULL OR DATE(i.invoice_start_date) >= DATE(:startDate))
+                AND (:endDate IS NULL OR DATE(i.invoice_start_date) <= DATE(:endDate))
+            GROUP BY i.invoice_id
             ORDER BY i.invoice_generated_date DESC
             """, nativeQuery = true)
     List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId,
-                                                   @Param("customerId") String customerId);
+                                                   @Param("customerId") String customerId,
+                                                   @Param("startDate") Date startDate,
+                                                   @Param("endDate") Date endDate);
 
     @Query("""
                 SELECT i
