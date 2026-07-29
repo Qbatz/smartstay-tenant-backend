@@ -140,12 +140,12 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoicesV1> findInvoicesGeneratedToday();
 
     @Query("""
-                SELECT i
-                FROM invoicesv1 i
-                JOIN Customers c ON c.customerId = i.customerId
-                JOIN CustomerCredentials cc ON cc.xuid = c.xuid
-                WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
-                  AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
+            SELECT i
+            FROM invoicesv1 i
+            JOIN Customers c ON c.customerId = i.customerId
+            JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+            WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+              AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
             """)
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
@@ -198,13 +198,13 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                          @Param("startDate") Date startDate);
 
     @Query(value = """
-        SELECT COALESCE(SUM(paid_amount), 0)
-        FROM invoicesv1
-        WHERE customer_id = :customerId
-          AND hostel_id = :hostelId
-          AND DATE(invoice_start_date) >= DATE(:startDate)
-          AND invoice_type IN ('RENT', 'REASSIGN_RENT')
-        """, nativeQuery = true)
+            SELECT COALESCE(SUM(paid_amount), 0)
+            FROM invoicesv1
+            WHERE customer_id = :customerId
+              AND hostel_id = :hostelId
+              AND DATE(invoice_start_date) >= DATE(:startDate)
+              AND invoice_type IN ('RENT', 'REASSIGN_RENT')
+            """, nativeQuery = true)
     Double getTotalPaidAmountForCurrentMonth(@Param("customerId") String customerId,
                                              @Param("hostelId") String hostelId,
                                              @Param("startDate") Date startDate);
@@ -215,4 +215,14 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
 
     List<InvoicesV1> findAllByCustomerIdInAndInvoiceTypeInAndIsCancelledFalse(Set<String> customerIds,
                                                                               Set<String> invoiceTypes);
+
+    @Query("""
+            SELECT i FROM invoicesv1 i
+            WHERE i.customerId = :customerId
+                AND i.invoiceType IN :invoiceTypes
+                AND DATE(i.invoiceStartDate) < DATE(:beforeDate)
+                AND i.paymentStatus != :paidName
+            """)
+    List<InvoicesV1> findOlderUnpaidInvoicesByInvoiceTypes(String customerId, Set<String> invoiceTypes,
+                                                           Date beforeDate, String paidName);
 }

@@ -119,7 +119,15 @@ public class HostelService {
         BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
         int billStartDate = 1;
         int billingRuleDueDate = 5;
-        if (billingRules != null) {
+        boolean hasGracePeriod = false;
+        int gracePeriodDays = 0;
+        String typeOfBilling = null;
+        String billingModel = null;
+        if (billingRules != null){
+            hasGracePeriod = billingRules.isHasGracePeriod();
+            gracePeriodDays = billingRules.getGracePeriodDays() != null ? billingRules.getGracePeriodDays() : 0;
+            typeOfBilling = billingRules.getTypeOfBilling();
+            billingModel = billingRules.getBillingModel();
             billStartDate = billingRules.getBillingStartDate();
             billingRuleDueDate = billingRules.getBillDueDays();
         }
@@ -132,14 +140,23 @@ public class HostelService {
 
         Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
 
-        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate);
+        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate,
+                hasGracePeriod, gracePeriodDays, typeOfBilling, billingModel);
     }
 
     public BillingDates getBillStartDate(String hostelId, Date date) {
         BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
         int billStartDate = 1;
         int billingRuleDueDate = 5;
-        if (billingRules != null) {
+        boolean hasGracePeriod = false;
+        int gracePeriodDays = 0;
+        String typeOfBilling = null;
+        String billingModel = null;
+        if (billingRules != null){
+            hasGracePeriod = billingRules.isHasGracePeriod();
+            gracePeriodDays = billingRules.getGracePeriodDays() != null ? billingRules.getGracePeriodDays() : 0;
+            typeOfBilling = billingRules.getTypeOfBilling();
+            billingModel = billingRules.getBillingModel();
             billStartDate = billingRules.getBillingStartDate();
             billingRuleDueDate = billingRules.getBillDueDays();
         }
@@ -152,7 +169,8 @@ public class HostelService {
 
         Date findEndDate = Utils.findLastDate(billStartDate, calendar.getTime());
 
-        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate);
+        return new BillingDates(calendar.getTime(), findEndDate, dueDate, billingRuleDueDate,
+                hasGracePeriod, gracePeriodDays, typeOfBilling, billingModel);
     }
 
     private String buildHint(InvoiceSummaryResponse invoice) {
