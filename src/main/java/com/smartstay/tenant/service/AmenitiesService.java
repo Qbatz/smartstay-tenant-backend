@@ -117,6 +117,7 @@ public class AmenitiesService {
 
         notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
         amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
+
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
 

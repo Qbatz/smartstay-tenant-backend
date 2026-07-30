@@ -87,4 +87,12 @@ public class AmenityRequestService {
     public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
         return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
     }
+
+    public AmenityRequest getAmenityRequestById(long requestId) {
+        return amenityRequestRepository.findByAmenityRequestIdAndIsActiveTrue(requestId);
+    }
+
+    public void delete(AmenityRequest amenityRequest) {
+        amenityRequestRepository.delete(amenityRequest);
+    }
 }

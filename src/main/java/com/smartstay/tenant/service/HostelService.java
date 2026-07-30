@@ -1,7 +1,10 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.AmenityRequest;
+import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dao.HostelV1;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
@@ -293,5 +296,52 @@ public class HostelService {
 
     public HostelV1 getHostelById(String hostelId) {
         return hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+    }
+
+    public ResponseEntity<?> deleteCustomerRequestsById(String hostelId, String requestId) {
+
+        if (!authentication.isAuthenticated()) {
+            return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
+        }
+
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        if (requestId == null || requestId.length() < 2) {
+            return new ResponseEntity<>("Invalid requestId format.", HttpStatus.BAD_REQUEST);
+        }
+
+        char prefix = requestId.charAt(0);
+        String idPart = requestId.substring(1);
+
+        long actualId;
+        try {
+            actualId = Long.parseLong(idPart);
+        } catch (NumberFormatException e) {
+            return new ResponseEntity<>("Invalid requestId format.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (prefix == 'A') {
+            AmenityRequest amenityRequest = amenityRequestService
+                    .getAmenityRequestById(actualId);
+            if (amenityRequest == null) {
+                return new ResponseEntity<>(Constants.AMENITY_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            }
+            amenityRequestService.delete(amenityRequest);
+        } else if (prefix == 'B') {
+            BedChangeRequest bedChangeRequest = bedChangeRequestService
+                    .getBedChangeRequestById(actualId);
+            if (bedChangeRequest == null) {
+                return new ResponseEntity<>(Constants.BED_CHANGE_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            }
+            bedChangeRequestService.delete(bedChangeRequest);
+        } else {
+            return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(Constants.REQUEST_REMOVED_SUCCESSFULLY, HttpStatus.OK);
     }
 }

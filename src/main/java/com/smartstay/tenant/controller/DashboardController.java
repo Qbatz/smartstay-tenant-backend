@@ -38,4 +38,10 @@ public class DashboardController {
                                                     @PathVariable("requestId") String requestId) {
         return hostelService.getCustomerRequestById(hostelId, requestId);
     }
+
+    @DeleteMapping("/requests/{hostelId}/{requestId}")
+    public ResponseEntity<?> deleteCustomerRequestsById(@PathVariable("hostelId") String hostelId,
+                                                        @PathVariable("requestId") String requestId) {
+        return hostelService.deleteCustomerRequestsById(hostelId, requestId);
+    }
 }
