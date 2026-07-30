@@ -344,7 +344,8 @@ public class InvoiceService {
         }
 
         totalAdvancePaid = advancePaid + bookingAmount;
-        advanceInfo = new AdvanceInfo(advanceAmount, advancePaid, advanceInvoiceNumber, bookingAmount, totalAdvancePaid, listDeductions);
+        advanceInfo = new AdvanceInfo(advanceAmount, advancePaid, advanceInvoiceNumber, bookingAmount,
+                totalAdvancePaid, listDeductions);
 
         BillingDates billingDates = hostelService
                 .getBillStartDate(invoice.getHostelId(), invoice.getInvoiceStartDate());
@@ -551,14 +552,20 @@ public class InvoiceService {
                     ebAmount, ebReadings);
         }
 
-        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(),
-                invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
-                invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
-                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(),
-                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(),
-                invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo,
-                currentMonthInfo, unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode,
-                referenceId, showMessage);
+        List<DeductionsRes> deductionsRes = new ArrayList<>();
+        if (invoice.getDeductions() != null && !invoice.getDeductions().isEmpty()) {
+            deductionsRes = invoice.getDeductions().stream()
+                    .map(deduction -> new DeductionsRes(deduction.getType(),
+                            deduction.getAmount(), deduction.getPaidAmount()))
+                    .toList();
+        }
+
+        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
+                Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
+                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid,
+                dueAmount, invoice.getDeductionAmount(), status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
+                invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo, currentMonthInfo,
+                unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId, showMessage);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }
@@ -788,18 +795,21 @@ public class InvoiceService {
             }
         }
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
-                Utils.capitalize(invoice.getInvoiceType()),
-                Utils.dateToString(invoice.getInvoiceGeneratedDate()),
-                Utils.dateToString(invoice.getInvoiceDueDate()),
-                Utils.dateToString(invoice.getInvoiceStartDate()),
-                Utils.dateToString(invoice.getInvoiceEndDate()),
-                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, dueAmount,
-                status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
-                invoice.getGstPercentile(), invoiceItems, receipts, unpaidInvoicesRes,
-                invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
-                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom,
-                redeemedTo);
+        List<DeductionsRes> deductionsRes = new ArrayList<>();
+        if (invoice.getDeductions() != null && !invoice.getDeductions().isEmpty()) {
+            deductionsRes = invoice.getDeductions().stream()
+                    .map(deduction -> new DeductionsRes(deduction.getType(),
+                            deduction.getAmount(), deduction.getPaidAmount()))
+                    .toList();
+        }
+
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
+                Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()),
+                Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()),
+                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, dueAmount, invoice.getDeductionAmount(),
+                status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), deductionsRes,
+                invoiceItems, receipts, unpaidInvoicesRes, invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
+                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
