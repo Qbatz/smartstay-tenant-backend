@@ -10,10 +10,7 @@ import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.Deductions;
 import com.smartstay.tenant.dto.invoice.*;
-import com.smartstay.tenant.ennum.BankAccountType;
-import com.smartstay.tenant.ennum.BillConfigTypes;
-import com.smartstay.tenant.ennum.InvoiceType;
-import com.smartstay.tenant.ennum.PaymentStatus;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.mapper.invoice.InvoiceItemMapper;
 import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
 import com.smartstay.tenant.repository.HostelRepository;
@@ -128,7 +125,8 @@ public class InvoiceService {
         return new InvoiceSummaryMapper().apply(projection);
     }
 
-    public ResponseEntity<?> getInvoiceList(String hostelId) {
+    public ResponseEntity<?> getInvoiceList(String hostelId, Date startDate,
+                                            Date endDate, String dateFilterOption) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -139,9 +137,46 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        HostelV1 hostelV1 = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+        HostelV1 hostel = hostelRepository.findByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
+        if (hostel == null) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
-        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository.getAllInvoiceItems(hostelId, customerId);
+        Calendar calendar = Calendar.getInstance();
+
+        if (dateFilterOption != null) {
+            switch (dateFilterOption) {
+
+                case "Today" -> {
+                    startDate = Utils.getStartOfDay(new Date());
+                    endDate = Utils.getEndOfDay(new Date());
+                }
+
+                case "This Week" -> {
+                    calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+                    startDate = Utils.getStartOfDay(calendar.getTime());
+
+                    calendar.add(Calendar.DAY_OF_WEEK, 6);
+                    endDate = Utils.getEndOfDay(calendar.getTime());
+                }
+
+                case "This Month" -> {
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                    startDate = Utils.getStartOfDay(calendar.getTime());
+
+                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+                    endDate = Utils.getEndOfDay(calendar.getTime());
+                }
+
+                default -> {
+                    // Invalid option -> ignore dateFilterOption
+                    // startDate/endDate supplied by the request (if any) will be used.
+                }
+            }
+        }
+
+        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository
+                .getAllInvoiceItems(hostelId, customerId, startDate, endDate);
 
         InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
 
@@ -152,9 +187,10 @@ public class InvoiceService {
 
         InvoiceListDto invoiceListDto = new InvoiceListDto();
         invoiceListDto.setInvoices(invoiceItemDTOs);
-        invoiceListDto.setHostelName(hostelV1.getHostelName());
-        invoiceListDto.setHostelUrl(hostelV1.getMainImage());
-        invoiceListDto.setInitials(Utils.getInitials(hostelV1.getHostelName()));
+        invoiceListDto.setHostelName(hostel.getHostelName());
+        invoiceListDto.setHostelUrl(hostel.getMainImage());
+        invoiceListDto.setInitials(Utils.getInitials(hostel.getHostelName()));
+        invoiceListDto.setDateFilterOptions(List.of("Today", "This Week", "This Month"));
 
         return new ResponseEntity<>(invoiceListDto, HttpStatus.OK);
     }
@@ -170,16 +206,54 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
         InvoicesV1 invoice = invoicesV1Repository.getInvoiceByIdAndCustomerId(invoiceId, customerId);
         if (invoice == null) {
             return new ResponseEntity<>(Utils.INVOICE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        if (InvoiceType.SETTLEMENT.name().equalsIgnoreCase(invoice.getInvoiceType())) {
-            return getFinalSettlementInvoiceDetails(customerId, invoice);
+        Date invoiceStartDate = invoice.getInvoiceStartDate();
+        if (invoiceStartDate == null) {
+            return new ResponseEntity<>(Utils.INVOICE_START_DATE_IS_NULL, HttpStatus.BAD_REQUEST);
         }
 
-        InvoiceDetailsDTO invoiceItem = getInvoiceDetails(invoiceId, invoice);
+        BillingRules billingRule = hostelConfigService.getCurrentMonthTemplate(hostelId);
+        if (billingRule == null){
+            return new ResponseEntity<>(Utils.BILLING_RULE_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        BillingDates billingDates = null;
+        if (BillingType.FIXED_DATE.name().equals(billingRule.getTypeOfBilling())){
+            billingDates = hostelConfigService.computeBillingDates(billingRule, invoiceStartDate);
+        } else if (BillingType.JOINING_DATE_BASED.name().equals(billingRule.getTypeOfBilling())) {
+            if (customer.getJoiningDate() == null){
+                return new ResponseEntity<>("Joining date not found", HttpStatus.BAD_REQUEST);
+            }
+            billingDates = hostelConfigService
+                    .computeJoiningBasedBillingDates(billingRule, customer.getJoiningDate(), invoiceStartDate);
+        }
+
+        if (billingDates == null){
+            return new ResponseEntity<>("Billing dates not found", HttpStatus.BAD_REQUEST);
+        }
+
+        Set<String> invoicesTypes = new HashSet<>();
+        invoicesTypes.add(InvoiceType.RENT.name());
+        invoicesTypes.add(InvoiceType.REASSIGN_RENT.name());
+
+        List<InvoicesV1> unpaidInvoices = invoicesV1Repository
+                .findOlderUnpaidInvoicesByInvoiceTypes(customerId, invoicesTypes,
+                        billingDates.currentBillStartDate(), PaymentStatus.PAID.name());
+
+        if (InvoiceType.SETTLEMENT.name().equalsIgnoreCase(invoice.getInvoiceType())) {
+            return getFinalSettlementInvoiceDetails(customerId, invoice, unpaidInvoices);
+        }
+
+        InvoiceDetailsDTO invoiceItem = getInvoiceDetails(invoiceId, invoice, unpaidInvoices);
         if (invoiceItem == null) {
             return new ResponseEntity<>(Utils.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
@@ -187,7 +261,17 @@ public class InvoiceService {
         return new ResponseEntity<>(invoiceItem, HttpStatus.OK);
     }
 
-    private ResponseEntity<?> getFinalSettlementInvoiceDetails(String customerId, InvoicesV1 invoice) {
+    private ResponseEntity<?> getFinalSettlementInvoiceDetails(String customerId, InvoicesV1 invoice,
+                                                               List<InvoicesV1> unpaidInvoices) {
+
+        if (customerId == null || invoice == null){
+            return null;
+        }
+
+        Date invoiceStartDate = invoice.getInvoiceStartDate();
+        if (invoiceStartDate == null) {
+            return new ResponseEntity<>(Utils.INVOICE_START_DATE_IS_NULL, HttpStatus.BAD_REQUEST);
+        }
 
         FinalSettlementDetails finalSettlementDetails = new FinalSettlementDetails();
 
@@ -246,7 +330,6 @@ public class InvoiceService {
             if (advanceInvoice.getPaidAmount() != null) {
                 advancePaid = advanceInvoice.getPaidAmount();
             }
-
         }
         if (bookingInvoice != null) {
             bookingAmount = bookingInvoice.getTotalAmount();
@@ -255,12 +338,14 @@ public class InvoiceService {
         if (customers != null) {
             Advance advance = customers.getAdvance();
             if (advance != null) {
-                listDeductions = advance.getDeductions().stream().map(i -> new Deductions(i.getType(), i.getAmount())).toList();
+                listDeductions = advance.getDeductions().stream()
+                        .map(i -> new Deductions(i.getType(), i.getAmount())).toList();
             }
         }
 
         totalAdvancePaid = advancePaid + bookingAmount;
-        advanceInfo = new AdvanceInfo(advanceAmount, advancePaid, advanceInvoiceNumber, bookingAmount, totalAdvancePaid, listDeductions);
+        advanceInfo = new AdvanceInfo(advanceAmount, advancePaid, advanceInvoiceNumber, bookingAmount,
+                totalAdvancePaid, listDeductions);
 
         BillingDates billingDates = hostelService
                 .getBillStartDate(invoice.getHostelId(), invoice.getInvoiceStartDate());
@@ -271,8 +356,6 @@ public class InvoiceService {
         }
 
         CurrentMonthInfo currentMonthInfo = null;
-
-        Date invoiceStartDate = invoice.getInvoiceStartDate();
 
         BillingDates billingDate = hostelService
                 .getBillStartAndEndDateBasedOnDate(invoice.getHostelId(), invoiceStartDate);
@@ -367,35 +450,31 @@ public class InvoiceService {
         currentMonthInfo = new CurrentMonthInfo(noOfDaysStayed,
                 (double)Math.round(payableRent), lastRentPaid, customersBedHistoriesForLastMonth);
 
-        List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
-        if (invoice.getCancelledInvoices() != null && !invoice.getCancelledInvoices().isEmpty()) {
-            List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
+        List<UnpaidInvoices> unpaidInvoicesRes = new ArrayList<>();
+        if (unpaidInvoices != null && !unpaidInvoices.isEmpty()) {
 
-            List<InvoicesV1> cancelledInvoices = invoicesV1Repository
-                    .findAllByInvoiceIdIn(cancelledInvoiceIds);
-
-            unpaidInvoices = cancelledInvoices.stream()
-                    .map(cancelledInvoice -> {
-                        Date cancelledDate = cancelledInvoice.getCancelledDate();
+            unpaidInvoicesRes = unpaidInvoices.stream()
+                    .map(unpaidInvoice -> {
+                        Date cancelledDate = unpaidInvoice.getCancelledDate();
                         String cancelledDateString = cancelledDate != null ?
                                 Utils.dateToString(cancelledDate) : null;
-                        Date generatedDate = cancelledInvoice.getInvoiceDate() != null ?
-                                cancelledInvoice.getInvoiceDate() : cancelledInvoice.getInvoiceStartDate();
+                        Date generatedDate = unpaidInvoice.getInvoiceDate() != null ?
+                                unpaidInvoice.getInvoiceDate() : unpaidInvoice.getInvoiceStartDate();
                         String generatedDateString = generatedDate != null ?
                                 Utils.dateToString(generatedDate) : null;
-                        Date createdAt = cancelledInvoice.getCreatedAt();
+                        Date createdAt = unpaidInvoice.getCreatedAt();
                         String createdAtDate = createdAt != null ?
                                 Utils.dateToString(createdAt) : null;
                         String createdAtTime = createdAt != null ?
                                 Utils.dateToTime(createdAt) : null;
                         return new UnpaidInvoices(
-                                cancelledInvoice.getInvoiceId(),
-                                cancelledInvoice.getInvoiceNumber(),
-                                cancelledInvoice.getInvoiceType(),
-                                cancelledInvoice.getTotalAmount(),
-                                cancelledInvoice.getPaidAmount(),
-                                Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount()
-                                        - cancelledInvoice.getPaidAmount()),
+                                unpaidInvoice.getInvoiceId(),
+                                unpaidInvoice.getInvoiceNumber(),
+                                unpaidInvoice.getInvoiceType(),
+                                unpaidInvoice.getTotalAmount(),
+                                unpaidInvoice.getPaidAmount(),
+                                Utils.roundOffWithTwoDigit(unpaidInvoice.getTotalAmount()
+                                        - unpaidInvoice.getPaidAmount()),
                                 cancelledDateString,
                                 generatedDateString,
                                 createdAtDate,
@@ -473,19 +552,30 @@ public class InvoiceService {
                     ebAmount, ebReadings);
         }
 
-        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(),
-                invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
-                invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
-                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(),
-                invoice.getTotalAmount(), totalPaid, dueAmount, status, invoice.getGst(), invoice.getCgst(),
-                invoice.getSgst(), invoice.getGstPercentile(), invoiceItems, receipts, advanceInfo,
-                currentMonthInfo, unpaidInvoices, invoiceEbResponse, lastPaidDate, lastPaymentMode,
-                referenceId, showMessage);
+        List<DeductionsRes> deductionsRes = new ArrayList<>();
+        if (invoice.getDeductions() != null && !invoice.getDeductions().isEmpty()) {
+            deductionsRes = invoice.getDeductions().stream()
+                    .map(deduction -> new DeductionsRes(deduction.getType(),
+                            deduction.getAmount(), deduction.getPaidAmount()))
+                    .toList();
+        }
+
+        finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
+                Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
+                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid,
+                dueAmount, invoice.getDeductionAmount(), status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
+                invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo, currentMonthInfo,
+                unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId, showMessage);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }
 
-    public InvoiceDetailsDTO getInvoiceDetails(String invoiceId, InvoicesV1 invoice) {
+    public InvoiceDetailsDTO getInvoiceDetails(String invoiceId, InvoicesV1 invoice,
+                                               List<InvoicesV1> unpaidInvoices) {
+
+        if (invoiceId == null || invoice == null){
+            return null;
+        }
 
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoiceId);
 
@@ -505,10 +595,7 @@ public class InvoiceService {
 
         double dueAmount = invoice.getTotalAmount() - totalPaid;
 
-        String status = "";
-        if (invoice != null) {
-            status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus());
-        }
+        String status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus());
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoiceId);
 
@@ -547,34 +634,31 @@ public class InvoiceService {
             showMessage = true;
         }
 
-        List<UnpaidInvoices> unpaidInvoices = new ArrayList<>();
-        if (invoice.getCancelledInvoices() != null && !invoice.getCancelledInvoices().isEmpty()) {
-            List<String> cancelledInvoiceIds = invoice.getCancelledInvoices();
+        List<UnpaidInvoices> unpaidInvoicesRes = new ArrayList<>();
+        if (unpaidInvoices != null && !unpaidInvoices.isEmpty()) {
 
-            List<InvoicesV1> cancelledInvoices = invoicesV1Repository.findAllByInvoiceIdIn(cancelledInvoiceIds);
-
-            unpaidInvoices = cancelledInvoices.stream()
-                    .map(cancelledInvoice -> {
-                        Date cancelledDate = cancelledInvoice.getCancelledDate();
+            unpaidInvoicesRes = unpaidInvoices.stream()
+                    .map(unpaidInvoice -> {
+                        Date cancelledDate = unpaidInvoice.getCancelledDate();
                         String cancelledDateString = cancelledDate != null ?
                                 Utils.dateToString(cancelledDate) : null;
-                        Date generatedDate = cancelledInvoice.getInvoiceDate() != null ?
-                                cancelledInvoice.getInvoiceDate() : cancelledInvoice.getInvoiceStartDate();
+                        Date generatedDate = unpaidInvoice.getInvoiceDate() != null ?
+                                unpaidInvoice.getInvoiceDate() : unpaidInvoice.getInvoiceStartDate();
                         String generatedDateString = generatedDate != null ?
                                 Utils.dateToString(generatedDate) : null;
-                        Date createdAt = cancelledInvoice.getCreatedAt();
+                        Date createdAt = unpaidInvoice.getCreatedAt();
                         String createdAtDate = createdAt != null ?
                                 Utils.dateToString(createdAt) : null;
                         String createdAtTime = createdAt != null ?
                                 Utils.dateToTime(createdAt) : null;
                         return new UnpaidInvoices(
-                                cancelledInvoice.getInvoiceId(),
-                                cancelledInvoice.getInvoiceNumber(),
-                                cancelledInvoice.getInvoiceType(),
-                                cancelledInvoice.getTotalAmount(),
-                                cancelledInvoice.getPaidAmount(),
-                                Utils.roundOffWithTwoDigit(cancelledInvoice.getTotalAmount()
-                                        - cancelledInvoice.getPaidAmount()),
+                                unpaidInvoice.getInvoiceId(),
+                                unpaidInvoice.getInvoiceNumber(),
+                                unpaidInvoice.getInvoiceType(),
+                                unpaidInvoice.getTotalAmount(),
+                                unpaidInvoice.getPaidAmount(),
+                                Utils.roundOffWithTwoDigit(unpaidInvoice.getTotalAmount()
+                                        - unpaidInvoice.getPaidAmount()),
                                 cancelledDateString,
                                 generatedDateString,
                                 createdAtDate,
@@ -711,18 +795,21 @@ public class InvoiceService {
             }
         }
 
-        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
-                Utils.capitalize(invoice.getInvoiceType()),
-                Utils.dateToString(invoice.getInvoiceGeneratedDate()),
-                Utils.dateToString(invoice.getInvoiceDueDate()),
-                Utils.dateToString(invoice.getInvoiceStartDate()),
-                Utils.dateToString(invoice.getInvoiceEndDate()),
-                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, dueAmount,
-                status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
-                invoice.getGstPercentile(), invoiceItems, receipts, unpaidInvoices,
-                invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
-                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom,
-                redeemedTo);
+        List<DeductionsRes> deductionsRes = new ArrayList<>();
+        if (invoice.getDeductions() != null && !invoice.getDeductions().isEmpty()) {
+            deductionsRes = invoice.getDeductions().stream()
+                    .map(deduction -> new DeductionsRes(deduction.getType(),
+                            deduction.getAmount(), deduction.getPaidAmount()))
+                    .toList();
+        }
+
+        return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
+                Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()),
+                Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()),
+                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, dueAmount, invoice.getDeductionAmount(),
+                status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), deductionsRes,
+                invoiceItems, receipts, unpaidInvoicesRes, invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
+                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {

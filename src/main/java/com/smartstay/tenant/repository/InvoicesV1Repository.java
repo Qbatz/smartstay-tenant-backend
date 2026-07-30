@@ -89,33 +89,37 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_type          AS invoiceType,
                 i.invoice_number        AS invoiceNumber,
                 i.total_amount          AS totalAmount,
-                SUM(COALESCE(id.discount_amount, 0)) as discountAmount,
+                SUM(COALESCE(id.discount_amount, 0)) AS discountAmount,
                 i.invoice_due_date      AS invoiceDueDate,
                 i.invoice_generated_date AS invoiceGeneratedDate,
                 i.invoice_start_date    AS invoiceStartDate,
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
-                t.paid_at         AS paidAt,
-                t.payment_date    AS paymentDate,
-                i.is_cancelled       AS isCancelled
+                t.paid_at               AS paidAt,
+                t.payment_date          AS paymentDate,
+                i.is_cancelled          AS isCancelled
             FROM invoicesv1 i
-            LEFT JOIN invoice_discounts id ON id.invoice_id = i.invoice_id
+            LEFT JOIN invoice_discounts id
+                ON id.invoice_id = i.invoice_id
             LEFT JOIN transactionv1 t
-                   ON t.invoice_id = i.invoice_id
-                   AND t.paid_at = (
-                               SELECT MAX(t2.paid_at)
-                               FROM transactionv1 t2
-                               WHERE t2.invoice_id = i.invoice_id
-                         )
+                ON t.invoice_id = i.invoice_id
+                AND t.paid_at = (
+                    SELECT MAX(t2.paid_at)
+                    FROM transactionv1 t2
+                    WHERE t2.invoice_id = i.invoice_id
+                )
             WHERE i.hostel_id = :hostelId
-              AND i.customer_id = :customerId
-            GROUP BY
-                i.invoice_id
+                AND i.customer_id = :customerId
+                AND (:startDate IS NULL OR DATE(i.invoice_start_date) >= DATE(:startDate))
+                AND (:endDate IS NULL OR DATE(i.invoice_start_date) <= DATE(:endDate))
+            GROUP BY i.invoice_id
             ORDER BY i.invoice_generated_date DESC
             """, nativeQuery = true)
     List<InvoiceItemProjection> getAllInvoiceItems(@Param("hostelId") String hostelId,
-                                                   @Param("customerId") String customerId);
+                                                   @Param("customerId") String customerId,
+                                                   @Param("startDate") Date startDate,
+                                                   @Param("endDate") Date endDate);
 
     @Query("""
                 SELECT i
@@ -140,12 +144,12 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
     List<InvoicesV1> findInvoicesGeneratedToday();
 
     @Query("""
-                SELECT i
-                FROM invoicesv1 i
-                JOIN Customers c ON c.customerId = i.customerId
-                JOIN CustomerCredentials cc ON cc.xuid = c.xuid
-                WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
-                  AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
+            SELECT i
+            FROM invoicesv1 i
+            JOIN Customers c ON c.customerId = i.customerId
+            JOIN CustomerCredentials cc ON cc.xuid = c.xuid
+            WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+              AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
             """)
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
@@ -198,13 +202,13 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                          @Param("startDate") Date startDate);
 
     @Query(value = """
-        SELECT COALESCE(SUM(paid_amount), 0)
-        FROM invoicesv1
-        WHERE customer_id = :customerId
-          AND hostel_id = :hostelId
-          AND DATE(invoice_start_date) >= DATE(:startDate)
-          AND invoice_type IN ('RENT', 'REASSIGN_RENT')
-        """, nativeQuery = true)
+            SELECT COALESCE(SUM(paid_amount), 0)
+            FROM invoicesv1
+            WHERE customer_id = :customerId
+              AND hostel_id = :hostelId
+              AND DATE(invoice_start_date) >= DATE(:startDate)
+              AND invoice_type IN ('RENT', 'REASSIGN_RENT')
+            """, nativeQuery = true)
     Double getTotalPaidAmountForCurrentMonth(@Param("customerId") String customerId,
                                              @Param("hostelId") String hostelId,
                                              @Param("startDate") Date startDate);
@@ -215,4 +219,14 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
 
     List<InvoicesV1> findAllByCustomerIdInAndInvoiceTypeInAndIsCancelledFalse(Set<String> customerIds,
                                                                               Set<String> invoiceTypes);
+
+    @Query("""
+            SELECT i FROM invoicesv1 i
+            WHERE i.customerId = :customerId
+                AND i.invoiceType IN :invoiceTypes
+                AND DATE(i.invoiceStartDate) < DATE(:beforeDate)
+                AND i.paymentStatus != :paidName
+            """)
+    List<InvoicesV1> findOlderUnpaidInvoicesByInvoiceTypes(String customerId, Set<String> invoiceTypes,
+                                                           Date beforeDate, String paidName);
 }

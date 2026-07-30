@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvoiceListDto {
-
+    List<String> dateFilterOptions;
     private String hostelName;
     private String hostelUrl;
     private String initials;

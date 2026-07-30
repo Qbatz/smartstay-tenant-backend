@@ -68,23 +68,33 @@ public class BedsService {
         bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
         fcmNotificationService.sendNotificationBedChangeRequest(hostelId);
+
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getBedRequests(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
-        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+
+        List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(),
+                CustomerStatus.NOTICE.name());
+
+        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(
+                hostelId, customerId, currentStatus);
         if (!customerExist) {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        List<RequestItemResponse> requestResponses = bedChangeRequestService.getRequests(hostelId, customerId);
+
+        List<RequestItemResponse> requestResponses = bedChangeRequestService
+                .getRequests(hostelId, customerId);
+
         return new ResponseEntity<>(requestResponses, HttpStatus.OK);
     }
 

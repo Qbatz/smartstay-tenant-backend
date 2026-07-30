@@ -18,16 +18,13 @@ import java.util.List;
 @Service
 public class BedChangeRequestService {
 
-
     @Autowired
-    private BedChangeRequestRepo requestRepo;
-
+    private BedChangeRequestRepo bedChangeRequestRepo;
     @Autowired
     private BedsRepository bedsRepository;
 
-
     public boolean existsPendingRequest(String customerId, String hostelId) {
-        return requestRepo.existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
+        return bedChangeRequestRepo.existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
                 customerId,
                 hostelId,
                 List.of(RequestStatus.OPEN.name(),RequestStatus.PENDING.name(),RequestStatus.INPROGRESS.name()
@@ -36,7 +33,7 @@ public class BedChangeRequestService {
 
     public List<RequestItemResponse> getRequests(String hostelId, String customerId) {
 
-        List<BedChangeRequest> listBedChangeRequest = requestRepo
+        List<BedChangeRequest> listBedChangeRequest = bedChangeRequestRepo
                 .findByHostelIdAndCustomerId(hostelId, customerId);
 
         return listBedChangeRequest.stream()
@@ -45,7 +42,7 @@ public class BedChangeRequestService {
     }
 
     public BedChangeRequestResponse getRequestsById(String hostelId, String customerId, Long requestId) {
-        return requestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
+        return bedChangeRequestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
     }
 
     public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId, BedChangePayload request) {
@@ -75,6 +72,14 @@ public class BedChangeRequestService {
         bedRequest.setCreatedAt(new Date());
         bedRequest.setActive(true);
         bedRequest.setDeleted(false);
-        return requestRepo.save(bedRequest);
+        return bedChangeRequestRepo.save(bedRequest);
+    }
+
+    public BedChangeRequest getBedChangeRequestById(long requestId) {
+        return bedChangeRequestRepo.findByIdAndIsActiveTrueAndIsDeletedFalse(requestId);
+    }
+
+    public void delete(BedChangeRequest bedChangeRequest) {
+        bedChangeRequestRepo.delete(bedChangeRequest);
     }
 }

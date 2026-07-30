@@ -2,6 +2,7 @@ package com.smartstay.tenant.dto.invoice;
 
 import com.smartstay.tenant.response.eb.InvoiceEbResponse;
 import com.smartstay.tenant.response.invoiceRedemption.InvRedemptionRes;
+import com.smartstay.tenant.response.invoices.DeductionsRes;
 import com.smartstay.tenant.response.invoices.UnpaidInvoices;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,11 +26,13 @@ public class InvoiceDetailsDTO {
     private Double discountAmount;
     private Double paidAmount;
     private Double dueAmount;
+    private Double deductionAmount;
     private String status;
     private Double gst;
     private Double cgst;
     private Double sgst;
     private Double gstPercentile;
+    private List<DeductionsRes> deductions;
     private List<InvoiceItemDTO> invoiceItems;
     private List<ReceiptDTO> receipts;
     private List<UnpaidInvoices> unpaidInvoices;

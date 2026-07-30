@@ -11,14 +11,16 @@ import java.util.List;
 public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, Long> {
 
     @Query("""
-                SELECT COUNT(ar) > 0 
+                SELECT COUNT(ar) > 0
                 FROM AmenityRequest ar
                 WHERE ar.customerId = :customerId
                   AND ar.amenityId = :amenityId
                   AND ar.currentStatus IN (:currentStatus)
                   AND ar.isActive = TRUE
             """)
-    boolean existsPendingRequest(@Param("customerId") String customerId, @Param("amenityId") String amenityId, @Param("currentStatus") List<String> currentStatus);
+    boolean existsPendingRequest(@Param("customerId") String customerId,
+                                 @Param("amenityId") String amenityId,
+                                 @Param("currentStatus") List<String> currentStatus);
 
     @Query("""
                 SELECT new com.smartstay.tenant.response.amenity.AmenityRequestResponse(
@@ -38,7 +40,8 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
                   AND ar.hostelId = :hostelId
                   AND ar.isActive = true
             """)
-    List<AmenityRequestResponse> findRequestsForCustomer(@Param("customerId") String customerId, @Param("hostelId") String hostelId);
+    List<AmenityRequestResponse> findRequestsForCustomer(@Param("customerId") String customerId,
+                                                         @Param("hostelId") String hostelId);
 
     @Query("""
                 SELECT new com.smartstay.tenant.response.amenity.AmenityRequestResponse(
@@ -59,7 +62,11 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
                   AND ar.hostelId = :hostelId
                   AND ar.isActive = true
             """)
-    AmenityRequestResponse findRequestsForCustomerById(@Param("customerId") String customerId, @Param("hostelId") String hostelId, @Param("requestId") Long requestId);
+    AmenityRequestResponse findRequestsForCustomerById(@Param("customerId") String customerId,
+                                                       @Param("hostelId") String hostelId,
+                                                       @Param("requestId") Long requestId);
 
     List<AmenityRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
+
+    AmenityRequest findByAmenityRequestIdAndIsActiveTrue(long requestId);
 }
