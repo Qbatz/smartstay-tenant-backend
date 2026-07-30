@@ -1,5 +1,7 @@
 package com.smartstay.tenant.controller;
 
+import com.smartstay.tenant.payload.customer.CustomerMpinOtpPayload;
+import com.smartstay.tenant.payload.customer.CustomerMpinPayload;
 import com.smartstay.tenant.response.customer.EditCustomer;
 import com.smartstay.tenant.service.CustomerService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -13,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("v2/customer")
+@RequestMapping("/v2/customer")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -41,5 +43,20 @@ public class CustomerController {
     @PutMapping("/remove-profile-picture")
     public ResponseEntity<?> removeProfilePicture() {
         return customerService.removeProfilePicture();
+    }
+
+    @PostMapping("/change-mpin")
+    public ResponseEntity<?> changeMpin(@Valid @RequestBody CustomerMpinPayload payload) {
+        return customerService.changeMpin(payload);
+    }
+
+    @PostMapping("/resend-mpin-otp")
+    public ResponseEntity<?> resendMpinOtp(){
+        return customerService.resendMpinOtp();
+    }
+
+    @PostMapping("/verify-mpin-otp")
+    public ResponseEntity<?> verifyMpinOtp(@Valid @RequestBody CustomerMpinOtpPayload payload) {
+        return customerService.verifyMpinOtp(payload);
     }
 }

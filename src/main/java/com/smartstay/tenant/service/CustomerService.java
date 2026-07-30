@@ -1,5 +1,6 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
@@ -9,10 +10,13 @@ import com.smartstay.tenant.ennum.Gender;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsEditPayload;
+import com.smartstay.tenant.payload.customer.CustomerMpinOtpPayload;
+import com.smartstay.tenant.payload.customer.CustomerMpinPayload;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
+
+    @Value("${ENVIRONMENT}")
+    private String environment;
 
     @Autowired
     private InvoicesV1Repository invoicesV1Repository;
@@ -44,6 +51,14 @@ public class CustomerService {
     private CustomerAdditionalContactsService customerAdditionalContactsService;
     @Autowired
     private CustomerJobDetailsService customerJobDetailsService;
+    @Autowired
+    private CustomerCredentialsService customerCredentialsService;
+    @Autowired
+    private CustomersOtpService customersOtpService;
+    @Autowired
+    private OtpService otpService;
+    @Autowired
+    private JWTService jwtService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -285,5 +300,152 @@ public class CustomerService {
         customersRepository.save(customers);
 
         return new ResponseEntity<>(Utils.PROFILE_PICTURE_REMOVED, HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> changeMpin(CustomerMpinPayload payload) {
+
+        String customerId = authentication.getName();
+
+        Customers customer = customersRepository.findById(customerId).orElse(null);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        String customerMobile = customer.getMobile();
+
+        CustomerCredentials customerCredentials = customerCredentialsService
+                .getCustomerCredentialsByMobile(customerMobile);
+        if (customerCredentials == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Constants.CUSTOMER_CREDENTIALS_NOT_FOUND);
+        }
+
+        if (payload.mpin().equals(customerCredentials.getCustomerPin())){
+            return new ResponseEntity<>(Constants.CHANGE_MPIN_CAN_NOT_BE_SAME, HttpStatus.BAD_REQUEST);
+        }
+
+        CustomersOtp customersOtp = customersOtpService.createNewCustomersOtp(customerCredentials);
+
+        int otp = customersOtp.getOtp();
+
+        if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
+
+            String otpMessage = "Dear user, your SmartStay change mpin OTP is " + otp +
+                    ". Use this OTP to verify your new mpin. Do not share it with anyone. - SmartStay";
+
+            otpService.sendOtp(customerCredentials.getCustomerMobile(), otpMessage);
+
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(otp, HttpStatus.OK);
+        }
+    }
+
+    public ResponseEntity<?> resendMpinOtp() {
+
+        String customerId = authentication.getName();
+
+        Customers customer = customersRepository.findById(customerId).orElse(null);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        String customerMobile = customer.getMobile();
+
+        CustomerCredentials customerCredentials = customerCredentialsService
+                .getCustomerCredentialsByMobile(customerMobile);
+        if (customerCredentials == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Constants.CUSTOMER_CREDENTIALS_NOT_FOUND);
+        }
+
+        Date now = new Date();
+        Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
+
+        CustomersOtp customersOtp = customersOtpService
+                .getByXuid(customerCredentials.getXuid());
+        if (customersOtp == null) {
+            return new ResponseEntity<>(Constants.OTP_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+
+        if (!customersOtp.isVerified()) {
+            customersOtp.setExpiryAt(expiryAt);
+            customersOtp.setUpdatedAt(new Date());
+            customersOtp = customersOtpService.save(customersOtp);
+        } else {
+            return new ResponseEntity<>(Constants.NO_UNVERIFIED_OTP, HttpStatus.FORBIDDEN);
+        }
+
+        int otp = customersOtp.getOtp();
+
+        if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
+
+            String otpMessage = "Dear user, your SmartStay change mpin OTP is " + otp +
+                    ". Use this OTP to verify your new mpin. Do not share it with anyone. - SmartStay";
+
+            otpService.sendOtp(customerCredentials.getCustomerMobile(), otpMessage);
+
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(otp, HttpStatus.OK);
+        }
+    }
+
+    public ResponseEntity<?> verifyMpinOtp(CustomerMpinOtpPayload payload) {
+
+        String customerId = authentication.getName();
+
+        Customers customer = customersRepository.findById(customerId).orElse(null);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        String customerMobile = customer.getMobile();
+
+        CustomerCredentials customerCredentials = customerCredentialsService
+                .getCustomerCredentialsByMobile(customerMobile);
+        if (customerCredentials == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Constants.CUSTOMER_CREDENTIALS_NOT_FOUND);
+        }
+
+        CustomersOtp customersOtp = customersOtpService
+                .getByXuid(customerCredentials.getXuid());
+        if (customersOtp == null) {
+            return new ResponseEntity<>(Constants.OTP_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+        if (customersOtp.getOtp() == 0){
+            return new ResponseEntity<>(Constants.OTP_NOT_GENERATED, HttpStatus.BAD_REQUEST);
+        }
+
+        if (customersOtp.getExpiryAt().before(new Date())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Constants.OTP_EXPIRED);
+        }
+
+        if (!String.valueOf(customersOtp.getOtp()).equals(payload.otp())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Constants.OTP_DOES_NOT_MATCH);
+        }
+
+        customersOtp.setVerified(true);
+        customersOtp.setOtp(0);
+        customersOtp.setUpdatedAt(new Date());
+        customersOtp.setExpiryAt(null);
+
+        customersOtpService.save(customersOtp);
+
+        customerCredentials.setCustomerPin(payload.mpin());
+        customerCredentials.setPinVerified(true);
+
+        customerCredentials = customerCredentialsService.save(customerCredentials);
+
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("mobile", customerCredentials.getCustomerMobile());
+        claims.put("mPin", customerCredentials.getCustomerPin());
+
+        String token = jwtService.generateToken(customerId, claims);
+
+        return new ResponseEntity<>(token, HttpStatus.OK);
     }
 }

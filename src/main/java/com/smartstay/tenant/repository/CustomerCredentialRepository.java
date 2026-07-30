@@ -6,8 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CustomerCredentialRepository extends JpaRepository<CustomerCredentials, String> {
+
     CustomerCredentials findByCustomerMobile(String mobileNo);
+
     CustomerCredentials findByXuid(String xuid);
+
     @Query("""
         SELECT cc.fcmToken
         FROM CustomerCredentials cc
