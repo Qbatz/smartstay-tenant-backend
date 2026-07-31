@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v2/amenities")
+@RequestMapping("/v2/amenities")
 @SecurityScheme(name = "Authorization", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 @SecurityRequirement(name = "Authorization")
 @CrossOrigin("*")
@@ -38,7 +38,7 @@ public class AmenityController {
         return amenitiesService.createAmenityRequest(hostelId,amenityId, amenityRequest);
     }
 
-    @GetMapping("all-requests/{hostelId}")
+    @GetMapping("/all-requests/{hostelId}")
     public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAmenityRequest(hostelId);
     }
@@ -47,5 +47,11 @@ public class AmenityController {
     public ResponseEntity<?> deleteRequestById(@PathVariable("hostelId") String hostelId,
                                                @PathVariable("requestId") long requestId) {
         return amenitiesService.deleteRequestById(hostelId, requestId);
+    }
+
+    @PostMapping("/deactivate/{hostelId}/{amenityId}")
+    public ResponseEntity<?> deactivateRequestById(@PathVariable("hostelId") String hostelId,
+                                                   @PathVariable("amenityId") String amenityId) {
+        return amenitiesService.deactivateAmenity(hostelId, amenityId);
     }
 }
