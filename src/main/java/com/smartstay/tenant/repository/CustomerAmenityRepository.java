@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CustomerAmenityRepository extends JpaRepository<CustomersAmenity, String> {
 
-
+    CustomersAmenity findTopByAmenityIdAndCustomerIdAndEndDateIsNullOrderByCreatedAtDesc(String amenityId, String customerId);
 }

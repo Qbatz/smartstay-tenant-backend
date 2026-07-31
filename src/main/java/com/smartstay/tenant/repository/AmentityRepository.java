@@ -108,4 +108,6 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
     AmenityDetails findAmenityByAmenityIdAndCustomerStatus(@Param("hostelId") String hostelId,
                                                            @Param("amenityId") String amenityId,
                                                            @Param("customerId") String customerId);
+
+    AmenitiesV1 findByAmenityIdAndIsActiveTrueAndIsDeletedFalse(String amenityId);
 }
