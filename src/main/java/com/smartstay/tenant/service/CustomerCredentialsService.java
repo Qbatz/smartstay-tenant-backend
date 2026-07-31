@@ -26,4 +26,8 @@ public class CustomerCredentialsService {
     public void saveCustomerCredentials(CustomerCredentials credentials) {
         repository.save(credentials);
     }
+
+    public CustomerCredentials save(CustomerCredentials customerCredentials) {
+        return repository.save(customerCredentials);
+    }
 }

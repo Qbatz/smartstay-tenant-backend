@@ -42,4 +42,10 @@ public class AmenityController {
     public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId) {
         return amenitiesService.getAmenityRequest(hostelId);
     }
+
+    @DeleteMapping("/request/{hostelId}/{requestId}")
+    public ResponseEntity<?> deleteRequestById(@PathVariable("hostelId") String hostelId,
+                                               @PathVariable("requestId") long requestId) {
+        return amenitiesService.deleteRequestById(hostelId, requestId);
+    }
 }
