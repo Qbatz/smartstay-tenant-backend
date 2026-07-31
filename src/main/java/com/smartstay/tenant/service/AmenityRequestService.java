@@ -95,4 +95,8 @@ public class AmenityRequestService {
     public void delete(AmenityRequest amenityRequest) {
         amenityRequestRepository.delete(amenityRequest);
     }
+
+    public AmenityRequest getAmenityRequestByCustomerIdAndAmenityId(String customerId, String amenityId) {
+        return amenityRequestRepository.findByCustomerIdAndAmenityIdAndIsActiveTrue(customerId, amenityId);
+    }
 }

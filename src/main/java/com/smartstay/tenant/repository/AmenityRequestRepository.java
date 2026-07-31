@@ -69,4 +69,6 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
     List<AmenityRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
 
     AmenityRequest findByAmenityRequestIdAndIsActiveTrue(long requestId);
+
+    AmenityRequest findByCustomerIdAndAmenityIdAndIsActiveTrue(String customerId, String amenityId);
 }

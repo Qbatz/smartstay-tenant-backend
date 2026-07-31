@@ -1,6 +1,7 @@
 package com.smartstay.tenant.mapper.amenities;
 
 import com.smartstay.tenant.Utils.Utils;
+import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityDetailsResponse;
@@ -12,10 +13,13 @@ import java.util.function.Function;
 
 public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDetailsResponse> {
 
-    private HostelConfigService hostelConfigService;
+    private final HostelConfigService hostelConfigService;
+    private final AmenityRequest amenityRequest;
 
-    public AmenityResponseMapper(HostelConfigService hostelConfigService) {
+    public AmenityResponseMapper(HostelConfigService hostelConfigService,
+                                 AmenityRequest amenityRequest) {
         this.hostelConfigService = hostelConfigService;
+        this.amenityRequest = amenityRequest;
     }
 
     @Override
@@ -95,11 +99,17 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
             nextDueDateString = Utils.dateToString(nextDueDate);
         }
 
-        return new AmenityDetailsResponse(amenityDetails.getAmenityId(),
-                amenityDetails.getAmenityName(), amenityDetails.getAmenityAmount(),
-                amenityDetails.getDescription(), amenityDetails.getTermsAndCondition(),
-                amenityDetails.getProRate(), amenityDetails.getIsAssigned(), startDateString,
-                endDateString, dueDateString, nextStartDateString, nextEndDateString,
+        boolean isRequestRaised = false;
+        Long amenityRequestId = null;
+        if (amenityRequest != null) {
+            isRequestRaised = true;
+            amenityRequestId = amenityRequest.getAmenityRequestId();
+        }
+
+        return new AmenityDetailsResponse(amenityDetails.getAmenityId(), amenityDetails.getAmenityName(),
+                amenityDetails.getAmenityAmount(), amenityDetails.getDescription(), amenityDetails.getTermsAndCondition(),
+                amenityDetails.getProRate(), amenityDetails.getIsAssigned(), isRequestRaised, amenityRequestId,
+                startDateString, endDateString, dueDateString, nextStartDateString, nextEndDateString,
                 nextDueDateString);
     }
 }

@@ -1,8 +1,10 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.AmenitiesV1;
+import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
@@ -30,23 +32,29 @@ public class AmenitiesService {
     private Authentication authentication;
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private HostelConfigService hostelConfigService;
 
     public ResponseEntity<?> getAllAmenities(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<AmenityInfoProjection> assigned = amenityRepository.findCurrentlyAssignedAmenities(hostelId, customerId);
-        List<AmenityInfoProjection> unassigned = amenityRepository.findUnassignedAmenities(hostelId, customerId);
+        List<AmenityInfoProjection> assigned = amenityRepository
+                .findCurrentlyAssignedAmenities(hostelId, customerId);
+        List<AmenityInfoProjection> unassigned = amenityRepository
+                .findUnassignedAmenities(hostelId, customerId);
 
-        AmenitiesStatusResponse response = new AmenitiesStatusResponse(assigned != null ? assigned : List.of(), unassigned != null ? unassigned : List.of());
+        AmenitiesStatusResponse response = new AmenitiesStatusResponse(
+                assigned != null ? assigned : List.of(),
+                unassigned != null ? unassigned : List.of());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -68,9 +76,11 @@ public class AmenitiesService {
     }
 
     public ResponseEntity<?> getAmenityByAmenityId(String hostelId, String amenityId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
@@ -79,11 +89,19 @@ public class AmenitiesService {
 
         AmenityDetails amenityInfo = amenityRepository
                 .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
+
+        AmenityRequest amenityRequest = amenityRequestService
+                .getAmenityRequestByCustomerIdAndAmenityId(customerId, amenityId);
+
         if (amenityInfo != null) {
-            AmenityResponseMapper amenityResponseMapper = new AmenityResponseMapper(hostelConfigService);
+
+            AmenityResponseMapper amenityResponseMapper = new AmenityResponseMapper(hostelConfigService, amenityRequest);
+
             AmenityDetailsResponse amenityDetailsResponse = amenityResponseMapper.apply(amenityInfo);
+
             return new ResponseEntity<>(amenityDetailsResponse, HttpStatus.OK);
         }
+
         return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
     }
 
@@ -123,5 +141,24 @@ public class AmenitiesService {
 
     public List<AmenitiesV1> findByAmenityIds(List<String> listAmenitiesId) {
         return amenityRepository.findAllById(listAmenitiesId);
+    }
+
+    public ResponseEntity<?> deleteRequestById(String hostelId, long requestId) {
+
+        String customerId = authentication.getName();
+
+        if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        AmenityRequest amenityRequest = amenityRequestService
+                .getAmenityRequestById(requestId);
+        if (amenityRequest == null) {
+            return new ResponseEntity<>(Constants.AMENITY_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        amenityRequestService.delete(amenityRequest);
+
+        return new ResponseEntity<>(Constants.REQUEST_REMOVED_SUCCESSFULLY, HttpStatus.OK);
     }
 }
