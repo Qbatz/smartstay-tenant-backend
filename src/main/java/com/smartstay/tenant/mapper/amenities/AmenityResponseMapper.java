@@ -101,15 +101,21 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
 
         boolean isRequestRaised = false;
         Long amenityRequestId = null;
+        String requestDate = null;
+        String requestTime = null;
         if (amenityRequest != null) {
             isRequestRaised = true;
             amenityRequestId = amenityRequest.getAmenityRequestId();
+            if (amenityRequest.getRequestedDate() != null){
+                requestDate = Utils.dateToString(amenityRequest.getRequestedDate());
+                requestTime = Utils.dateToTime(amenityRequest.getRequestedDate());
+            }
         }
 
         return new AmenityDetailsResponse(amenityDetails.getAmenityId(), amenityDetails.getAmenityName(),
                 amenityDetails.getAmenityAmount(), amenityDetails.getDescription(), amenityDetails.getTermsAndCondition(),
                 amenityDetails.getProRate(), amenityDetails.getIsAssigned(), isRequestRaised, amenityRequestId,
-                startDateString, endDateString, dueDateString, nextStartDateString, nextEndDateString,
-                nextDueDateString);
+                requestDate, requestTime, startDateString, endDateString, dueDateString, nextStartDateString,
+                nextEndDateString, nextDueDateString);
     }
 }

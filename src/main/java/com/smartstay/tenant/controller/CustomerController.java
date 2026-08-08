@@ -2,6 +2,7 @@ package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.customer.CustomerMpinOtpPayload;
 import com.smartstay.tenant.payload.customer.CustomerMpinPayload;
+import com.smartstay.tenant.payload.customer.RaiseNoticePayload;
 import com.smartstay.tenant.response.customer.EditCustomer;
 import com.smartstay.tenant.service.CustomerService;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -58,5 +59,11 @@ public class CustomerController {
     @PostMapping("/verify-mpin-otp")
     public ResponseEntity<?> verifyMpinOtp(@Valid @RequestBody CustomerMpinOtpPayload payload) {
         return customerService.verifyMpinOtp(payload);
+    }
+
+    @PostMapping("/raise-notice/{hostelId}")
+    public ResponseEntity<?> raiseNotice(@PathVariable String hostelId,
+                                         @Valid @RequestBody RaiseNoticePayload payload) {
+        return customerService.raiseNotice(hostelId, payload);
     }
 }

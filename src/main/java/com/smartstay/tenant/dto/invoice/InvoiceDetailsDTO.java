@@ -14,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvoiceDetailsDTO {
-
     private String invoiceId;
     private String invoiceNumber;
     private String invoiceType;

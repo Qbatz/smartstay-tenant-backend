@@ -99,10 +99,21 @@ public class BedsService {
     }
 
     public BedDetails getBedDetails(Integer bedId) {
-        return bedsRepository.findByBedId(bedId);
+        return bedsRepository.findBedDetailsByBedId(bedId);
     }
 
     public List<Beds> findAllByBedIdIn(Set<Integer> bedIds) {
         return bedsRepository.findAllByBedIdIn(bedIds);
+    }
+
+    public Beds getByBedId(Integer bedId) {
+        if (bedId == null){
+            return null;
+        }
+        return bedsRepository.findByBedId(bedId);
+    }
+
+    public void save(Beds bed) {
+        bedsRepository.save(bed);
     }
 }

@@ -273,16 +273,14 @@ public class InvoiceService {
             return new ResponseEntity<>(Utils.INVOICE_START_DATE_IS_NULL, HttpStatus.BAD_REQUEST);
         }
 
+        Date today = new Date();
+
         FinalSettlementDetails finalSettlementDetails = new FinalSettlementDetails();
 
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoice.getInvoiceId());
 
         Double totalPaid = transactionService.getTotalPaidAmountByInvoiceId(invoice.getInvoiceId());
         if (totalPaid == null) totalPaid = 0.0;
-
-        double dueAmount = invoice.getTotalAmount() - totalPaid;
-
-        String status = dueAmount == 0 ? "Paid" : totalPaid == 0 ? "Pending" : "Partially Paid";
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoice.getInvoiceId());
 
@@ -302,13 +300,6 @@ public class InvoiceService {
                     lastPaymentMode = Utils.capitalize(bank.getBankName());
                 }
             }
-        }
-
-        boolean showMessage = false;
-        Date today = new Date();
-
-        if ("Pending".equalsIgnoreCase(status) && invoice.getInvoiceDueDate().before(today)) {
-            showMessage = true;
         }
 
         Customers customers = customerService.getCustomerById(customerId);
@@ -560,6 +551,16 @@ public class InvoiceService {
                     .toList();
         }
 
+        double dueAmount = invoice.getTotalAmount() - totalPaid;
+
+        String status = dueAmount == 0 ? "Paid" : totalPaid == 0 ? "Pending" : "Partially Paid";
+
+        boolean showMessage = false;
+
+        if ("Pending".equalsIgnoreCase(status) && invoice.getInvoiceDueDate().before(today)) {
+            showMessage = true;
+        }
+
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
                 invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid,
@@ -577,6 +578,8 @@ public class InvoiceService {
             return null;
         }
 
+        Date today = new Date();
+
         List<InvoiceItemDTO> invoiceItems = invoicesV1Repository.getInvoiceItems(invoiceId);
 
         Double totalPaid = 0.0;
@@ -592,8 +595,6 @@ public class InvoiceService {
                     })
                     .sum();
         }
-
-        double dueAmount = invoice.getTotalAmount() - totalPaid;
 
         String status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus());
 
@@ -628,7 +629,6 @@ public class InvoiceService {
         }
 
         boolean showMessage = false;
-        Date today = new Date();
 
         if ("Pending".equalsIgnoreCase(status) && invoice.getInvoiceDueDate().before(today)) {
             showMessage = true;
@@ -771,26 +771,31 @@ public class InvoiceService {
                 .collect(Collectors.toMap(InvoicesV1::getInvoiceId,
                         inv -> inv));
 
+        double redeemedFromAmount = 0;
         List<InvRedemptionRes> redeemedFrom = new ArrayList<>();
         List<InvRedemptionRes> redeemedTo = new ArrayList<>();
         for (InvoiceRedemption invoiceRedemption : invoiceRedemptions) {
+
+            double redemptionAmount = invoiceRedemption.getRedemptionAmount() != null
+                    ? invoiceRedemption.getRedemptionAmount() : 0;
+
             if (invoiceRedemption.getSourceInvoiceId().equals(invoiceId)){
                 InvoicesV1 targetInvoice = invoiceMap.getOrDefault(invoiceRedemption.getTargetInvoiceId(), null);
                 String targetInvoiceId = targetInvoice != null ? targetInvoice.getInvoiceId() : null;
                 String targetInvoiceNumber = targetInvoice != null ? targetInvoice.getInvoiceNumber() : null;
                 InvRedemptionRes redeemedToRes = new InvRedemptionRes(invoiceRedemption.getId(),
-                        targetInvoiceId, targetInvoiceNumber, invoiceRedemption.getRedemptionAmount(),
+                        targetInvoiceId, targetInvoiceNumber, redemptionAmount,
                         Utils.dateToString(invoiceRedemption.getRedeemedAt()), Utils.dateToTime(invoiceRedemption.getRedeemedAt()));
-
                 redeemedTo.add(redeemedToRes);
             } else if (invoiceRedemption.getTargetInvoiceId().equals(invoiceId)) {
                 InvoicesV1 sourceInvoice = invoiceMap.getOrDefault(invoiceRedemption.getSourceInvoiceId(), null);
                 String sourceInvoiceId = sourceInvoice != null ? sourceInvoice.getInvoiceId() : null;
                 String sourceInvoiceNumber = sourceInvoice != null ? sourceInvoice.getInvoiceNumber() : null;
                 InvRedemptionRes redeemedFromRes = new InvRedemptionRes(invoiceRedemption.getId(),
-                        sourceInvoiceId, sourceInvoiceNumber, invoiceRedemption.getRedemptionAmount(),
+                        sourceInvoiceId, sourceInvoiceNumber, redemptionAmount,
                         Utils.dateToString(invoiceRedemption.getRedeemedAt()), Utils.dateToTime(invoiceRedemption.getRedeemedAt()));
 
+                redeemedFromAmount += redemptionAmount;
                 redeemedFrom.add(redeemedFromRes);
             }
         }
@@ -802,6 +807,8 @@ public class InvoiceService {
                             deduction.getAmount(), deduction.getPaidAmount()))
                     .toList();
         }
+
+        double dueAmount = invoice.getTotalAmount() - totalPaid - redeemedFromAmount;
 
         return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
                 Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()),

@@ -53,7 +53,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
         }
 
         if (bedChangeRequest.getBedId() != null) {
-            var bed = bedsRepository.findByBedId(bedChangeRequest.getBedId());
+            var bed = bedsRepository.findBedDetailsByBedId(bedChangeRequest.getBedId());
             if (bed != null) {
                 requestedItem = bed.getBedName();
             }
