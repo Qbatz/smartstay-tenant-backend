@@ -32,7 +32,7 @@ public class InvoiceUtils {
                 paymentStatus = "Partially Refunded";
             }
             else {
-                paymentStatus = status;
+                paymentStatus = Utils.capitalize(status.toLowerCase());
             }
 
             return paymentStatus;
