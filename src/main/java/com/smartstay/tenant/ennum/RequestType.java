@@ -5,5 +5,6 @@ public enum RequestType {
     COMPLAINT,
     CHANGE_BED,
     INVOICE_GENERATION,
-    AMENITY_REQUEST
+    AMENITY_REQUEST,
+    RAISE_NOTICE
 }

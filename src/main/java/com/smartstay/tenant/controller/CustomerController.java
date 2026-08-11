@@ -62,8 +62,8 @@ public class CustomerController {
     }
 
     @PostMapping("/raise-notice/{hostelId}")
-    public ResponseEntity<?> raiseNotice(@PathVariable String hostelId,
-                                         @Valid @RequestBody RaiseNoticePayload payload) {
-        return customerService.raiseNotice(hostelId, payload);
+    public ResponseEntity<?> raiseNoticeRequest(@PathVariable String hostelId,
+                                                @Valid @RequestBody RaiseNoticePayload payload) {
+        return customerService.raiseNoticeRequest(hostelId, payload);
     }
 }

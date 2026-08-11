@@ -31,6 +31,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
     private final BookingsV1 booking;
     private final InvoicesV1 bookingInvoice;
     private final InvoicesV1 advanceInvoice;
+    private final RaiseNoticeRequest raiseNoticeRequest;
 
     public HostelDetailsMapper(HostelV1 hostel,
                                Customers customer,
@@ -43,7 +44,8 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
                                Map<Integer, Floors> floorsMap,
                                BookingsV1 booking,
                                InvoicesV1 bookingInvoice,
-                               InvoicesV1 advanceInvoice) {
+                               InvoicesV1 advanceInvoice,
+                               RaiseNoticeRequest raiseNoticeRequest) {
         this.hostel = hostel;
         this.customer = customer;
         this.owner = owner;
@@ -56,6 +58,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         this.booking = booking;
         this.bookingInvoice = bookingInvoice;
         this.advanceInvoice = advanceInvoice;
+        this.raiseNoticeRequest = raiseNoticeRequest;
     }
 
     @Override
@@ -90,6 +93,9 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
                     CustomerStatus.CHECK_IN.name().equals(customer.getCurrentStatus()) ||
                     CustomerStatus.WALKED_IN.name().equals(customer.getCurrentStatus())){
                 canRaiseNotice = true;
+                if (raiseNoticeRequest != null){
+                    canRaiseNotice = false;
+                }
             }
         }
         if (latestBillingRules != null){

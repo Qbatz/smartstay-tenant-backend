@@ -6,9 +6,9 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
-import com.smartstay.tenant.ennum.BedStatus;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.Gender;
+import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsEditPayload;
@@ -18,7 +18,6 @@ import com.smartstay.tenant.payload.customer.RaiseNoticePayload;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -65,8 +64,13 @@ public class CustomerService {
     @Autowired
     private JWTService jwtService;
     @Autowired
+    private RaiseNoticeRequestService raiseNoticeRequestService;
+    @Autowired
     @Lazy
-    private BedsService bedsService;
+    private NotificationService notificationService;
+    @Autowired
+    @Lazy
+    private FCMNotificationService fcmNotificationService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -458,7 +462,7 @@ public class CustomerService {
         return new ResponseEntity<>(token, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> raiseNotice(String hostelId, RaiseNoticePayload payload) {
+    public ResponseEntity<?> raiseNoticeRequest(String hostelId, RaiseNoticePayload payload) {
 
         String customerId = authentication.getName();
 
@@ -480,6 +484,10 @@ public class CustomerService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.BOOKING_NOT_FOUND);
         }
 
+        if (raiseNoticeRequestService.existsPendingRequest(customerId, hostelId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.REQUEST_ALREADY_EXISTS);
+        }
+
         Date joiningDate = booking.getJoiningDate();
         Date requestDate = Utils.localDateToDate(payload.requestDate());
         Date checkoutDate = Utils.localDateToDate(payload.checkoutDate());
@@ -494,30 +502,24 @@ public class CustomerService {
 
         Date today = new Date();
 
-        customer.setCurrentStatus(CustomerStatus.NOTICE.name());
-        customer.setLastUpdatedAt(today);
-        customer.setUpdatedBy(customerId);
+        RaiseNoticeRequest raiseNoticeRequest = new RaiseNoticeRequest();
 
-        int bedId = booking.getBedId();
-        Beds bed = bedsService.getByBedId(bedId);
-        if (bed == null){
-            return new ResponseEntity<>(Constants.BED_NOT_FOUND, HttpStatus.BAD_REQUEST);
-        }
+        raiseNoticeRequest.setHostelId(hostelId);
+        raiseNoticeRequest.setCustomerId(customerId);
+        raiseNoticeRequest.setRequestedDate(requestDate);
+        raiseNoticeRequest.setCheckoutDate(checkoutDate);
+        raiseNoticeRequest.setReason(payload.reason());
+        raiseNoticeRequest.setRequestStatus(RequestStatus.OPEN.name());
+        raiseNoticeRequest.setCreatedAt(today);
+        raiseNoticeRequest.setCreatedBy(customerId);
+        raiseNoticeRequest.setActive(true);
+        raiseNoticeRequest.setDeleted(false);
 
-        bed.setCurrentStatus(BedStatus.NOTICE.name());
-        bed.setFreeFrom(checkoutDate);
-        bed.setUpdatedAt(today);
+        raiseNoticeRequest = raiseNoticeRequestService.save(raiseNoticeRequest);
 
-        booking.setCurrentStatus(BedStatus.NOTICE.name());
-        booking.setReasonForLeaving(payload.reason());
-        booking.setLeavingDate(checkoutDate);
-        booking.setNoticeDate(requestDate);
-        booking.setUpdatedAt(today);
-        booking.setUpdatedBy(customerId);
-
-        customersRepository.save(customer);
-        bedsService.save(bed);
-        bookingsService.save(booking);
+        notificationService.createRaiseNoticeRequestNotification(customerId,
+                hostelId, raiseNoticeRequest.getId());
+        fcmNotificationService.sendRaiseNoticeNotification(hostelId, customer);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

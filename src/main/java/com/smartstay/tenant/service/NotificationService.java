@@ -217,6 +217,28 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
     }
 
+    public void createRaiseNoticeRequestNotification(String customerId, String hostelId, Long requestId) {
+
+        Date today = new Date();
+
+        AdminNotifications adminNotification = new AdminNotifications();
+
+        adminNotification.setUserId(customerId);
+        adminNotification.setNotificationType(RequestType.RAISE_NOTICE.name());
+        adminNotification.setTitle("Raise Notice Request");
+        adminNotification.setDescription("Raise notice request submitted by customer.");
+        adminNotification.setUserType(UserType.TENANT.name());
+        adminNotification.setHostelId(hostelId);
+        adminNotification.setCreatedBy(customerId);
+        adminNotification.setActive(true);
+        adminNotification.setRead(false);
+        adminNotification.setDeleted(false);
+        adminNotification.setCreatedAt(today);
+        adminNotification.setUpdatedAt(today);
+        adminNotification.setSourceId(String.valueOf(requestId));
+
+        notificationService.saveAdminNotification(adminNotification);
+    }
 
     public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description, String customerId, String hostelId) {
 

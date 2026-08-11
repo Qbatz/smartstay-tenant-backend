@@ -24,4 +24,5 @@ public class Constants {
     public static final String REQUEST_DATE_MUST_AFTER_JOINING_DATE = "Request date must be after joining date";
     public static final String CHECKOUT_DATE_MUST_AFTER_JOINING_DATE = "Checkout date must be after request date";
     public static final String BED_NOT_FOUND = "Bed not found";
+    public static final String REQUEST_ALREADY_EXISTS = "Request already exists";
 }
