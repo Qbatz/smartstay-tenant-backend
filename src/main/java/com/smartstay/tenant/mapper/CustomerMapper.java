@@ -90,9 +90,16 @@ public class CustomerMapper {
         List<CustomerJobDetailsResponse> customerJobDetailsResponseList = new ArrayList<>();
         if (customerJobDetailsList != null && !customerJobDetailsList.isEmpty()) {
             customerJobDetailsResponseList = customerJobDetailsList.stream()
-                    .map(jd -> new CustomerJobDetailsResponse(jd.getJobId(),
-                            jd.getEmploymentStatus(), jd.getOrganizationName(), jd.getRole(), jd.getWorkLocation(),
-                            jd.getShiftType(), jd.getShiftStartTime(), jd.getShiftEndTime()))
+                    .map(jd -> {
+                        String workStartDate = jd.getWorkStartDate() != null ?
+                                Utils.dateToString(jd.getWorkStartDate()) : null;
+                        String workEndDate = jd.getWorkEndDate() != null ?
+                                Utils.dateToString(jd.getWorkEndDate()) : null;
+                        return new CustomerJobDetailsResponse(jd.getJobId(),
+                                jd.getEmploymentStatus(), jd.getOrganizationName(), jd.getRole(),
+                                jd.getWorkLocation(), workStartDate, workEndDate,
+                                jd.getShiftType(), jd.getShiftStartTime(), jd.getShiftEndTime());
+                    })
                     .toList();
         }
 

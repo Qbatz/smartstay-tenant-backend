@@ -5,6 +5,8 @@ public record CustomerJobDetailsResponse(Long jobId,
                                          String organizationName,
                                          String role,
                                          String workLocation,
+                                         String workStartDate,
+                                         String workEndDate,
                                          String shiftType,
                                          String shiftFrom,
                                          String shiftTo) {

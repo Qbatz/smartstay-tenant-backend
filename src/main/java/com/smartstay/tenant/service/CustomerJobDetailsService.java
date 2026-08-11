@@ -86,6 +86,14 @@ public class CustomerJobDetailsService {
                 hasData = true;
                 customerJobDetails.setWorkLocation(payload.workLocation().trim());
             }
+            if (payload.workStartDate() != null) {
+                hasData = true;
+                customerJobDetails.setWorkStartDate(Utils.localDateToDate(payload.workStartDate()));
+            }
+            if (payload.workEndDate() != null){
+                hasData = true;
+                customerJobDetails.setWorkEndDate(Utils.localDateToDate(payload.workEndDate()));
+            }
             if (payload.shiftType() != null) {
                 hasData = true;
                 customerJobDetails.setShiftType(payload.shiftType().trim());
