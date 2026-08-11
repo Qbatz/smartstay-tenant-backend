@@ -65,7 +65,8 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
         String reason = null;
 
-        return new RequestItemResponse(String.valueOf(amenityRequest.getAmenityRequestId()),
+        return new RequestItemResponse(
+                String.valueOf(amenityRequest.getAmenityRequestId()),
                 Utils.capitalize(RequestType.AMENITY_REQUEST.name().replace("_", " ")),
                 RequestType.AMENITY_REQUEST.name(),
                 amenityRequest.getRequestedDate(),
@@ -80,6 +81,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
                 reason,
                 amenityPrice,
                 amenityProRate,
+                null,
                 null,
                 null);
     }

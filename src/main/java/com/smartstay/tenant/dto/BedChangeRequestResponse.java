@@ -25,6 +25,7 @@ public class BedChangeRequestResponse {
     private Date startsFrom;
     private String reason;
     private String preferredType;
+    private String bedChangeUrgency;
     private String currentStatus;
 }
 

@@ -5,9 +5,11 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BedDetails;
+import com.smartstay.tenant.ennum.BedChangeUrgencyEnum;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.repository.BedsRepository;
+import com.smartstay.tenant.response.bed.BedChangeUrgencyDropdownRes;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -115,5 +117,16 @@ public class BedsService {
 
     public void save(Beds bed) {
         bedsRepository.save(bed);
+    }
+
+    public ResponseEntity<?> getBedChangeUrgency() {
+
+        List<BedChangeUrgencyDropdownRes> response = Arrays.stream(BedChangeUrgencyEnum.values())
+                .map(i -> new BedChangeUrgencyDropdownRes(
+                        i.name(), i.getValue()
+                ))
+                .toList();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

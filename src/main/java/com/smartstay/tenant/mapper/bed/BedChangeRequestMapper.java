@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public class BedChangeRequestMapper implements Function<BedChangeRequest, RequestItemResponse> {
 
-    private BedsRepository bedsRepository;
+    private final BedsRepository bedsRepository;
 
     public BedChangeRequestMapper(BedsRepository bedsRepository) {
         this.bedsRepository = bedsRepository;
@@ -19,6 +19,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
 
     @Override
     public RequestItemResponse apply(BedChangeRequest bedChangeRequest) {
+
         String status = "";
         int statusCode = 0;
         String requestedItem = null;
@@ -69,7 +70,8 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
             startsFrom = Utils.dateToString(bedChangeRequest.getStartsFrom());
         }
 
-        return new RequestItemResponse(String.valueOf(bedChangeRequest.getId()),
+        return new RequestItemResponse(
+                String.valueOf(bedChangeRequest.getId()),
                 Utils.capitalize(RequestType.CHANGE_BED.name().replace("_", " ")),
                 RequestType.CHANGE_BED.name(),
                 bedChangeRequest.getCreatedAt(),
@@ -85,6 +87,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
                 0,
                 false,
                 bedChangeRequest.getPreferredType(),
+                bedChangeRequest.getBedChangeUrgency(),
                 startsFrom);
     }
 }

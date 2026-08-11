@@ -28,6 +28,7 @@ public class RequestItemResponse implements Comparable<RequestItemResponse> {
     private double amenityPrice;
     private boolean amenityProRate;
     private String preferredBedType;
+    private String bedChangeUrgency;
     private String bedChangeStartsFrom;
 
     @Override

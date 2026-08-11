@@ -1,5 +1,7 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.ennum.BedChangeUrgencyEnum;
+import com.smartstay.tenant.exceptions.BadRequestException;
 import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.BedChangeRequest;
@@ -25,10 +27,8 @@ public class BedChangeRequestService {
 
     public boolean existsPendingRequest(String customerId, String hostelId) {
         return bedChangeRequestRepo.existsByCustomerIdAndHostelIdAndIsActiveTrueAndIsDeletedFalseAndCurrentStatusIn(
-                customerId,
-                hostelId,
-                List.of(RequestStatus.OPEN.name(),RequestStatus.PENDING.name(),RequestStatus.INPROGRESS.name()
-        ));
+                customerId, hostelId, List.of(RequestStatus.OPEN.name(),
+                        RequestStatus.PENDING.name(),RequestStatus.INPROGRESS.name()));
     }
 
     public List<RequestItemResponse> getRequests(String hostelId, String customerId) {
@@ -68,6 +68,15 @@ public class BedChangeRequestService {
         }
         if (request.preferredType() != null) {
             bedRequest.setPreferredType(request.preferredType());
+        }
+        if (request.bedChangeUrgency() != null) {
+            String bedChangeUrgency;
+            try {
+                bedChangeUrgency = BedChangeUrgencyEnum.valueOf(request.bedChangeUrgency()).name();
+            } catch (Exception e) {
+                throw new BadRequestException("Invalid bed change urgency");
+            }
+            bedRequest.setBedChangeUrgency(bedChangeUrgency);
         }
         bedRequest.setCreatedAt(new Date());
         bedRequest.setActive(true);
