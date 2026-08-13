@@ -58,7 +58,9 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_generated_date AS invoiceGeneratedDate,
                 i.invoice_due_date AS invoiceDueDate,
                 i.invoice_start_date AS invoiceStartDate,
-                i.invoice_end_date AS invoiceEndDate
+                i.invoice_end_date AS invoiceEndDate,
+                i.payment_status AS paymentStatus,
+                COALESCE(t.payment_date, i.invoice_generated_date) as paymentDate
             FROM invoicesv1 i
             JOIN invoice_items ii ON ii.invoice_id = i.invoice_id
             LEFT JOIN invoice_discounts id ON id.invoice_id = i.invoice_id

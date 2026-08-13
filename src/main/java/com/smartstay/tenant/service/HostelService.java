@@ -11,6 +11,7 @@ import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
+import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
@@ -89,26 +90,46 @@ public class HostelService {
                 .getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(),
                         currentMonthBillingDates.currentBillEndDate());
 
+        boolean previousMonthCanShowPaymentDate = false;
+        boolean currentMonthCanShowPaymentDate = false;
+
+        if (previousMonthInvoices != null) {
+            if (PaymentStatus.PAID.name().equals(previousMonthInvoices.getPaymentStatus()) ||
+                    PaymentStatus.PARTIAL_PAYMENT.name().equals(previousMonthInvoices.getPaymentStatus())){
+                previousMonthCanShowPaymentDate = true;
+            }
+        }
+        if (currentMonthInvoices != null) {
+            if (PaymentStatus.PAID.name().equals(currentMonthInvoices.getPaymentStatus()) ||
+                    PaymentStatus.PARTIAL_PAYMENT.name().equals(currentMonthInvoices.getPaymentStatus())){
+                currentMonthCanShowPaymentDate = true;
+            }
+        }
+
         InvoiceSummary previousSummary = previousMonthInvoices != null ?
                 new InvoiceSummary(previousMonthInvoices.getRent(), previousMonthInvoices.getEb(), previousMonthInvoices.getDiscountAmount(),
                         previousMonthInvoices.getPaidAmount(), previousMonthInvoices.getInvoiceNumber(), previousMonthInvoices.getInvoiceGeneratedDate(),
                         previousMonthInvoices.getInvoiceDueDate(), previousMonthInvoices.getCurrentInvoiceStartDate(),
-                        previousMonthInvoices.getCurrentInvoiceEndDate(), false, buildHint(previousMonthInvoices),
-                        buildMessage(previousMonthInvoices)) : null;
+                        previousMonthInvoices.getCurrentInvoiceEndDate(), previousMonthInvoices.getPaymentStatus(),
+                        previousMonthInvoices.getPaymentDate(), previousMonthCanShowPaymentDate, false,
+                        buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
 
         InvoiceSummary currentSummary = currentMonthInvoices != null ?
                 new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getDiscountAmount(),
                         currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
                         currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(),
-                        currentMonthInvoices.getCurrentInvoiceEndDate(), isToday(currentMonthInvoices.getInvoiceGeneratedDate()),
-                        buildHint(currentMonthInvoices), buildMessage(currentMonthInvoices)) : null;
+                        currentMonthInvoices.getCurrentInvoiceEndDate(), currentMonthInvoices.getPaymentStatus(),
+                        currentMonthInvoices.getPaymentDate(), currentMonthCanShowPaymentDate,
+                        isToday(currentMonthInvoices.getInvoiceGeneratedDate()), buildHint(currentMonthInvoices),
+                        buildMessage(currentMonthInvoices)) : null;
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
         ComplaintDateResponseMapper complaintDateResponseMapper = new ComplaintDateResponseMapper();
         List<ComplaintDateResponse> complaintDateResponseList = complaints.stream()
                 .map(complaintDateResponseMapper).toList();
 
-        HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary, complaintDateResponseList);
+        HostelDetails hostelDetails = new HostelDetails(previousSummary, currentSummary,
+                complaintDateResponseList);
 
         return new ResponseEntity<>(hostelDetails, HttpStatus.OK);
     }

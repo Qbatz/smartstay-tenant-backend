@@ -5,8 +5,7 @@ import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 
 import java.util.function.Function;
 
-public class InvoiceSummaryMapper
-        implements Function<InvoiceSummaryProjection, InvoiceSummaryResponse> {
+public class InvoiceSummaryMapper implements Function<InvoiceSummaryProjection, InvoiceSummaryResponse> {
 
     @Override
     public InvoiceSummaryResponse apply(InvoiceSummaryProjection p) {
@@ -24,7 +23,9 @@ public class InvoiceSummaryMapper
                 p.getInvoiceGeneratedDate(),
                 p.getInvoiceDueDate(),
                 p.getInvoiceStartDate(),
-                p.getInvoiceEndDate()
+                p.getInvoiceEndDate(),
+                p.getPaymentStatus(),
+                p.getPaymentDate()
         );
     }
 }

@@ -17,19 +17,18 @@ public class InvoiceSummary {
     private Double discountAmount;
     private Double paidAmount;
     private String invoiceNumber;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate invoiceGeneratedDate;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate invoiceDueDate;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate currentInvoiceStartDate;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate currentInvoiceEndDate;
-
+    private String paymentStatus;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    private LocalDate paymentDate;
+    private boolean canShowPaymentDate;
     private boolean shouldShow;
     private String hint;
     private String message;

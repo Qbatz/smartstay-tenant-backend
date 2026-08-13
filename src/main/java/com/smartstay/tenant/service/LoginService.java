@@ -128,6 +128,11 @@ public class LoginService {
                     .body("Customer not found. Please register first.");
         }
 
+        if (credentials.getCustomerPin() == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Customer pin not found. Please set pin first.");
+        }
+
         if (!credentials.getCustomerPin().equals(verifyMpin.mPin())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid M-Pin. Please try again.");
