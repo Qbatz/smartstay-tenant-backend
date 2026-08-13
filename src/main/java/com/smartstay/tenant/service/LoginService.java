@@ -56,6 +56,8 @@ public class LoginService {
     private FloorsService floorsService;
     @Autowired
     private InvoiceService invoiceService;
+    @Autowired
+    private RaiseNoticeRequestService raiseNoticeRequestService;
 
     public ResponseEntity<?> updateMpin(UpdateMpin updateMpin) {
 
@@ -315,6 +317,16 @@ public class LoginService {
                 .collect(Collectors.toMap(InvoicesV1::getCustomerId,
                         Function.identity(), (a, b) -> a));
 
+        List<RaiseNoticeRequest> noticeRequests = raiseNoticeRequestService
+                .getByHostelIdsAndCustomerIds(filteredHostelIds, customerIds);
+
+        Map<String, RaiseNoticeRequest> noticeRequestMap = noticeRequests.stream()
+                .collect(Collectors.toMap(
+                        request -> request.getCustomerId() + "_" + request.getHostelId(),
+                        Function.identity(),
+                        (existing, replacement) -> existing
+                ));
+
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
         List<HostelWithRentDTO> otherStays = new ArrayList<>();
@@ -332,6 +344,8 @@ public class LoginService {
             String parentId = hostel.getParentId();
             String hostelId = hostel.getHostelId();
 
+            String compositeKey = thisCustomerId + "_" + hostelId;
+
             Users owner = ownersMap.getOrDefault(parentId, null);
             BillingRules billingRules = latestBillingRulesMap.getOrDefault(hostelId, null);
             List<CustomerDocuments> thisCustomerDocs = customerDocsMap.getOrDefault(thisCustomerId, null);
@@ -339,10 +353,12 @@ public class LoginService {
             BookingsV1 booking = bookingsMap.getOrDefault(thisCustomerId, null);
             InvoicesV1 bookingInvoice = bookingInvoiceMap.getOrDefault(thisCustomerId, null);
             InvoicesV1 advanceInvoice = advanceInvoiceMap.getOrDefault(thisCustomerId, null);
+            RaiseNoticeRequest raiseNoticeRequest = noticeRequestMap.getOrDefault(compositeKey, null);
 
             HostelDetailsMapper mapper = new HostelDetailsMapper(hostel, customer,
                     owner, billingRules, thisCustomerDocs, latestBedHistory,
-                    bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice);
+                    bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice,
+                    raiseNoticeRequest);
 
             if (CustomerStatus.VACATED.name().equals(customer.getCurrentStatus())){
                 previousStays.add(mapper.apply(customerHostel));

@@ -16,6 +16,9 @@ public class InvoiceUtils {
             else if (status.equalsIgnoreCase(PaymentStatus.PARTIAL_PAYMENT.name())) {
                 paymentStatus = "Partial Payment";
             }
+            else if (status.equalsIgnoreCase(PaymentStatus.CANCELLED.name())) {
+                paymentStatus = "Cancelled";
+            }
             else if (status.equalsIgnoreCase(PaymentStatus.ADVANCE_IN_HAND.name())) {
                 paymentStatus = "Over pay";
             }
@@ -27,6 +30,9 @@ public class InvoiceUtils {
             }
             else if (status.equalsIgnoreCase(PaymentStatus.PARTIAL_REFUND.name())) {
                 paymentStatus = "Partially Refunded";
+            }
+            else {
+                paymentStatus = Utils.capitalize(status.toLowerCase());
             }
 
             return paymentStatus;

@@ -30,4 +30,9 @@ public class BedController {
     public ResponseEntity<?> getBedRequests(@PathVariable("hostelId") String hostelId) {
         return bedsService.getBedRequests(hostelId);
     }
+
+    @GetMapping("/bed-change-urgency")
+    public ResponseEntity<?> getBedChangeUrgency() {
+        return bedsService.getBedChangeUrgency();
+    }
 }

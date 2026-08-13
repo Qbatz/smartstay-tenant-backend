@@ -27,6 +27,8 @@ public class BedChangeRequest {
     Date startsFrom;
     String reason;
     String preferredType;
+    //from bed change urgency enum
+    String bedChangeUrgency;
     Date createdAt;
     Date updatedAt;
     String currentStatus;

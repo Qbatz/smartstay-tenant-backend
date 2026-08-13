@@ -19,4 +19,10 @@ public class Constants {
     public static final String AMENITY_NOT_FOUND = "Amenity not found";
     public static final String AMENITY_IS_NOT_ASSIGNED = "Amenity is not assigned";
     public static final String DEACTIVATED = "Deactivated successfully";
+    public static final String BOOKING_NOT_FOUND = "Booking not found";
+    public static final String CUSTOMER_NOT_CHECKED_IN = "Customer not checked in";
+    public static final String REQUEST_DATE_MUST_AFTER_JOINING_DATE = "Request date must be after joining date";
+    public static final String CHECKOUT_DATE_MUST_AFTER_JOINING_DATE = "Checkout date must be after request date";
+    public static final String BED_NOT_FOUND = "Bed not found";
+    public static final String REQUEST_ALREADY_EXISTS = "Request already exists";
 }

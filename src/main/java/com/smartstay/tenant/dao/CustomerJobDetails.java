@@ -22,6 +22,8 @@ public class CustomerJobDetails {
     private String organizationName;
     private String role;
     private String workLocation;
+    private Date workStartDate;
+    private Date workEndDate;
     private String shiftType;
     private String shiftStartTime;
     private String shiftEndTime;

@@ -26,4 +26,8 @@ public class BookingsService {
     public List<BookingsV1> getBookingsByCustomerIds(Set<String> customerIds) {
         return bookingsRepository.findAllByCustomerIdIn(customerIds);
     }
+
+    public void save(BookingsV1 booking) {
+        bookingsRepository.save(booking);
+    }
 }

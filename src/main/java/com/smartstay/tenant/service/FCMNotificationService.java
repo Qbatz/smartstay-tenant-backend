@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.google.firebase.messaging.*;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
@@ -43,7 +42,6 @@ public class FCMNotificationService {
             throw new RuntimeException(e);
         }
     }
-
 
     public void notifyCustomersForTodayInvoices() {
         List<InvoicesV1> invoices = invoicesV1Repository.findInvoicesGeneratedTodayForActiveCustomers();
@@ -182,6 +180,58 @@ public class FCMNotificationService {
                 }
             }
 
+        }
+    }
+
+    public void sendRaiseNoticeNotification(String hostelId, Customers customer) {
+
+        List<Users> adminUsers = userService.findMasters(hostelId);
+
+        if (customer != null){
+
+            String fullName = Utils.getFullName(customer.getFirstName(), customer.getLastName());
+
+            if (adminUsers != null) {
+
+                List<String> fcmTokens = new ArrayList<>();
+
+                List<UsersConfig> userConfigs = adminUsers
+                        .stream()
+                        .map(Users::getConfig)
+                        .toList();
+
+                if (!userConfigs.isEmpty()) {
+                    userConfigs.forEach(item -> {
+                        if (item != null) {
+                            if (item.getFcmToken() != null) {
+                                fcmTokens.add(item.getFcmToken());
+                            }
+                            if (item.getFcmWebToken() != null) {
+                                fcmTokens.add(item.getFcmWebToken());
+                            }
+                        }
+                    });
+                }
+
+                if (!fcmTokens.isEmpty()) {
+                    HashMap<String, String> payloads = new HashMap<>();
+                    payloads.put("title", "Raise Notice Request");
+                    payloads.put("type", NotificationType.RAISE_NOTICE_REQUEST.name());
+                    payloads.put("description", fullName + " has raised a notice request.");
+
+                    MulticastMessage multicastMessage = MulticastMessage.builder()
+                            .addAllTokens(fcmTokens)
+                            .putAllData(payloads)
+                            .build();
+
+                    try {
+                        BatchResponse response = FirebaseMessaging.getInstance()
+                                .sendEachForMulticast(multicastMessage);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
     }
 

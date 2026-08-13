@@ -6,17 +6,21 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
+import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.Gender;
+import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsEditPayload;
 import com.smartstay.tenant.payload.customer.CustomerMpinOtpPayload;
 import com.smartstay.tenant.payload.customer.CustomerMpinPayload;
+import com.smartstay.tenant.payload.customer.RaiseNoticePayload;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -59,6 +63,14 @@ public class CustomerService {
     private OtpService otpService;
     @Autowired
     private JWTService jwtService;
+    @Autowired
+    private RaiseNoticeRequestService raiseNoticeRequestService;
+    @Autowired
+    @Lazy
+    private NotificationService notificationService;
+    @Autowired
+    @Lazy
+    private FCMNotificationService fcmNotificationService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -246,6 +258,7 @@ public class CustomerService {
         if (bookingDetails == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Booking details not found");
         }
+
         Double rentAmount = bookingDetails.getRentAmount();
         Double advancePaidAmount = invoicesV1Repository.findAdvancePaidAmount(customerId);
         if (advancePaidAmount == null) {
@@ -447,5 +460,67 @@ public class CustomerService {
         String token = jwtService.generateToken(customerId, claims);
 
         return new ResponseEntity<>(token, HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> raiseNoticeRequest(String hostelId, RaiseNoticePayload payload) {
+
+        String customerId = authentication.getName();
+
+        if (!existsByCustomerIdAndHostelId(customerId, hostelId)) {
+            return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        Customers customer = customersRepository.findById(customerId).orElse(null);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
+        if (!CustomerStatus.CHECK_IN.name().equals(customer.getCurrentStatus())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.CUSTOMER_NOT_CHECKED_IN);
+        }
+
+        BookingsV1 booking = bookingsService.getLatestBooking(customerId, hostelId);
+        if (booking == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.BOOKING_NOT_FOUND);
+        }
+
+        if (raiseNoticeRequestService.existsPendingRequest(customerId, hostelId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.REQUEST_ALREADY_EXISTS);
+        }
+
+        Date joiningDate = booking.getJoiningDate();
+        Date requestDate = Utils.localDateToDate(payload.requestDate());
+        Date checkoutDate = Utils.localDateToDate(payload.checkoutDate());
+
+        if (Utils.compareWithTwoDates(requestDate, joiningDate) < 0) {
+            return new ResponseEntity<>(Constants.REQUEST_DATE_MUST_AFTER_JOINING_DATE, HttpStatus.BAD_REQUEST);
+        }
+
+        if (Utils.compareWithTwoDates(checkoutDate, joiningDate) < 0) {
+            return new ResponseEntity<>(Constants.CHECKOUT_DATE_MUST_AFTER_JOINING_DATE, HttpStatus.BAD_REQUEST);
+        }
+
+        Date today = new Date();
+
+        RaiseNoticeRequest raiseNoticeRequest = new RaiseNoticeRequest();
+
+        raiseNoticeRequest.setHostelId(hostelId);
+        raiseNoticeRequest.setCustomerId(customerId);
+        raiseNoticeRequest.setRequestedDate(requestDate);
+        raiseNoticeRequest.setCheckoutDate(checkoutDate);
+        raiseNoticeRequest.setReason(payload.reason());
+        raiseNoticeRequest.setRequestStatus(RequestStatus.OPEN.name());
+        raiseNoticeRequest.setCreatedAt(today);
+        raiseNoticeRequest.setCreatedBy(customerId);
+        raiseNoticeRequest.setActive(true);
+        raiseNoticeRequest.setDeleted(false);
+
+        raiseNoticeRequest = raiseNoticeRequestService.save(raiseNoticeRequest);
+
+        notificationService.createRaiseNoticeRequestNotification(customerId,
+                hostelId, raiseNoticeRequest.getId());
+        fcmNotificationService.sendRaiseNoticeNotification(hostelId, customer);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
