@@ -114,14 +114,16 @@ public class InvoiceService {
                 List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
     }
 
-    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId, Date startDate, Date endDate) {
-        InvoiceSummaryProjection projection = invoicesV1Repository.getInvoiceSummary(hostelId, customerId, startDate, endDate);
+    public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId,
+                                                          Date startDate, Date endDate) {
 
-//        System.out.println("Invoice Summary Projection: " + projection);
-//        System.out.println("DueDate---> " + (projection != null ? projection.getInvoiceDueDate() : "null"));
+        InvoiceSummaryProjection projection = invoicesV1Repository
+                .getInvoiceSummary(hostelId, customerId, startDate, endDate);
+
         if (projection == null) {
             return null;
         }
+
         return new InvoiceSummaryMapper().apply(projection);
     }
 
