@@ -15,6 +15,7 @@ public interface InvoiceItemProjection {
     LocalDate getInvoiceGeneratedDate();
 
     LocalDate getInvoiceStartDate();
+    LocalDate getInvoiceEndDate();
 
     Double getPaidAmount();
     Double getDueAmount();

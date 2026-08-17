@@ -49,6 +49,22 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                              @Param("itemTypes") List<String> itemTypes);
 
     @Query(value = """
+            SELECT * FROM invoicesv1
+            WHERE customer_id = :customerId
+                AND hostel_id = :hostelId
+                AND DATE(invoice_start_date) >= DATE(:startDate)
+                AND DATE(invoice_start_date) <= DATE(:endDate)
+                AND (invoice_type = 'RENT' OR invoice_type = 'REASSIGN_RENT')
+                AND is_cancelled = false
+            ORDER BY invoice_start_date DESC
+            LIMIT 1
+            """, nativeQuery = true)
+    InvoicesV1 findLatestRentInvoiceBetweenStartAndEndDate(String hostelId,
+                                                           String customerId,
+                                                           Date startDate,
+                                                           Date endDate);
+
+    @Query(value = """
             SELECT
                 SUM(CASE WHEN ii.invoice_item = 'RENT' THEN ii.amount ELSE 0 END) AS rentAmount,
                 SUM(CASE WHEN ii.invoice_item = 'EB' THEN ii.amount ELSE 0 END) AS ebAmount,
@@ -86,6 +102,19 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                                @Param("endDate") Date endDate);
 
     @Query(value = """
+            SELECT * FROM invoicesv1
+            WHERE customer_id = :customerId
+                AND hostel_id = :hostelId
+                AND (:startDate IS NULL OR DATE(invoice_start_date) >= DATE(:startDate))
+                AND (:endDate IS NULL OR DATE(invoice_start_date) <= DATE(:endDate))
+            ORDER BY invoice_start_date DESC
+            """, nativeQuery = true)
+    List<InvoicesV1> findInvoicesBetweenStartAndEndDate(String hostelId,
+                                                        String customerId,
+                                                        Date startDate,
+                                                        Date endDate);
+
+    @Query(value = """
             SELECT
                 i.invoice_id            AS invoiceId,
                 i.invoice_type          AS invoiceType,
@@ -95,6 +124,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                 i.invoice_due_date      AS invoiceDueDate,
                 i.invoice_generated_date AS invoiceGeneratedDate,
                 i.invoice_start_date    AS invoiceStartDate,
+                i.invoice_end_date      AS invoiceEndDate,
                 COALESCE(SUM(t.paid_amount), 0) AS paidAmount,
                 (i.total_amount - COALESCE(SUM(t.paid_amount), 0)) AS dueAmount,
                 i.payment_status        AS status,
@@ -124,25 +154,34 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                                    @Param("endDate") Date endDate);
 
     @Query("""
-                SELECT i
-                FROM invoicesv1 i
-                WHERE i.invoiceId = :invoiceId
-                  AND i.customerId = :customerId
+            SELECT i
+            FROM invoicesv1 i
+            WHERE i.invoiceId = :invoiceId
+              AND i.customerId = :customerId
             """)
     InvoicesV1 getInvoiceByIdAndCustomerId(@Param("invoiceId") String invoiceId,
                                            @Param("customerId") String customerId);
 
     @Query("""
-                SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
-                FROM InvoiceItems ii
-                WHERE ii.invoice.invoiceId = :invoiceId
+            SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
+            FROM InvoiceItems ii
+            WHERE ii.invoice.invoiceId = :invoiceId
             """)
     List<InvoiceItemDTO> getInvoiceItems(@Param("invoiceId") String invoiceId);
 
-    @Query("SELECT SUM(i.paidAmount) FROM invoicesv1 i WHERE i.customerId = :customerId AND i.invoiceType = 'ADVANCE'")
+    @Query("""
+            SELECT SUM(i.paidAmount)
+            FROM invoicesv1 i
+            WHERE i.customerId = :customerId
+                AND i.invoiceType = 'ADVANCE'
+            """)
     Double findAdvancePaidAmount(@Param("customerId") String customerId);
 
-    @Query("SELECT i FROM invoicesv1 i WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE")
+    @Query("""
+            SELECT i
+            FROM invoicesv1 i
+            WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
+            """)
     List<InvoicesV1> findInvoicesGeneratedToday();
 
     @Query("""
@@ -151,54 +190,74 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             JOIN Customers c ON c.customerId = i.customerId
             JOIN CustomerCredentials cc ON cc.xuid = c.xuid
             WHERE DATE(i.invoiceGeneratedDate) = CURRENT_DATE
-              AND i.isCancelled = false AND i.invoiceType = 'RENT' AND i.invoiceMode = 'RECURRING'
+              AND i.isCancelled = false
+              AND i.invoiceType = 'RENT'
+              AND i.invoiceMode = 'RECURRING'
             """)
     List<InvoicesV1> findInvoicesGeneratedTodayForActiveCustomers();
 
     @Query("""
-            SELECT inv FROM invoicesv1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
-            inv.invoiceType='ADVANCE'
+            SELECT inv
+            FROM invoicesv1 inv
+            WHERE inv.customerId = :customerId
+                AND inv.hostelId=:hostelId
+                AND inv.invoiceType='ADVANCE'
             """)
     InvoicesV1 findAdvanceInvoice(String customerId, String hostelId);
 
     @Query("""
-            SELECT inv FROM invoicesv1 inv WHERE inv.customerId=:customerId AND inv.hostelId=:hostelId AND
-            inv.invoiceType='BOOKING'
+            SELECT inv
+            FROM invoicesv1 inv
+            WHERE inv.customerId = :customerId
+                AND inv.hostelId = :hostelId
+                AND inv.invoiceType = 'BOOKING'
             """)
     InvoicesV1 findBookingInvoice(String customerId, String hostelId);
 
     @Query("""
-            SELECT inv from invoicesv1 inv WHERE inv.customerId=:customerId AND DATE(inv.invoiceStartDate) <= DATE(:endDate)
-            AND DATE(inv.invoiceEndDate) >= DATE(:startDate) AND inv.invoiceType in ('RENT', 'REASSIGN_RENT')
+            SELECT inv
+            from invoicesv1 inv
+            WHERE inv.customerId = :customerId
+                AND DATE(inv.invoiceStartDate) <= DATE(:endDate)
+                AND DATE(inv.invoiceEndDate) >= DATE(:startDate)
+                AND inv.invoiceType in ('RENT', 'REASSIGN_RENT')
             """)
     List<InvoicesV1> findCurrentMonthInvoices(String customerId, Date startDate, Date endDate);
 
     @Query(
             value = """
-        SELECT
-            i.invoice_number AS invoiceNumber,
-            i.total_amount AS totalAmount,
-            DATE_FORMAT(i.invoice_start_date, '%d/%m/%Y') AS invoiceStartDate,
-            i.invoice_type AS invoiceType
-        FROM invoicesv1 i
-        WHERE i.hostel_id = :hostelId
-        AND i.invoice_id IN (:invoiceId)
-        """,
-            nativeQuery = true
-    )
+            SELECT
+                i.invoice_number AS invoiceNumber,
+                i.total_amount AS totalAmount,
+                DATE_FORMAT(i.invoice_start_date, '%d/%m/%Y') AS invoiceStartDate,
+                i.invoice_type AS invoiceType
+            FROM invoicesv1 i
+            WHERE i.hostel_id = :hostelId
+            AND i.invoice_id IN (:invoiceId)
+            """,
+            nativeQuery = true)
     List<InvoiceSummary> findInvoiceSummariesByHostelId(@Param("hostelId") String hostelId,
                                                         @Param("invoiceId") List<String> invoiceId);
 
     @Query(value = """
-            SELECT * FROM invoicesv1 WHERE customer_id=:customerId AND hostel_id=:hostelId AND DATE(invoice_start_date) >= DATE(:startDate) 
-             AND  (invoice_type='RENT' OR invoice_type='REASSIGN_RENT')
+            SELECT *
+            FROM invoicesv1
+            WHERE customer_id = :customerId
+                AND hostel_id = :hostelId
+                AND DATE(invoice_start_date) >= DATE(:startDate)
+                AND (invoice_type='RENT' OR invoice_type='REASSIGN_RENT')
             """, nativeQuery = true)
     List<InvoicesV1> findAllCurrentMonthInvoices(@Param("customerId") String customerId,
                                                  @Param("hostelId") String hostelId,
                                                  @Param("startDate") Date startDate);
 
     @Query(value = """
-            SELECT * FROM invoicesv1 invc WHERE invc.customer_id=:customerId and DATE(invc.invoice_start_date) >= DATE(:startDate) ORDER BY invc.invoice_start_date DESC LIMIT 1;
+            SELECT *
+            FROM invoicesv1 invc
+            WHERE invc.customer_id = :customerId
+                and DATE(invc.invoice_start_date) >= DATE(:startDate)
+            ORDER BY invc.invoice_start_date DESC
+            LIMIT 1;
             """, nativeQuery = true)
     InvoicesV1 findCurrentRunningInvoice(@Param("customerId") String customerId,
                                          @Param("startDate") Date startDate);
