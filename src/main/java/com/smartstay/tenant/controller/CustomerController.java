@@ -66,4 +66,9 @@ public class CustomerController {
                                                 @Valid @RequestBody RaiseNoticePayload payload) {
         return customerService.raiseNoticeRequest(hostelId, payload);
     }
+
+    @GetMapping("/notice-reason")
+    public ResponseEntity<?> getNoticeReason() {
+        return customerService.getNoticeReason();
+    }
 }
