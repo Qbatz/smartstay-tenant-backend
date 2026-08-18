@@ -5,8 +5,12 @@ import lombok.Getter;
 @Getter
 public enum NoticeReasonEnum {
 
-    JOB_SWITCH("Job switch"),
-    REASON_NOT_GIVEN("Reason not given");
+    JOB_RELOCATION("Job / Workplace Relocation"),
+    RETURNING_TO_HOMETOWN("Returning to Hometown"),
+    COLLEGE_COURSE_COMPLETED("College / Course Completed"),
+    LOOKING_FOR_ANOTHER_ACCOMMODATION("Looking for Another PG / Accommodation"),
+    MOVING_WITH_FAMILY("Moving with Family"),
+    PERSONAL_OTHER_REASONS("Personal / Other Reasons");
 
     private final String value;
 
