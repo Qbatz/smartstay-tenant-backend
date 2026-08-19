@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TransactionService {
@@ -96,6 +97,15 @@ public class TransactionService {
 
     public TransactionV1 getLatestTransactionByInvoiceId(String invoiceId) {
         return transactionV1Repository.findTopByInvoiceIdOrderByPaidAtDesc(invoiceId);
+    }
+
+    public List<TransactionV1> getLatestTransactionsByInvoiceIds(Set<String> invoiceIds) {
+
+        if (invoiceIds == null || invoiceIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return transactionV1Repository.findLatestTransactionsByInvoiceIds(invoiceIds);
     }
 
     public Double findPaidAmountForInvoice(String invoiceId) {

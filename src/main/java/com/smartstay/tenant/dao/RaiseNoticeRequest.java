@@ -21,9 +21,12 @@ public class RaiseNoticeRequest {
     private Long id;
     private String hostelId;
     private String customerId;
+    private int noticePeriodDays;
     private Date requestedDate;
     private Date checkoutDate;
+    // from notice reason enum
     private String reason;
+    private String remarks;
     // from request status enum
     private String requestStatus;
     private Date createdAt;

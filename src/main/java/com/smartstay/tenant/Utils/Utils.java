@@ -3,6 +3,8 @@ package com.smartstay.tenant.Utils;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.HostelV1;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -258,6 +260,22 @@ public final class Utils {
         return Math.round(number * 100.0) / 100.0;
     }
 
+    public static double roundOfDouble(Double number) {
+        if (number == null){
+            return 0d;
+        }
+        return (double) Math.round(number);
+    }
+
+    public static double roundOfDoubleTo2Digits(Double number) {
+        if (number == null){
+            return 0d;
+        }
+        return BigDecimal.valueOf(number)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
     public static Date stringDateToDate(String date) {
 
         if (date == null) {
@@ -493,5 +511,13 @@ public final class Utils {
         return Date.from(
                 localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
         );
+    }
+
+    public static LocalDate dateToLocalDate(Date date) {
+        return date == null
+                ? null
+                : date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 }

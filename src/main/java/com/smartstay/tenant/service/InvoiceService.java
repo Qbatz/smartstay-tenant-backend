@@ -11,8 +11,6 @@ import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.Deductions;
 import com.smartstay.tenant.dto.invoice.*;
 import com.smartstay.tenant.ennum.*;
-import com.smartstay.tenant.mapper.invoice.InvoiceItemMapper;
-import com.smartstay.tenant.mapper.invoice.InvoiceSummaryMapper;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
@@ -35,6 +33,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -110,21 +109,73 @@ public class InvoiceService {
     }
 
     public List<InvoiceItems> getInvoicesWithItems(String customerId, Date startDate, Date endDate) {
-        return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate,
-                List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
+//        return invoicesV1Repository.getInvoiceItemDetails(customerId, startDate, endDate,
+//                List.of(InvoiceType.EB.name(), InvoiceType.RENT.name()));
+        return null;
     }
 
     public InvoiceSummaryResponse getLatestInvoiceSummary(String hostelId, String customerId,
                                                           Date startDate, Date endDate) {
 
-        InvoiceSummaryProjection projection = invoicesV1Repository
-                .getInvoiceSummary(hostelId, customerId, startDate, endDate);
+//        InvoiceSummaryProjection projection = invoicesV1Repository
+//                .getInvoiceSummary(hostelId, customerId, startDate, endDate);
+//
+//        if (projection == null) {
+//            return null;
+//        }
+//
+//        return new InvoiceSummaryMapper().apply(projection);
 
-        if (projection == null) {
+        InvoicesV1 latestInvoice = invoicesV1Repository
+                .findLatestRentInvoiceBetweenStartAndEndDate(hostelId, customerId,
+                        startDate, endDate);
+
+        if (latestInvoice == null){
             return null;
         }
 
-        return new InvoiceSummaryMapper().apply(projection);
+        List<com.smartstay.tenant.dao.InvoiceItems> latestInvoiceItems = new ArrayList<>();
+
+        if (latestInvoice.getInvoiceItems() != null) {
+            latestInvoiceItems = latestInvoice.getInvoiceItems();
+        }
+
+        double rentAmount = 0;
+        double ebAmount = 0;
+        for (com.smartstay.tenant.dao.InvoiceItems item : latestInvoiceItems) {
+            if (com.smartstay.tenant.ennum.InvoiceItems.RENT.name().equals(item.getInvoiceItem())){
+                rentAmount += item.getAmount();
+            }
+            if (com.smartstay.tenant.ennum.InvoiceItems.EB.name().equals(item.getInvoiceItem())){
+                ebAmount += item.getAmount();
+            }
+        }
+
+        double discountAmount = invoiceDiscountsService
+                .getDiscountAmountByInvoiceId(latestInvoice.getInvoiceId());
+
+        Date paymentDate = latestInvoice.getInvoiceGeneratedDate();
+        TransactionV1 latestTransaction = transactionService
+                .getLatestTransactionByInvoiceId(latestInvoice.getInvoiceId());
+        if (latestTransaction != null){
+            paymentDate = latestTransaction.getPaymentDate();
+        }
+
+        InvoiceSummaryResponse response = new InvoiceSummaryResponse();
+
+        response.setRent(rentAmount);
+        response.setEb(ebAmount);
+        response.setDiscountAmount(discountAmount);
+        response.setPaidAmount(latestInvoice.getPaidAmount());
+        response.setInvoiceNumber(latestInvoice.getInvoiceNumber());
+        response.setInvoiceGeneratedDate(Utils.dateToLocalDate(latestInvoice.getInvoiceGeneratedDate()));
+        response.setInvoiceDueDate(Utils.dateToLocalDate(latestInvoice.getInvoiceDueDate()));
+        response.setCurrentInvoiceStartDate(Utils.dateToLocalDate(latestInvoice.getInvoiceStartDate()));
+        response.setCurrentInvoiceEndDate(Utils.dateToLocalDate(latestInvoice.getInvoiceEndDate()));
+        response.setPaymentStatus(latestInvoice.getPaymentStatus());
+        response.setPaymentDate(Utils.dateToLocalDate(paymentDate));
+
+        return response;
     }
 
     public ResponseEntity<?> getInvoiceList(String hostelId, Date startDate,
@@ -177,18 +228,101 @@ public class InvoiceService {
             }
         }
 
-        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository
-                .getAllInvoiceItems(hostelId, customerId, startDate, endDate);
+//        List<InvoiceItemProjection> invoiceItems = invoicesV1Repository
+//                .getAllInvoiceItems(hostelId, customerId, startDate, endDate);
+//
+//        InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
+//
+//        List<InvoiceItemResponseDTO> invoiceItemDTOs = invoiceItems.stream().map(invoiceItemMapper).toList();
+//        if (invoiceItemDTOs.isEmpty()) {
+//            return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
+//        }
 
-        InvoiceItemMapper invoiceItemMapper = new InvoiceItemMapper();
+        List<InvoicesV1> invoices = invoicesV1Repository
+                .findInvoicesBetweenStartAndEndDate(hostelId, customerId, startDate, endDate);
 
-        List<InvoiceItemResponseDTO> invoiceItemDTOs = invoiceItems.stream().map(invoiceItemMapper).toList();
-        if (invoiceItemDTOs.isEmpty()) {
-            return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
+        Set<String> invoiceIds = invoices.stream()
+                .map(InvoicesV1::getInvoiceId)
+                .collect(Collectors.toSet());
+
+        List<InvoiceDiscounts> invoiceDiscounts = invoiceDiscountsService
+                .getInvoiceDiscountsByInvoiceIds(invoiceIds);
+
+        Map<String, List<InvoiceDiscounts>> invoiceDiscountMap = invoiceDiscounts.stream()
+                .collect(Collectors.groupingBy(InvoiceDiscounts::getInvoiceId));
+
+        List<TransactionV1> latestTransactions = transactionService
+                .getLatestTransactionsByInvoiceIds(invoiceIds);
+
+        Map<String, TransactionV1> latestTransactionMap = latestTransactions.stream()
+                .collect(Collectors.toMap(TransactionV1::getInvoiceId,
+                        Function.identity(), (a, b) -> b));
+
+        List<InvoiceItemResponseDTO> responseList = new ArrayList<>();
+
+        for (InvoicesV1 invoice : invoices) {
+
+            double totalAmount = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+            double paidAmount = invoice.getPaidAmount() != null ? invoice.getPaidAmount() : 0;
+            double dueAmount = totalAmount - paidAmount;
+
+            double discountAmount = 0;
+            List<InvoiceDiscounts> thisInvoiceDiscounts = invoiceDiscountMap.get(invoice.getInvoiceId());
+
+            if (thisInvoiceDiscounts != null) {
+                for (InvoiceDiscounts discount : thisInvoiceDiscounts) {
+
+                    double thisDiscountAmount = discount.getDiscountAmount() != null
+                            ? discount.getDiscountAmount() : 0;
+
+                    discountAmount += thisDiscountAmount;
+                }
+            }
+
+            Date paidAt = invoice.getInvoiceGeneratedDate();
+            Date paymentDate = invoice.getInvoiceGeneratedDate();
+
+            TransactionV1 latestTransaction = latestTransactionMap.get(invoice.getInvoiceId());
+            if (latestTransaction != null) {
+                if (latestTransaction.getPaidAt() != null){
+                    paidAt = latestTransaction.getPaidAt();
+                }
+                if (latestTransaction.getPaymentDate() != null) {
+                    paymentDate = latestTransaction.getPaymentDate();
+                }
+            }
+
+            boolean canShowPaymentDate = false;
+            if (PaymentStatus.PAID.name().equals(invoice.getPaymentStatus()) ||
+                    PaymentStatus.PARTIAL_PAYMENT.name().equals(invoice.getPaymentStatus())){
+                canShowPaymentDate = true;
+            }
+
+            InvoiceItemResponseDTO response = new InvoiceItemResponseDTO();
+
+            response.setInvoiceId(invoice.getInvoiceId());
+            response.setInvoiceType(invoice.getInvoiceType());
+            response.setInvoiceNumber(invoice.getInvoiceNumber());
+            response.setAmount(invoice.getTotalAmount());
+            response.setDiscountAmount(discountAmount);
+            response.setInvoiceDueDate(Utils.dateToLocalDate(invoice.getInvoiceDueDate()));
+            response.setInvoiceGeneratedDate(Utils.dateToLocalDate(invoice.getInvoiceGeneratedDate()));
+            response.setInvoiceStartDate(Utils.dateToLocalDate(invoice.getInvoiceStartDate()));
+            response.setInvoiceEndDate(Utils.dateToLocalDate(invoice.getInvoiceEndDate()));
+            response.setPaidAt(Utils.dateToLocalDate(paidAt));
+            response.setPaymentDate(Utils.dateToLocalDate(paymentDate));
+            response.setPaidAmount(invoice.getPaidAmount());
+            response.setDueAmount(dueAmount);
+            response.setStatus(InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus()));
+            response.setIsCancelled(invoice.isCancelled());
+            response.setCanShowPaymentDate(canShowPaymentDate);
+
+            responseList.add(response);
         }
 
         InvoiceListDto invoiceListDto = new InvoiceListDto();
-        invoiceListDto.setInvoices(invoiceItemDTOs);
+//        invoiceListDto.setInvoices(invoiceItemDTOs);
+        invoiceListDto.setInvoices(responseList);
         invoiceListDto.setHostelName(hostel.getHostelName());
         invoiceListDto.setHostelUrl(hostel.getMainImage());
         invoiceListDto.setInitials(Utils.getInitials(hostel.getHostelName()));

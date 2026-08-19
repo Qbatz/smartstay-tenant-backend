@@ -6,10 +6,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.FilesConfig;
 import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.*;
-import com.smartstay.tenant.ennum.CustomerStatus;
-import com.smartstay.tenant.ennum.Gender;
-import com.smartstay.tenant.ennum.RequestStatus;
-import com.smartstay.tenant.ennum.UserType;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.mapper.CustomerMapper;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsEditPayload;
 import com.smartstay.tenant.payload.customer.CustomerMpinOtpPayload;
@@ -18,6 +15,7 @@ import com.smartstay.tenant.payload.customer.RaiseNoticePayload;
 import com.smartstay.tenant.repository.CustomerRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
 import com.smartstay.tenant.response.customer.EditCustomer;
+import com.smartstay.tenant.response.customer.NoticeReasonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -484,13 +482,23 @@ public class CustomerService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.BOOKING_NOT_FOUND);
         }
 
+        BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
+        if (billingRules == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.BILLING_RULE_NOT_FOUND);
+        }
+
         if (raiseNoticeRequestService.existsPendingRequest(customerId, hostelId)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.REQUEST_ALREADY_EXISTS);
         }
 
+        Date today = new Date();
+
+        int noticePeriodDays = billingRules.getNoticePeriod() != null ? billingRules.getNoticePeriod() : 30;
+        noticePeriodDays = noticePeriodDays - 1;
+
         Date joiningDate = booking.getJoiningDate();
-        Date requestDate = Utils.localDateToDate(payload.requestDate());
-        Date checkoutDate = Utils.localDateToDate(payload.checkoutDate());
+        Date requestDate = Utils.getStartOfDay(today);
+        Date checkoutDate = Utils.addDaysToDate(requestDate, noticePeriodDays);
 
         if (Utils.compareWithTwoDates(requestDate, joiningDate) < 0) {
             return new ResponseEntity<>(Constants.REQUEST_DATE_MUST_AFTER_JOINING_DATE, HttpStatus.BAD_REQUEST);
@@ -500,15 +508,22 @@ public class CustomerService {
             return new ResponseEntity<>(Constants.CHECKOUT_DATE_MUST_AFTER_JOINING_DATE, HttpStatus.BAD_REQUEST);
         }
 
-        Date today = new Date();
+        String reason = null;
+        try {
+            reason = NoticeReasonEnum.valueOf(payload.reason()).name();
+        } catch (Exception e){
+            return new ResponseEntity<>(Constants.NOTICE_REASON_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
         RaiseNoticeRequest raiseNoticeRequest = new RaiseNoticeRequest();
 
         raiseNoticeRequest.setHostelId(hostelId);
         raiseNoticeRequest.setCustomerId(customerId);
+        raiseNoticeRequest.setNoticePeriodDays(noticePeriodDays + 1);
         raiseNoticeRequest.setRequestedDate(requestDate);
         raiseNoticeRequest.setCheckoutDate(checkoutDate);
-        raiseNoticeRequest.setReason(payload.reason());
+        raiseNoticeRequest.setReason(reason);
+        raiseNoticeRequest.setRemarks(payload.remarks());
         raiseNoticeRequest.setRequestStatus(RequestStatus.OPEN.name());
         raiseNoticeRequest.setCreatedAt(today);
         raiseNoticeRequest.setCreatedBy(customerId);
@@ -522,5 +537,15 @@ public class CustomerService {
         fcmNotificationService.sendRaiseNoticeNotification(hostelId, customer);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> getNoticeReason() {
+
+        List<NoticeReasonResponse> response = Arrays.stream(NoticeReasonEnum.values())
+                .map(reason -> new NoticeReasonResponse(
+                        reason.name(), reason.getValue()
+                )).toList();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

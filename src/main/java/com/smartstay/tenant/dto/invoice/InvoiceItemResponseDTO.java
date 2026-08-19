@@ -22,6 +22,8 @@ public class InvoiceItemResponseDTO {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate invoiceStartDate;
     @JsonFormat(pattern = "dd/MM/yyyy")
+    private LocalDate invoiceEndDate;
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate paidAt;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate paymentDate;
@@ -29,5 +31,6 @@ public class InvoiceItemResponseDTO {
     private Double dueAmount;
     private String status;
     private Boolean isCancelled;
+    private boolean canShowPaymentDate;
 }
 

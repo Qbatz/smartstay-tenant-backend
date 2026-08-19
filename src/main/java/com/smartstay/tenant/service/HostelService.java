@@ -81,13 +81,14 @@ public class HostelService {
         calendar.setTime(startDate);
         calendar.add(Calendar.MONTH, -1);
 
-        BillingDates previousBillingDates = hostelConfigService.getBillingRuleOnDate(hostelId, calendar.getTime());
+        BillingDates previousBillingDates = hostelConfigService
+                .getBillingRuleOnDate(hostelId, calendar.getTime());
 
         InvoiceSummaryResponse previousMonthInvoices = invoiceService
-                .getLatestInvoiceSummary(hostelId,customerId, previousBillingDates.currentBillStartDate(),
+                .getLatestInvoiceSummary(hostelId, customerId, previousBillingDates.currentBillStartDate(),
                         previousBillingDates.currentBillEndDate());
         InvoiceSummaryResponse currentMonthInvoices = invoiceService
-                .getLatestInvoiceSummary(hostelId,customerId, currentMonthBillingDates.currentBillStartDate(),
+                .getLatestInvoiceSummary(hostelId, customerId, currentMonthBillingDates.currentBillStartDate(),
                         currentMonthBillingDates.currentBillEndDate());
 
         boolean previousMonthCanShowPaymentDate = false;
