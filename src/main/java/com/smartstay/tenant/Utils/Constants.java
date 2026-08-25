@@ -27,4 +27,5 @@ public class Constants {
     public static final String REQUEST_ALREADY_EXISTS = "Request already exists";
     public static final String BILLING_RULE_NOT_FOUND = "Billing rule not found";
     public static final String NOTICE_REASON_NOT_FOUND = "Notice reason not found";
+    public static final String KYC_USAGE_NOT_FOUND = "Kyc usage not found";
 }
