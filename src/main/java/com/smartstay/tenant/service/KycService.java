@@ -1,9 +1,11 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dao.KYCUsage;
 import com.smartstay.tenant.dao.KycDetails;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycRequest;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycResponse;
@@ -48,6 +50,8 @@ public class KycService {
     private CustomerService customerService;
     @Autowired
     private HostelService hostelService;
+    @Autowired
+    private KycUsageService kycUsageService;
 
     public ResponseEntity<?> verifyKycStatus() {
 
@@ -150,6 +154,11 @@ public class KycService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_DETAILS_NOT_FOUND);
         }
 
+        KYCUsage kycUsage = kycUsageService.getByCustomerId(customerId);
+        if (kycUsage == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.KYC_USAGE_NOT_FOUND);
+        }
+
         String currentStatus = kycDetails.getCurrentStatus();
 
         if (!KycStatus.REQUESTED.name().equalsIgnoreCase(currentStatus)){
@@ -169,7 +178,16 @@ public class KycService {
         kycDetails.setCurrentStatus(KycStatus.WAITING_FOR_APPROVAL.name());
         kycDetails.setUpdatedAt(today);
 
+        int existingVerificationCount = 0;
+        if (kycUsage.getVerifiedCount() != null){
+            existingVerificationCount = kycUsage.getVerifiedCount();
+        }
+        kycUsage.setLatestCompletionBy(customerId);
+        kycUsage.setLatestVerified(today);
+        kycUsage.setVerifiedCount(existingVerificationCount + 1);
+
         kycDetailsRepository.save(kycDetails);
+        kycUsageService.save(kycUsage);
 
         return ResponseEntity.status(HttpStatus.OK).body(Utils.SUCCESS);
     }
@@ -206,6 +224,8 @@ public class KycService {
                 return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
             }
         }
+
+        KYCUsage kycUsage = kycUsageService.getByCustomerId(customerId);
 
         String digioInitiateUrl = digioRequestWithTemplateUrl;
 
@@ -254,7 +274,23 @@ public class KycService {
                     kycDetails.setExpireAt(Utils.stringDateToDate(kycAccessToken.validTill()));
                 }
 
+                if (kycUsage == null){
+                    kycUsage = new KYCUsage();
+
+                    kycUsage.setHostelId(customer.getHostelId());
+                    kycUsage.setLatestRequestTo(customerId);
+                    kycUsage.setRequestCount(1);
+                } else {
+                    int existingRequestCount = 0;
+                    if (kycUsage.getRequestCount() != null) {
+                        existingRequestCount = kycUsage.getRequestCount();
+                    }
+                    kycUsage.setRequestCount(existingRequestCount + 1);
+                }
+                kycUsage.setLatestRequest(today);
+
                 kycDetails = kycDetailsRepository.save(kycDetails);
+                kycUsageService.save(kycUsage);
 
                 NotificationKycInfo notificationKycInfo = new NotificationKycInfo(
                         kycDetails.getEntityId(), kycDetails.getAccessTokenId(), customer.getMobile()
