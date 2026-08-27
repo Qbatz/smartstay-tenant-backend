@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface KycUsageRepository extends JpaRepository<KYCUsage, Long> {
 
-    KYCUsage findByLatestRequestTo(String customerId);
+    KYCUsage findByHostelId(String hostelId);
 }
