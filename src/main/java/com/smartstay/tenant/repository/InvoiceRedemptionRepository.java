@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface InvoiceRedemptionRepository extends JpaRepository<InvoiceRedemption, Long> {
@@ -22,4 +23,16 @@ public interface InvoiceRedemptionRepository extends JpaRepository<InvoiceRedemp
                 ORDER BY ir.id DESC
             """)
     List<InvoiceRedemption> findByInvoiceId(@Param("invoiceId") String invoiceId);
+
+    @Query("""
+                SELECT ir
+                FROM InvoiceRedemption ir
+                WHERE (
+                    ir.sourceInvoiceId in :invoiceIds
+                    OR ir.targetInvoiceId in :invoiceIds
+                )
+                AND ir.isActive = true
+                ORDER BY ir.id DESC
+            """)
+    List<InvoiceRedemption> findByInvoiceIds(@Param("invoiceIds") Set<String> invoiceIds);
 }

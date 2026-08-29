@@ -24,6 +24,7 @@ public class InvoiceDetailsDTO {
     private Double totalAmount;
     private Double discountAmount;
     private Double paidAmount;
+    private Double balanceAmount;
     private Double dueAmount;
     private Double deductionAmount;
     private String status;
@@ -44,4 +45,7 @@ public class InvoiceDetailsDTO {
     private boolean showRedeemedTo;
     private List<InvRedemptionRes> redeemedFrom;
     private List<InvRedemptionRes> redeemedTo;
+    private String adjustmentStatus;
+    private String lastAdjustedDate;
+    private String lastAdjustedTime;
 }

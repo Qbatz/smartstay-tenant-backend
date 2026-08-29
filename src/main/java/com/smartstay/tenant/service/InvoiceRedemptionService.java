@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class InvoiceRedemptionService {
@@ -15,5 +16,9 @@ public class InvoiceRedemptionService {
 
     public List<InvoiceRedemption> getInvoiceRedemptionByInvoiceId(String invoiceId){
         return invoiceRedemptionRepository.findByInvoiceId(invoiceId);
+    }
+
+    public List<InvoiceRedemption> getInvoiceRedemptionByInvoiceIds(Set<String> invoiceIds){
+        return invoiceRedemptionRepository.findByInvoiceIds(invoiceIds);
     }
 }
