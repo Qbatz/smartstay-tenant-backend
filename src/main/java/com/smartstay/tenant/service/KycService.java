@@ -154,7 +154,7 @@ public class KycService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_DETAILS_NOT_FOUND);
         }
 
-        KYCUsage kycUsage = kycUsageService.getByCustomerId(customerId);
+        KYCUsage kycUsage = kycUsageService.getByHostelId(customer.getHostelId());
         if (kycUsage == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.KYC_USAGE_NOT_FOUND);
         }
@@ -225,7 +225,7 @@ public class KycService {
             }
         }
 
-        KYCUsage kycUsage = kycUsageService.getByCustomerId(customerId);
+        KYCUsage kycUsage = kycUsageService.getByHostelId(customer.getHostelId());
 
         String digioInitiateUrl = digioRequestWithTemplateUrl;
 
@@ -278,7 +278,6 @@ public class KycService {
                     kycUsage = new KYCUsage();
 
                     kycUsage.setHostelId(customer.getHostelId());
-                    kycUsage.setLatestRequestTo(customerId);
                     kycUsage.setRequestCount(1);
                 } else {
                     int existingRequestCount = 0;
@@ -288,6 +287,7 @@ public class KycService {
                     kycUsage.setRequestCount(existingRequestCount + 1);
                 }
                 kycUsage.setLatestRequest(today);
+                kycUsage.setLatestRequestTo(customerId);
 
                 kycDetails = kycDetailsRepository.save(kycDetails);
                 kycUsageService.save(kycUsage);

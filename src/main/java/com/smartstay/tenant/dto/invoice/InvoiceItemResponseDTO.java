@@ -28,9 +28,13 @@ public class InvoiceItemResponseDTO {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate paymentDate;
     private Double paidAmount;
+    private Double balanceAmount;
     private Double dueAmount;
     private String status;
     private Boolean isCancelled;
     private boolean canShowPaymentDate;
+    private String adjustmentStatus;
+    private String lastAdjustedDate;
+    private String lastAdjustedTime;
 }
 

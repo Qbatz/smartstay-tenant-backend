@@ -258,6 +258,12 @@ public class InvoiceService {
                 .collect(Collectors.toMap(TransactionV1::getInvoiceId,
                         Function.identity(), (a, b) -> b));
 
+        List<InvoiceRedemption> invoiceRedemptions = invoiceRedemptionService
+                .getInvoiceRedemptionByInvoiceIds(invoiceIds);
+
+        Map<String, List<InvoiceRedemption>> sourceInvRedMap = invoiceRedemptions.stream()
+                .collect(Collectors.groupingBy(InvoiceRedemption::getSourceInvoiceId));
+
         List<InvoiceItemResponseDTO> responseList = new ArrayList<>();
 
         for (InvoicesV1 invoice : invoices) {
@@ -265,6 +271,7 @@ public class InvoiceService {
             double totalAmount = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
             double paidAmount = invoice.getPaidAmount() != null ? invoice.getPaidAmount() : 0;
             double dueAmount = totalAmount - paidAmount;
+            double balanceAmount = invoice.getBalanceAmount() != null ? invoice.getBalanceAmount() : 0;
 
             double discountAmount = 0;
             List<InvoiceDiscounts> thisInvoiceDiscounts = invoiceDiscountMap.get(invoice.getInvoiceId());
@@ -298,6 +305,40 @@ public class InvoiceService {
                 canShowPaymentDate = true;
             }
 
+            List<InvoiceRedemption> sourceInvoiceRedemptions = sourceInvRedMap
+                    .getOrDefault(invoice.getInvoiceId(), new ArrayList<>());
+
+            String adjustmentStatus = null;
+            String lastAdjustmentDate = null;
+            String lastAdjustmentTime = null;
+
+            if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType()) ||
+                    InvoiceType.ADVANCE.name().equals(invoice.getInvoiceType()) ||
+                    InvoiceType.AMOUNT_HOLDING.name().equals(invoice.getInvoiceType()) ||
+                    InvoiceType.EB_HOLDING.name().equals(invoice.getInvoiceType())) {
+
+                if (paidAmount == 0){
+                    adjustmentStatus = "Not paid";
+                } else if (paidAmount == balanceAmount){
+                    adjustmentStatus = "Not adjusted";
+                } else if (balanceAmount == 0) {
+                    adjustmentStatus = "Fully adjusted";
+                } else {
+                    adjustmentStatus = "Partially adjusted";
+                }
+
+                if (!sourceInvoiceRedemptions.isEmpty()){
+                    InvoiceRedemption latestSourceInvoiceRedemption = sourceInvoiceRedemptions.stream()
+                            .max(Comparator.comparing(InvoiceRedemption::getRedeemedAt))
+                            .orElse(null);
+
+                    if (latestSourceInvoiceRedemption != null && latestSourceInvoiceRedemption.getRedeemedAt() != null) {
+                        lastAdjustmentDate = Utils.dateToString(latestSourceInvoiceRedemption.getRedeemedAt());
+                        lastAdjustmentTime = Utils.dateToTime(latestSourceInvoiceRedemption.getRedeemedAt());
+                    }
+                }
+            }
+
             InvoiceItemResponseDTO response = new InvoiceItemResponseDTO();
 
             response.setInvoiceId(invoice.getInvoiceId());
@@ -312,10 +353,14 @@ public class InvoiceService {
             response.setPaidAt(Utils.dateToLocalDate(paidAt));
             response.setPaymentDate(Utils.dateToLocalDate(paymentDate));
             response.setPaidAmount(invoice.getPaidAmount());
+            response.setBalanceAmount(balanceAmount);
             response.setDueAmount(dueAmount);
             response.setStatus(InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus()));
             response.setIsCancelled(invoice.isCancelled());
             response.setCanShowPaymentDate(canShowPaymentDate);
+            response.setAdjustmentStatus(adjustmentStatus);
+            response.setLastAdjustedDate(lastAdjustmentDate);
+            response.setLastAdjustedTime(lastAdjustmentTime);
 
             responseList.add(response);
         }
@@ -732,6 +777,9 @@ public class InvoiceService {
                     .sum();
         }
 
+        double balanceAmount = invoice.getBalanceAmount() != null ? invoice.getBalanceAmount() : 0;
+        double paidAmount = invoice.getPaidAmount() != null ? invoice.getPaidAmount() : 0;
+
         String status = InvoiceUtils.getInvoicePaymentStatusByStatus(invoice.getPaymentStatus());
 
         List<ReceiptDTO> receipts = transactionService.getReceiptsByInvoiceId(invoiceId);
@@ -876,7 +924,9 @@ public class InvoiceService {
 
         boolean showRedeemedFrom = false;
         boolean showRedeemedTo = false;
-        if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType())){
+        if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType()) ||
+                InvoiceType.AMOUNT_HOLDING.name().equals(invoice.getInvoiceType()) ||
+                InvoiceType.EB_HOLDING.name().equals(invoice.getInvoiceType())){
             showRedeemedTo = true;
         } else if (InvoiceType.ADVANCE.name().equals(invoice.getInvoiceType())) {
             String customerId = invoice.getCustomerId();
@@ -890,6 +940,40 @@ public class InvoiceService {
 
         List<InvoiceRedemption> invoiceRedemptions = invoiceRedemptionService
                 .getInvoiceRedemptionByInvoiceId(invoiceId);
+        List<InvoiceRedemption> sourceInvoiceRedemptions = invoiceRedemptions.stream()
+                .filter(i -> invoice.getInvoiceId().equals(i.getSourceInvoiceId()))
+                .collect(Collectors.toList());
+
+        String adjustmentStatus = null;
+        String lastAdjustmentDate = null;
+        String lastAdjustmentTime = null;
+
+        if (InvoiceType.BOOKING.name().equals(invoice.getInvoiceType()) ||
+                InvoiceType.ADVANCE.name().equals(invoice.getInvoiceType()) ||
+                InvoiceType.AMOUNT_HOLDING.name().equals(invoice.getInvoiceType()) ||
+                InvoiceType.EB_HOLDING.name().equals(invoice.getInvoiceType())) {
+
+            if (paidAmount == 0){
+                adjustmentStatus = "Not paid";
+            } else if (paidAmount == balanceAmount){
+                adjustmentStatus = "Not adjusted";
+            } else if (balanceAmount == 0) {
+                adjustmentStatus = "Fully adjusted";
+            } else {
+                adjustmentStatus = "Partially adjusted";
+            }
+
+            if (!sourceInvoiceRedemptions.isEmpty()){
+                InvoiceRedemption latestSourceInvoiceRedemption = sourceInvoiceRedemptions.stream()
+                        .max(Comparator.comparing(InvoiceRedemption::getRedeemedAt))
+                        .orElse(null);
+
+                if (latestSourceInvoiceRedemption != null && latestSourceInvoiceRedemption.getRedeemedAt() != null) {
+                    lastAdjustmentDate = Utils.dateToString(latestSourceInvoiceRedemption.getRedeemedAt());
+                    lastAdjustmentTime = Utils.dateToTime(latestSourceInvoiceRedemption.getRedeemedAt());
+                }
+            }
+        }
 
         Set<String> invoiceIds = new HashSet<>();
         for (InvoiceRedemption invoiceRedemption : invoiceRedemptions) {
@@ -949,10 +1033,11 @@ public class InvoiceService {
         return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
                 Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()),
                 Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()),
-                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, dueAmount, invoice.getDeductionAmount(),
+                invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, balanceAmount, dueAmount, invoice.getDeductionAmount(),
                 status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), deductionsRes,
                 invoiceItems, receipts, unpaidInvoicesRes, invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
-                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo);
+                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo, adjustmentStatus,
+                lastAdjustmentDate, lastAdjustmentTime);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
@@ -987,12 +1072,15 @@ public class InvoiceService {
         String hostelLogo = null;
         StringBuilder invoiceRentalPeriod = new StringBuilder();
 
-        if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.ADVANCE.name())) {
+        if (InvoiceType.ADVANCE.name().equals(invoicesV1.getInvoiceType())) {
             invoiceType = "Advance";
-        } else if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.BOOKING.name())) {
+        } else if (InvoiceType.BOOKING.name().equals(invoicesV1.getInvoiceType())) {
             invoiceType = "Booking";
-        } else if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.SETTLEMENT.name())) {
+        } else if (InvoiceType.SETTLEMENT.name().equals(invoicesV1.getInvoiceType())) {
             invoiceType = "Settlement";
+        } else if (InvoiceType.EB_HOLDING.name().equals(invoicesV1.getInvoiceType()) ||
+            InvoiceType.AMOUNT_HOLDING.name().equals(invoicesV1.getInvoiceType())) {
+            invoiceType = "Retainer";
         }
 
         if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.RENT.name()) ||
@@ -1265,10 +1353,15 @@ public class InvoiceService {
         String invoiceSignatureUrl = null;
         String hostelLogo = null;
 
-        if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.ADVANCE.name())) {
+        if (InvoiceType.ADVANCE.name().equals(invoicesV1.getInvoiceType())) {
             invoiceType = "Advance";
-        } else if (invoicesV1.getInvoiceType().equalsIgnoreCase(InvoiceType.BOOKING.name())) {
+        } else if (InvoiceType.BOOKING.name().equals(invoicesV1.getInvoiceType())) {
             invoiceType = "Booking";
+        } else if (InvoiceType.SETTLEMENT.name().equals(invoicesV1.getInvoiceType())) {
+            invoiceType = "Settlement";
+        } else if (InvoiceType.EB_HOLDING.name().equals(invoicesV1.getInvoiceType()) ||
+                InvoiceType.AMOUNT_HOLDING.name().equals(invoicesV1.getInvoiceType())) {
+            invoiceType = "Retainer";
         }
 
         if (hostelV1.getHouseNo() != null && !hostelV1.getHouseNo().trim().equalsIgnoreCase("")) {

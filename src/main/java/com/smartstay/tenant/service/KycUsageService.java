@@ -11,8 +11,8 @@ public class KycUsageService {
     @Autowired
     private KycUsageRepository kycUsageRepository;
 
-    public KYCUsage getByCustomerId(String customerId) {
-        return kycUsageRepository.findByLatestRequestTo(customerId);
+    public KYCUsage getByHostelId(String hostelId) {
+        return kycUsageRepository.findByHostelId(hostelId);
     }
 
     public void save(KYCUsage kycUsage) {

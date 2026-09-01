@@ -27,6 +27,12 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
             canShowPaymentDate = true;
         }
 
+        String adjustmentStatus = null;
+        String lastAdjustmentDate = null;
+        String lastAdjustmentTime = null;
+
+        double balanceAmount = 0;
+
         return new InvoiceItemResponseDTO(
                 invoiceItemProjection.getInvoiceId(),
                 invoiceItemProjection.getInvoiceType(),
@@ -40,10 +46,14 @@ public class InvoiceItemMapper implements Function<InvoiceItemProjection, Invoic
                 invoiceItemProjection.getPaidAt(),
                 invoiceItemProjection.getPaymentDate(),
                 invoiceItemProjection.getPaidAmount(),
+                balanceAmount,
                 invoiceItemProjection.getDueAmount(),
                 status,
                 invoiceItemProjection.getIsCancelled(),
-                canShowPaymentDate
+                canShowPaymentDate,
+                adjustmentStatus,
+                lastAdjustmentDate,
+                lastAdjustmentTime
         );
     }
 }
