@@ -477,8 +477,25 @@ public class InvoiceService {
 
             if (latestTransaction.getBankId() != null) {
                 BankingV1 bank = transactionService.getBankDetailsById(latestTransaction.getBankId());
-                if (bank != null && bank.getBankName() != null) {
-                    lastPaymentMode = Utils.capitalize(bank.getBankName());
+//                if (bank != null && bank.getBankName() != null) {
+//                    lastPaymentMode = Utils.capitalize(bank.getBankName());
+//                }
+
+                if (bank != null) {
+                    if (bank.getAccountType() != null) {
+                        if (bank.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
+                            lastPaymentMode = "Cash";
+                        }
+                        else if (bank.getAccountType().equalsIgnoreCase(BankAccountType.CARD.name())) {
+                            lastPaymentMode = "Card";
+                        }
+                        else if (bank.getAccountType().equalsIgnoreCase(BankAccountType.UPI.name())) {
+                            lastPaymentMode = "Upi";
+                        }
+                        else if (bank.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
+                            lastPaymentMode = "Bank";
+                        }
+                    }
                 }
             }
         }
