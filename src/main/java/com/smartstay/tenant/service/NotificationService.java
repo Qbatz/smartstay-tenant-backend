@@ -86,9 +86,16 @@ public class NotificationService {
                         }
                     }
 
+                    boolean isClickable = false;
+                    if (NotificationType.INVOICE_GENERATION.name().equals(notification.getFullNotificationType())
+                            || NotificationType.COMPLAINT.name().equals(notification.getFullNotificationType())) {
+                        isClickable = true;
+                    }
+
                     return new NotificationResWrapper(notification.getId(), notification.getTitle(),
                             notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
-                            notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+                            notification.getCreatedDate(), notification.getIsRead(), isKycRequest, isClickable,
+                            notification.getSourceId(), kycInfo);
                 })
                 .toList();
 
@@ -138,9 +145,16 @@ public class NotificationService {
             }
         }
 
+        boolean isClickable = false;
+        if (NotificationType.INVOICE_GENERATION.name().equals(notification.getFullNotificationType())
+                || NotificationType.COMPLAINT.name().equals(notification.getFullNotificationType())) {
+            isClickable = true;
+        }
+
         NotificationResWrapper response = new NotificationResWrapper(notification.getId(), notification.getTitle(),
                 notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
-                notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+                notification.getCreatedDate(), notification.getIsRead(), isKycRequest, isClickable,
+                notification.getSourceId(), kycInfo);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
