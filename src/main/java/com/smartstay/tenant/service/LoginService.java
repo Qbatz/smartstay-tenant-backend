@@ -73,7 +73,7 @@ public class LoginService {
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -89,7 +89,7 @@ public class LoginService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -138,7 +138,7 @@ public class LoginService {
                     .body("Invalid M-Pin. Please try again.");
         }
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -160,10 +160,6 @@ public class LoginService {
         customerCredentialsService.saveCustomerCredentials(credentials);
 
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
-    }
-
-    public List<CustomerHostels> getHostels(String mobileNo) {
-        return hostelRepository.findHostelsByMobile(mobileNo);
     }
 
     public List<CustomerHostels> getAllHostels(String mobileNo) {

@@ -10,5 +10,7 @@ public record NotificationResWrapper(long id,
                                      String createdDate,
                                      boolean isRead,
                                      boolean isKycRequest,
+                                     boolean isClickable,
+                                     String sourceId,
                                      NotificationKycInfo kycInfo) {
 }

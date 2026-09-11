@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class InvoiceItemDTO {
     private Double amount;
     private String invoiceItem;
+    private String otherItem;
 }
