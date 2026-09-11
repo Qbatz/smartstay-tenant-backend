@@ -494,6 +494,8 @@ public class InvoiceService {
                         }
                         else if (bank.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
                             lastPaymentMode = "Bank";
+                        } else {
+                            lastPaymentMode = Utils.capitalize(bank.getAccountType());
                         }
                     }
                 }
@@ -749,7 +751,12 @@ public class InvoiceService {
                     .toList();
         }
 
-        double dueAmount = invoice.getTotalAmount() - totalPaid;
+        double dueAmount;
+        if (invoice.getTotalAmount() < 0) {
+            dueAmount = invoice.getTotalAmount() + totalPaid;
+        } else {
+            dueAmount = invoice.getTotalAmount() - totalPaid;
+        }
 
         String status = dueAmount == 0 ? "Paid" : totalPaid == 0 ? "Pending" : "Partially Paid";
 
@@ -759,12 +766,19 @@ public class InvoiceService {
             showMessage = true;
         }
 
+        String paymentStatus = null;
+        if (invoice.getPaymentStatus() != null){
+            paymentStatus = invoice.getPaymentStatus();
+            paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+        }
+
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
                 invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid,
-                dueAmount, invoice.getDeductionAmount(), status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(),
-                invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo, currentMonthInfo,
-                unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId, showMessage);
+                dueAmount, invoice.getDeductionAmount(), status, paymentStatus, invoice.getGst(), invoice.getCgst(),
+                invoice.getSgst(), invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo,
+                currentMonthInfo, unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId,
+                showMessage);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }
@@ -825,6 +839,8 @@ public class InvoiceService {
                 }
                 else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
                     lastPaymentMode = "Bank";
+                } else {
+                    lastPaymentMode = Utils.capitalize(bankingV1.getAccountType());
                 }
             }
         }
@@ -1045,16 +1061,27 @@ public class InvoiceService {
                     .toList();
         }
 
-        double dueAmount = invoice.getTotalAmount() - totalPaid - redeemedFromAmount;
+        double dueAmount;
+        if (invoice.getTotalAmount() < 0) {
+            dueAmount = invoice.getTotalAmount() + totalPaid + redeemedFromAmount;
+        } else {
+            dueAmount = invoice.getTotalAmount() - totalPaid - redeemedFromAmount;
+        }
+
+        String paymentStatus = null;
+        if (invoice.getPaymentStatus() != null){
+            paymentStatus = invoice.getPaymentStatus();
+            paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+        }
 
         return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
                 Utils.dateToString(invoice.getInvoiceGeneratedDate()), Utils.dateToString(invoice.getInvoiceDueDate()),
                 Utils.dateToString(invoice.getInvoiceStartDate()), Utils.dateToString(invoice.getInvoiceEndDate()),
                 invoice.getTotalAmount(), invoiceDiscountAmount, totalPaid, balanceAmount, dueAmount, invoice.getDeductionAmount(),
-                status, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), deductionsRes,
-                invoiceItems, receipts, unpaidInvoicesRes, invoiceEbResponse, Utils.dateToString(lastPaidDate), lastPaymentMode,
-                referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo, adjustmentStatus,
-                lastAdjustmentDate, lastAdjustmentTime);
+                status, paymentStatus, invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(),
+                deductionsRes, invoiceItems, receipts, unpaidInvoicesRes, invoiceEbResponse, Utils.dateToString(lastPaidDate),
+                lastPaymentMode, referenceId, showMessage, showRedeemedFrom, showRedeemedTo, redeemedFrom, redeemedTo,
+                adjustmentStatus, lastAdjustmentDate, lastAdjustmentTime);
     }
 
     public ResponseEntity<?> getReceiptDetailsByTransactionId(String hostelId, String transactionId) {
