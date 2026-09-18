@@ -29,4 +29,6 @@ public class Constants {
     public static final String NOTICE_REASON_NOT_FOUND = "Notice reason not found";
     public static final String KYC_USAGE_NOT_FOUND = "Kyc usage not found";
     public static final String CREDENTIALS_NOT_FOUND = "Credentials not found";
+    public static final String KYC_NOT_ENABLED = "Kyc is not enabled";
+    public static final String KYC_LIMIT_REACHED = "Kyc limit reached";
 }

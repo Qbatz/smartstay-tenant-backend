@@ -58,4 +58,10 @@ public class DateUtils {
 
         return duration.toString();
     }
+
+    public static Date getStartDateOfMonth(LocalDate date){
+        return Date.from(date.withDayOfMonth(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant());
+    }
 }
