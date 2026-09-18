@@ -328,6 +328,11 @@ public class LoginService {
                         (existing, replacement) -> existing
                 ));
 
+        List<InvoicesV1> refundedInvoices = invoiceService
+                .getAllRefundedInvoicesByCustomerIds(customerIds);
+        Map<String, List<InvoicesV1>> refundedInvoiceMap = refundedInvoices.stream()
+                .collect(Collectors.groupingBy(InvoicesV1::getCustomerId));
+
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
         List<HostelWithRentDTO> otherStays = new ArrayList<>();
@@ -355,11 +360,12 @@ public class LoginService {
             InvoicesV1 bookingInvoice = bookingInvoiceMap.getOrDefault(thisCustomerId, null);
             InvoicesV1 advanceInvoice = advanceInvoiceMap.getOrDefault(thisCustomerId, null);
             RaiseNoticeRequest raiseNoticeRequest = noticeRequestMap.getOrDefault(compositeKey, null);
+            List<InvoicesV1> refundedInvoiceList = refundedInvoiceMap.getOrDefault(thisCustomerId, null);
 
             HostelDetailsMapper mapper = new HostelDetailsMapper(hostel, customer,
                     owner, billingRules, thisCustomerDocs, latestBedHistory,
                     bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice,
-                    raiseNoticeRequest);
+                    raiseNoticeRequest, refundedInvoiceList);
 
             if (CustomerStatus.VACATED.name().equals(customer.getCurrentStatus())){
                 previousStays.add(mapper.apply(customerHostel));

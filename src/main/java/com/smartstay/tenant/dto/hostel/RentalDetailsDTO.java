@@ -20,8 +20,9 @@ public class RentalDetailsDTO {
     private String checkOutReason;
     private Double rentAmount;
     private Double bookingPaidAmount;
-    private Double bookingRefundedAmount;
+    private Double bookingRedeemedAmount;
     private Double advancePaidAmount;
-    private Double advanceRefundedAmount;
+    private Double advanceRedeemedAmount;
+    private Double totalRefundedAmount;
     private String dueDate;
 }

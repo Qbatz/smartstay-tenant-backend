@@ -1716,4 +1716,14 @@ public class InvoiceService {
         return invoicesV1Repository
                 .findAllByCustomerIdInAndInvoiceTypeInAndIsCancelledFalse(customerIds, invoiceTypes);
     }
+
+    public List<InvoicesV1> getAllRefundedInvoicesByCustomerIds(Set<String> customerIds) {
+
+        Set<String> paymentStatuses = new HashSet<>();
+        paymentStatuses.add(PaymentStatus.REFUNDED.name());
+        paymentStatuses.add(PaymentStatus.PARTIAL_REFUND.name());
+
+        return invoicesV1Repository
+                .findAllByCustomerIdInAndPaymentStatusInAndIsCancelledFalse(customerIds, paymentStatuses);
+    }
 }

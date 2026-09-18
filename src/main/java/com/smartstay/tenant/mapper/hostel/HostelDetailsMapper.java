@@ -32,6 +32,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
     private final InvoicesV1 bookingInvoice;
     private final InvoicesV1 advanceInvoice;
     private final RaiseNoticeRequest raiseNoticeRequest;
+    private final List<InvoicesV1> refundedInvoices;
 
     public HostelDetailsMapper(HostelV1 hostel,
                                Customers customer,
@@ -45,7 +46,8 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
                                BookingsV1 booking,
                                InvoicesV1 bookingInvoice,
                                InvoicesV1 advanceInvoice,
-                               RaiseNoticeRequest raiseNoticeRequest) {
+                               RaiseNoticeRequest raiseNoticeRequest,
+                               List<InvoicesV1> refundedInvoices) {
         this.hostel = hostel;
         this.customer = customer;
         this.owner = owner;
@@ -59,6 +61,7 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         this.bookingInvoice = bookingInvoice;
         this.advanceInvoice = advanceInvoice;
         this.raiseNoticeRequest = raiseNoticeRequest;
+        this.refundedInvoices = refundedInvoices;
     }
 
     @Override
@@ -151,9 +154,10 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         String reasonForLeaving = null;
         double rentAmount = 0;
         double bookingPaidAmount = 0;
-        double bookingRefundedAmount = 0;
+        double bookingRedeemedAmount = 0;
         double advancePaidAmount = 0;
-        double advanceRefundedAmount = 0;
+        double advanceRedeemedAmount = 0;
+        double totalRefundedAmount = 0;
         String dueDateText = null;
 
         if (latestBedHistory != null) {
@@ -203,17 +207,25 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         if (bookingInvoice != null){
             bookingPaidAmount = bookingInvoice.getPaidAmount() != null ? bookingInvoice.getPaidAmount() : 0;
             double bookingBalanceAmount = bookingInvoice.getBalanceAmount() != null ? bookingInvoice.getBalanceAmount() : 0;
-            bookingRefundedAmount = bookingPaidAmount - bookingBalanceAmount;
+            bookingRedeemedAmount = bookingPaidAmount - bookingBalanceAmount;
             bookingPaidAmount = Utils.roundOffWithTwoDigit(bookingPaidAmount);
-            bookingRefundedAmount = Utils.roundOffWithTwoDigit(bookingRefundedAmount);
+            bookingRedeemedAmount = Utils.roundOffWithTwoDigit(bookingRedeemedAmount);
         }
 
         if (advanceInvoice != null){
             advancePaidAmount = advanceInvoice.getPaidAmount() != null ? advanceInvoice.getPaidAmount() : 0;
             double advanceBalanceAmount = advanceInvoice.getBalanceAmount() != null ? advanceInvoice.getBalanceAmount() : 0;
-            advanceRefundedAmount = advancePaidAmount - advanceBalanceAmount;
+            advanceRedeemedAmount = advancePaidAmount - advanceBalanceAmount;
             advancePaidAmount = Utils.roundOffWithTwoDigit(advancePaidAmount);
-            advanceRefundedAmount = Utils.roundOffWithTwoDigit(advanceRefundedAmount);
+            advanceRedeemedAmount = Utils.roundOffWithTwoDigit(advanceRedeemedAmount);
+        }
+
+        if (refundedInvoices != null && !refundedInvoices.isEmpty()) {
+            totalRefundedAmount = refundedInvoices.stream()
+                    .mapToDouble(invoice -> invoice.getPaidAmount() != null
+                            ? invoice.getPaidAmount()
+                            : 0)
+                    .sum();
         }
 
         rentalDetailsDTO.setBedId(bedId);
@@ -228,9 +240,10 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         rentalDetailsDTO.setCheckOutReason(reasonForLeaving);
         rentalDetailsDTO.setRentAmount(rentAmount);
         rentalDetailsDTO.setBookingPaidAmount(bookingPaidAmount);
-        rentalDetailsDTO.setBookingRefundedAmount(bookingRefundedAmount);
+        rentalDetailsDTO.setBookingRedeemedAmount(bookingRedeemedAmount);
         rentalDetailsDTO.setAdvancePaidAmount(advancePaidAmount);
-        rentalDetailsDTO.setAdvanceRefundedAmount(advanceRefundedAmount);
+        rentalDetailsDTO.setAdvanceRedeemedAmount(advanceRedeemedAmount);
+        rentalDetailsDTO.setTotalRefundedAmount(totalRefundedAmount);
         rentalDetailsDTO.setDueDate(dueDateText);
 
         return rentalDetailsDTO;

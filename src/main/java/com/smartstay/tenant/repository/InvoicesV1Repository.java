@@ -290,4 +290,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoicesV1> findOlderUnpaidInvoicesByInvoiceTypes(String customerId, Set<String> invoiceTypes,
                                                            Date beforeDate, String paidName);
+
+    List<InvoicesV1> findAllByCustomerIdInAndPaymentStatusInAndIsCancelledFalse(Set<String> customerIds,
+                                                                                Set<String> paymentStatuses);
 }
