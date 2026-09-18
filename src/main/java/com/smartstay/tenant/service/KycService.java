@@ -1,12 +1,10 @@
 package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Constants;
+import com.smartstay.tenant.Utils.DateUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.HostelV1;
-import com.smartstay.tenant.dao.KYCUsage;
-import com.smartstay.tenant.dao.KycDetails;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycRequest;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycResponse;
 import com.smartstay.tenant.dto.kyc.DigioKycResponse;
@@ -22,6 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Service
@@ -52,6 +51,10 @@ public class KycService {
     private HostelService hostelService;
     @Autowired
     private KycUsageService kycUsageService;
+    @Autowired
+    private KycConfigService kycConfigService;
+    @Autowired
+    private KycHistoryService kycHistoryService;
 
     public ResponseEntity<?> verifyKycStatus() {
 
@@ -223,13 +226,53 @@ public class KycService {
             if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.WAITING_FOR_APPROVAL.name())) {
                 return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
             }
+            if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.REQUESTED.name())) {
+                return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        Date today = new Date();
+        Date todayStart = Utils.getStartOfDay(today);
+
+        KycConfig kycConfig = kycConfigService.getByHostelId(customer.getHostelId());
+        KycHistory latestKycHistory = kycHistoryService.getLatestByHostelId(customer.getHostelId());
+
+        if (kycConfig == null || latestKycHistory == null) {
+            return new ResponseEntity<>(Constants.KYC_NOT_ENABLED, HttpStatus.BAD_REQUEST);
+        }
+
+        if (latestKycHistory.getEndDate() != null){
+            Date historyEndDate = latestKycHistory.getEndDate();
+            Date historyEndDateStart = Utils.getStartOfDay(historyEndDate);
+
+            if (historyEndDateStart.before(todayStart)) {
+                return new ResponseEntity<>(Constants.KYC_NOT_ENABLED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        int limitPerMonth = kycConfig.getLimitPerMonth() != null ? kycConfig.getLimitPerMonth() : -1;
+
+        LocalDate todayLocalDate = Utils.dateToLocalDate(today);
+        Date monthStartDate = DateUtils.getStartDateOfMonth(todayLocalDate);
+
+        long kycDetailsCount = kycDetailsRepository
+                .findCountByHostelIdAndAfterDate(customer.getHostelId(), monthStartDate);
+
+        if (kycDetails == null){
+            if (limitPerMonth != -1 && kycDetailsCount >= limitPerMonth) {
+                return new ResponseEntity<>(Constants.KYC_LIMIT_REACHED, HttpStatus.BAD_REQUEST);
+            }
+        } else if (kycDetails.getCurrentStatus() != null
+                && !KycStatus.REQUESTED.name().equals(kycDetails.getCurrentStatus())){
+
+            if (limitPerMonth != -1 && kycDetailsCount > limitPerMonth) {
+                return new ResponseEntity<>(Constants.KYC_LIMIT_REACHED, HttpStatus.BAD_REQUEST);
+            }
         }
 
         KYCUsage kycUsage = kycUsageService.getByHostelId(customer.getHostelId());
 
         String digioInitiateUrl = digioRequestWithTemplateUrl;
-
-        Date today = new Date();
 
         try {
             HttpHeaders headers = new HttpHeaders();

@@ -22,7 +22,8 @@ public interface CustomerNotificationRepository extends JpaRepository<CustomerNo
                     CONCAT(UCASE(LEFT(notification_type, 1)), LCASE(SUBSTRING(notification_type, 2))) AS notificationType,
                     notification_type as fullNotificationType,
                     DATE_FORMAT(created_at, '%d/%m/%Y') AS createdDate,
-                    is_read
+                    is_read,
+                    source_id
                 FROM customer_notifications
                 WHERE hostel_id = :hostelId
                 AND user_id = :userId

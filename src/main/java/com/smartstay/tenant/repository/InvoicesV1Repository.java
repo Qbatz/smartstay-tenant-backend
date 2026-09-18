@@ -163,7 +163,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                            @Param("customerId") String customerId);
 
     @Query("""
-            SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
+            SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem, ii.otherItem)
             FROM InvoiceItems ii
             WHERE ii.invoice.invoiceId = :invoiceId
             """)
@@ -290,4 +290,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoicesV1> findOlderUnpaidInvoicesByInvoiceTypes(String customerId, Set<String> invoiceTypes,
                                                            Date beforeDate, String paidName);
+
+    List<InvoicesV1> findAllByCustomerIdInAndPaymentStatusInAndIsCancelledFalse(Set<String> customerIds,
+                                                                                Set<String> paymentStatuses);
 }
