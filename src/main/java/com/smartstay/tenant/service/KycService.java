@@ -224,7 +224,7 @@ public class KycService {
                 return new ResponseEntity<>(Utils.CUSTOMER_VERIFIED_KYC, HttpStatus.BAD_REQUEST);
             }
             if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.WAITING_FOR_APPROVAL.name())) {
-                return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(Utils.KYC_VERIFICATION_WAITING_FOR_APPROVAL, HttpStatus.BAD_REQUEST);
             }
             if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.REQUESTED.name())) {
                 return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
@@ -267,6 +267,58 @@ public class KycService {
 
             if (limitPerMonth != -1 && kycDetailsCount > limitPerMonth) {
                 return new ResponseEntity<>(Constants.KYC_LIMIT_REACHED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        String verifyStatus = null;
+
+        if (kycDetails != null && kycDetails.getEntityId() != null) {
+
+            String digioVerifyUrl = digioUrl + kycDetails.getEntityId() + "/response";
+
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth(digioUserName, digioPassword);
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                HttpEntity<String> request = new HttpEntity<>("{}", headers);
+
+                ResponseEntity<DigioKycResponse> response = restTemplate.exchange(
+                        digioVerifyUrl,
+                        HttpMethod.POST,
+                        request,
+                        DigioKycResponse.class
+                );
+
+                DigioKycResponse digioKycResponse = response.getBody();
+                if (digioKycResponse == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No response body found");
+                }
+
+                String status = digioKycResponse.status();
+
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    verifyStatus = status;
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+                }
+            } catch (HttpClientErrorException | HttpServerErrorException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Server error");
+            }
+        }
+
+        if (verifyStatus != null){
+            if (KycStatus.REQUESTED.name().equalsIgnoreCase(verifyStatus)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_REQUESTED);
+            }
+            if (KycStatus.VERIFIED.name().equalsIgnoreCase(verifyStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_VERIFIED);
+            }
+            if (KycStatus.APPROVED.name().equalsIgnoreCase(verifyStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_APPROVED);
+            }
+            if (KycStatus.EXPIRED.name().equalsIgnoreCase(verifyStatus)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_REQUEST_EXPIRED);
             }
         }
 

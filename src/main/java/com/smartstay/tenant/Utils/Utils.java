@@ -69,8 +69,10 @@ public final class Utils {
     public static final String KYC_STATUS_CAN_NOT_BE_PENDING = "Kyc status can not be pending";
     public static final String KYC_STATUS_CAN_NOT_BE_VERIFIED = "Kyc status can not be verified";
     public static final String KYC_VERIFICATION_ALREADY_REQUESTED = "Kyc verification is already requested";
+    public static final String KYC_VERIFICATION_WAITING_FOR_APPROVAL = "Kyc verification is waiting for approval";
     public static final String KYC_ALREADY_REQUESTED = "Kyc already requested";
     public static final String KYC_ALREADY_VERIFIED = "Kyc already verified";
+    public static final String KYC_ALREADY_APPROVED = "Kyc already approved";
     public static final String KYC_REQUEST_EXPIRED = "Kyc request expired";
     public static final String KYC_REQUEST_PENDING_OR_NOT_AVAILABLE = "Kyc request pending or not available";
 
