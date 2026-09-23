@@ -148,6 +148,8 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         String roomName = null;
         Integer floorId = null;
         String floorName = null;
+        String bookingDate = null;
+        String expJoiningDate = null;
         String joiningDate = null;
         String checkoutDate = null;
         String displayDuration = null;
@@ -192,6 +194,12 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
             }
             reasonForLeaving = booking.getReasonForLeaving();
             rentAmount = booking.getRentAmount() != null ? booking.getRentAmount() : 0;
+            if (booking.getBookingDate() != null){
+                bookingDate = Utils.dateToString(booking.getBookingDate());
+            }
+            if (booking.getExpectedJoiningDate() != null){
+                expJoiningDate = Utils.dateToString(booking.getExpectedJoiningDate());
+            }
         }
 
         if (latestBillingRules != null) {
@@ -234,6 +242,8 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         rentalDetailsDTO.setRoomName(roomName);
         rentalDetailsDTO.setFloorId(floorId);
         rentalDetailsDTO.setFloorName(floorName);
+        rentalDetailsDTO.setBookingDate(bookingDate);
+        rentalDetailsDTO.setExpJoiningDate(expJoiningDate);
         rentalDetailsDTO.setJoiningDate(joiningDate);
         rentalDetailsDTO.setCheckoutDate(checkoutDate);
         rentalDetailsDTO.setDisplayDuration(displayDuration);

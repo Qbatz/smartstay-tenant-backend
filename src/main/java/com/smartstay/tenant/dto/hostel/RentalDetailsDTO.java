@@ -14,6 +14,8 @@ public class RentalDetailsDTO {
     private String roomName;
     private Integer floorId;
     private String floorName;
+    private String bookingDate;
+    private String expJoiningDate;
     private String joiningDate;
     private String checkoutDate;
     private String displayDuration;
