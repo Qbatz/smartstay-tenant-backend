@@ -162,6 +162,8 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
         double totalRefundedAmount = 0;
         String dueDateText = null;
 
+        Date today = new Date();
+
         if (latestBedHistory != null) {
             bedId = latestBedHistory.getBedId();
             Beds bed = bedsMap.getOrDefault(bedId, null);
@@ -188,6 +190,9 @@ public class HostelDetailsMapper implements Function<CustomerHostels, HostelWith
             }
             if (dbCheckoutDate != null) {
                 checkoutDate = Utils.dateToString(dbCheckoutDate);
+            }
+            if (dbCheckoutDate == null) {
+                dbCheckoutDate = today;
             }
             if (dbJoiningDate != null && dbCheckoutDate != null) {
                 displayDuration = DateUtils.getDuration(dbJoiningDate, dbCheckoutDate);
