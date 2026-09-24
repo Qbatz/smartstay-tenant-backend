@@ -779,10 +779,13 @@ public class InvoiceService {
             }
         }
 
+        double invoiceDiscountAmount = invoiceDiscountsService
+                .getDiscountAmountByInvoiceId(invoice.getInvoiceId());
+
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()), invoice.getInvoiceGeneratedDate(), invoice.getInvoiceDueDate(),
-                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), totalPaid,
-                dueAmount, invoice.getDeductionAmount(), status, paymentStatus, invoice.getGst(), invoice.getCgst(),
+                invoice.getInvoiceStartDate(), invoice.getInvoiceEndDate(), invoice.getTotalAmount(), invoiceDiscountAmount,
+                totalPaid, dueAmount, invoice.getDeductionAmount(), status, paymentStatus, invoice.getGst(), invoice.getCgst(),
                 invoice.getSgst(), invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo,
                 currentMonthInfo, unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId,
                 showMessage);
