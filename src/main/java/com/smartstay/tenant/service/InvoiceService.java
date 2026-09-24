@@ -770,9 +770,13 @@ public class InvoiceService {
         }
 
         String paymentStatus = null;
-        if (invoice.getPaymentStatus() != null){
-            paymentStatus = invoice.getPaymentStatus();
-            paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+        if (invoice.isCancelled()){
+            paymentStatus = "Cancelled";
+        } else {
+            if (invoice.getPaymentStatus() != null){
+                paymentStatus = invoice.getPaymentStatus();
+                paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+            }
         }
 
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
@@ -1072,9 +1076,13 @@ public class InvoiceService {
         }
 
         String paymentStatus = null;
-        if (invoice.getPaymentStatus() != null){
-            paymentStatus = invoice.getPaymentStatus();
-            paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+        if (invoice.isCancelled()){
+            paymentStatus = "Cancelled";
+        } else {
+            if (invoice.getPaymentStatus() != null){
+                paymentStatus = invoice.getPaymentStatus();
+                paymentStatus = InvoiceUtils.getInvoicePaymentStatusByStatus(paymentStatus);
+            }
         }
 
         return new InvoiceDetailsDTO(invoice.getInvoiceId(), invoice.getInvoiceNumber(), Utils.capitalize(invoice.getInvoiceType()),
