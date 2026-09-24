@@ -1,6 +1,7 @@
 package com.smartstay.tenant.mapper;
 
 import com.smartstay.tenant.Utils.CustomerUtils;
+import com.smartstay.tenant.Utils.DateUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BookingDetailsDto;
@@ -9,6 +10,7 @@ import com.smartstay.tenant.response.customer.*;
 import com.smartstay.tenant.response.hostel.HostelResponse;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CustomerMapper {
@@ -34,7 +36,22 @@ public class CustomerMapper {
                     )).toList();
         }
 
+        Date today = new Date();
+
+        Date joiningDate = null;
+        Date checkoutDate = null;
+        String displayDuration = null;
         if (b != null) {
+            joiningDate = b.getJoiningDate();
+            checkoutDate = b.getCheckoutDate();
+
+            if (checkoutDate == null) {
+                checkoutDate = today;
+            }
+            if (joiningDate != null && checkoutDate != null) {
+                displayDuration = DateUtils.getDuration(joiningDate, checkoutDate);
+            }
+
             bookingDto = new BookingDetailsDto(
                     b.getBedId(),
                     b.getRoomId(),
@@ -118,6 +135,7 @@ public class CustomerMapper {
                 CustomerUtils.getProfilePic(c),
                 initials.toString(),
                 c.getExpJoiningDate() != null ? Utils.dateToString(c.getExpJoiningDate()) : null,
+                displayDuration,
                 c.getCurrentStatus(),
                 c.getDateOfBirth(),
                 c.getGender(),
