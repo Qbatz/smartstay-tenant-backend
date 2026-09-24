@@ -14,14 +14,17 @@ public class RentalDetailsDTO {
     private String roomName;
     private Integer floorId;
     private String floorName;
+    private String bookingDate;
+    private String expJoiningDate;
     private String joiningDate;
     private String checkoutDate;
     private String displayDuration;
     private String checkOutReason;
     private Double rentAmount;
     private Double bookingPaidAmount;
-    private Double bookingRefundedAmount;
+    private Double bookingRedeemedAmount;
     private Double advancePaidAmount;
-    private Double advanceRefundedAmount;
+    private Double advanceRedeemedAmount;
+    private Double totalRefundedAmount;
     private String dueDate;
 }

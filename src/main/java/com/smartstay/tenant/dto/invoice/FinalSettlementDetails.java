@@ -27,10 +27,12 @@ public class FinalSettlementDetails {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date endDate;
     private Double totalAmount;
+    private Double discountAmount;
     private Double paidAmount;
     private Double dueAmount;
     private Double deductionAmount;
     private String status;
+    private String paymentStatus;
     private Double gst;
     private Double cgst;
     private Double sgst;
