@@ -160,11 +160,10 @@ public class TransactionService {
             }
             else {
 
-                Credentials credential = credentialsService.getByService(ServiceEnum.reports.name());
-
-                if (credential == null || credential.getAuthToken() == null) {
-                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
-                }
+//                Credentials credential = credentialsService.getByService(ServiceEnum.reports.name());
+//                if (credential == null || credential.getAuthToken() == null) {
+//                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+//                }
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
