@@ -1,10 +1,8 @@
 package com.smartstay.tenant.response.customer;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartstay.tenant.dto.BookingDetailsDto;
 import com.smartstay.tenant.response.hostel.HostelResponse;
 
-import java.util.Date;
 import java.util.List;
 
 public record CustomerDetails(
@@ -24,8 +22,7 @@ public record CustomerDetails(
         String expJoiningDate,
         String displayDuration,
         String currentStatus,
-        @JsonFormat(pattern = "dd/MM/yyyy")
-        Date dateOfBirth,
+        String dateOfBirth,
         String gender,
 
         List<AdditionalContacts> additionalContacts,
