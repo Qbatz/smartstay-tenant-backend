@@ -293,4 +293,6 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
 
     List<InvoicesV1> findAllByCustomerIdInAndPaymentStatusInAndIsCancelledFalse(Set<String> customerIds,
                                                                                 Set<String> paymentStatuses);
+
+    List<InvoicesV1> findAllByInvoiceIdIn(Set<String> invoiceIds);
 }

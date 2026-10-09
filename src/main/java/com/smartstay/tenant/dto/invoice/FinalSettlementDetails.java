@@ -1,31 +1,25 @@
 package com.smartstay.tenant.dto.invoice;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartstay.tenant.response.eb.InvoiceEbResponse;
-import com.smartstay.tenant.response.invoices.DeductionsRes;
-import com.smartstay.tenant.response.invoices.UnpaidInvoices;
+import com.smartstay.tenant.response.invoices.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class FinalSettlementDetails {
+
     private String invoiceId;
     private String invoiceNumber;
     private String invoiceType;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date generatedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date dueDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date startDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date endDate;
+    private String generatedDate;
+    private String dueDate;
+    private String startDate;
+    private String endDate;
     private Double totalAmount;
     private Double discountAmount;
     private Double paidAmount;
@@ -44,9 +38,16 @@ public class FinalSettlementDetails {
     private CurrentMonthInfo currentMonthInfo;
     private List<UnpaidInvoices> unpaidInvoices;
     private InvoiceEbResponse ebInfo;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date lastPaidDate;
+    private String lastPaidDate;
     private String lastPaymentMode;
     private String lastReferenceId;
     private Boolean showMessage;
+    private SettlementRetainerInfoRes settlementRetainerInfo;
+    private SettlementAdditionalAdvance settlementAdditionalAdvance;
+    private CustomerBookingInfoRes customerBookingInfo;
+    private CustomerAdvanceInfoRes customerAdvanceInfo;
+    private WalletInfoRes walletInfo;
+    private UnpaidInvoiceInfo unpaidInvoiceInfo;
+    private CurrentRentInfo currentMonthRentInfo;
+    private CurrentMonthEbInfo currentMonthEbInfo;
 }
