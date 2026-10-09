@@ -28,6 +28,7 @@ public class InvoiceDetailsDTO {
     private Double dueAmount;
     private Double deductionAmount;
     private String status;
+    private String paymentStatus;
     private Double gst;
     private Double cgst;
     private Double sgst;

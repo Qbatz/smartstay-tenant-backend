@@ -1,6 +1,7 @@
 package com.smartstay.tenant.mapper;
 
 import com.smartstay.tenant.Utils.CustomerUtils;
+import com.smartstay.tenant.Utils.DateUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BookingDetailsDto;
@@ -9,6 +10,7 @@ import com.smartstay.tenant.response.customer.*;
 import com.smartstay.tenant.response.hostel.HostelResponse;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CustomerMapper {
@@ -34,18 +36,33 @@ public class CustomerMapper {
                     )).toList();
         }
 
+        Date today = new Date();
+
+        Date joiningDate = null;
+        Date checkoutDate = null;
+        String displayDuration = null;
         if (b != null) {
+            joiningDate = b.getJoiningDate();
+            checkoutDate = b.getCheckoutDate();
+
+            if (checkoutDate == null) {
+                checkoutDate = today;
+            }
+            if (joiningDate != null && checkoutDate != null) {
+                displayDuration = DateUtils.getDuration(joiningDate, checkoutDate);
+            }
+
             bookingDto = new BookingDetailsDto(
                     b.getBedId(),
                     b.getRoomId(),
                     b.getFloorId(),
                     b.getRentAmount(),
                     b.getBookingAmount(),
-                    b.getCheckoutDate(),
-                    b.getRequestedCheckoutDate(),
-                    b.getLeavingDate(),
-                    b.getNoticeDate(),
-                    b.getJoiningDate(),
+                    b.getCheckoutDate() != null ? Utils.dateToString(b.getCheckoutDate()) : null,
+                    b.getRequestedCheckoutDate() != null ? Utils.dateToString(b.getRequestedCheckoutDate()) : null,
+                    b.getLeavingDate() != null ? Utils.dateToString(b.getLeavingDate()) : null,
+                    b.getNoticeDate() != null ? Utils.dateToString(b.getNoticeDate()) : null,
+                    b.getJoiningDate() != null ? Utils.dateToString(b.getJoiningDate()) : null,
                     b.getExpectedJoiningDate() != null ? Utils.dateToString(b.getExpectedJoiningDate()) : null,
                     b.getBookingId(),
                     b.getCurrentStatus(),
@@ -118,8 +135,9 @@ public class CustomerMapper {
                 CustomerUtils.getProfilePic(c),
                 initials.toString(),
                 c.getExpJoiningDate() != null ? Utils.dateToString(c.getExpJoiningDate()) : null,
+                displayDuration,
                 c.getCurrentStatus(),
-                c.getDateOfBirth(),
+                c.getDateOfBirth() != null ? Utils.dateToString(c.getDateOfBirth()) : null,
                 c.getGender(),
 
                 additionalContactsList,
