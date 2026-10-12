@@ -1238,21 +1238,24 @@ public class InvoiceService {
             referenceId = latestTransaction.getTransactionReferenceId();
 
             if (latestTransaction.getBankId() != null) {
+
                 BankingV1 bankingV1 = transactionService.getBankDetailsById(latestTransaction.getBankId());
 
-                if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
-                    lastPaymentMode = "Cash";
-                }
-                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CARD.name())) {
-                    lastPaymentMode = "Card";
-                }
-                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.UPI.name())) {
-                    lastPaymentMode = "Upi";
-                }
-                else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
-                    lastPaymentMode = "Bank";
-                } else {
-                    lastPaymentMode = Utils.capitalize(bankingV1.getAccountType());
+                if (bankingV1 != null) {
+                    if (BankAccountType.CASH.name().equalsIgnoreCase(bankingV1.getAccountType())) {
+                        lastPaymentMode = "Cash";
+                    }
+                    else if (BankAccountType.CARD.name().equalsIgnoreCase(bankingV1.getAccountType())) {
+                        lastPaymentMode = "Card";
+                    }
+                    else if (BankAccountType.UPI.name().equalsIgnoreCase(bankingV1.getAccountType())) {
+                        lastPaymentMode = "Upi";
+                    }
+                    else if (BankAccountType.BANK.name().equalsIgnoreCase(bankingV1.getAccountType())) {
+                        lastPaymentMode = "Bank";
+                    } else {
+                        lastPaymentMode = Utils.capitalize(bankingV1.getAccountType());
+                    }
                 }
             }
         }
@@ -1582,15 +1585,30 @@ public class InvoiceService {
         }
 
         BankingV1 bankingV1 = bankingService.getBankDetails(transactionV1.getBankId());
+
         String bankName = null;
-        if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
-            bankName = "Cash";
-        } else {
-            bankName = bankingV1.getBankName();
+        String account = null;
+        String accountNumber = null;
+        String ifscCode = null;
+        String upiId = null;
+
+        if (bankingV1 != null){
+            if (BankAccountType.CASH.name().equalsIgnoreCase(bankingV1.getAccountType())) {
+                bankName = "Cash";
+            } else {
+                bankName = bankingV1.getBankName();
+            }
+
+            account = bankingV1.getAccountHolderName() + "-" + bankName;
+
+            accountNumber = bankingV1.getAccountNumber();
+
+            ifscCode = bankingV1.getIfscCode();
+
+            upiId = bankingV1.getUpiId();
         }
-        String account = bankingV1.getAccountHolderName() + "-" + bankName;
-        AccountDetails accountDetails = new AccountDetails(bankingV1.getAccountNumber(), bankingV1.getIfscCode(),
-                account, bankingV1.getUpiId(), null);
+
+        AccountDetails accountDetails = new AccountDetails(accountNumber, ifscCode, account, upiId, null);
 
         ReceiptConfigInfo receiptConfigInfo = null;
         BillTemplates hostelTemplates = templatesService.getTemplateByHostelId(hostelId);
@@ -1627,7 +1645,6 @@ public class InvoiceService {
                             .map(BillTemplateType::getReceiptMailId)
                             .toList().getFirst();
                 }
-
             }
 
             BillTemplateType templateType = null;
@@ -1732,18 +1749,19 @@ public class InvoiceService {
 
         String paymentMode = "";
 
-        if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CASH.name())) {
+        if (BankAccountType.CASH.name().equalsIgnoreCase(bankingV1.getAccountType())) {
             paymentMode = "Cash";
         }
-        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.CARD.name())) {
+        else if (BankAccountType.CARD.name().equalsIgnoreCase(bankingV1.getAccountType())) {
             paymentMode = "Card";
         }
-        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.UPI.name())) {
+        else if (BankAccountType.UPI.name().equalsIgnoreCase(bankingV1.getAccountType())) {
             paymentMode = "Upi";
         }
-        else if (bankingV1.getAccountType().equalsIgnoreCase(BankAccountType.BANK.name())) {
+        else if (BankAccountType.BANK.name().equalsIgnoreCase(bankingV1.getAccountType())) {
             paymentMode = "Bank";
         }
+
         ReceiptInfo receiptInfo = new ReceiptInfo(transactionV1.getTransactionReferenceId(),
                 transactionV1.getTransactionId(),
                 Utils.dateToString(transactionV1.getPaymentDate()),
@@ -1768,6 +1786,7 @@ public class InvoiceService {
                 hostelEmail, hostelPhone, "91", receiptInfo,
                 customerInfo, stayInfo, invoiceRentalPeriod.toString(),
                 accountDetails, receiptConfigInfo);
+
         return new ResponseEntity<>(details, HttpStatus.OK);
     }
 
