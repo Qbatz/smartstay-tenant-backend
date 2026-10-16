@@ -1,5 +1,6 @@
 package com.smartstay.tenant.dto.invoice;
 
+import com.smartstay.tenant.response.PaginationDataRes;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvoiceListDto {
+    PaginationDataRes paginationData;
     List<String> dateFilterOptions;
     private String hostelName;
     private String hostelUrl;

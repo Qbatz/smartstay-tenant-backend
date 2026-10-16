@@ -24,6 +24,7 @@ import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
 import com.smartstay.tenant.repository.*;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.complaints.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -319,24 +320,41 @@ public class ComplaintService {
     }
 
     public ResponseEntity<?> getComplaintList(String hostelId, int page, int size) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
+
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ComplaintDTO> complaints = complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
+        Page<ComplaintDTO> pagedComplaints = complaintsV1Repository
+                .getAllComplaints(hostelId, customerId, pageable);
+
+        List<ComplaintDTO> complaints = pagedComplaints.getContent();
 
         if (complaints.isEmpty()) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         ComplaintMapper complaintMapper = new ComplaintMapper();
-        Page<ComplaintResponse> response = complaints.map(complaintMapper);
+
+        List<ComplaintResponse> complaintsResList = complaints.stream()
+                .map(complaintMapper)
+                .toList();
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedComplaints.getTotalElements(), pagedComplaints.getTotalPages());
+
+        ComplaintResWrapper response = new ComplaintResWrapper(paginationDataRes, complaintsResList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

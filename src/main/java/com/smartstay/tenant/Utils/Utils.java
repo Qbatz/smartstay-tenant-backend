@@ -156,15 +156,17 @@ public final class Utils {
         return new SimpleDateFormat(OUTPUT_TIME_FORMAT).format(date);
     }
 
-    public static Date convertStringToDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+    public static Date convertStringToDate(String date) {
+
+        if (date == null || date.isBlank()) {
+            return null;
+        }
 
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat sdf = new SimpleDateFormat(OUTPUT_DATE_FORMAT);
             sdf.setLenient(false);
-            return sdf.parse(dateStr);
+            return sdf.parse(date);
         } catch (ParseException e) {
-            e.printStackTrace();
             return null;
         }
     }

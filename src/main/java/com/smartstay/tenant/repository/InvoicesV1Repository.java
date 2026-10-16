@@ -6,6 +6,8 @@ import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceSummaryProjection;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import com.smartstay.tenant.response.invoices.InvoiceSummary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -113,6 +115,20 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                                         String customerId,
                                                         Date startDate,
                                                         Date endDate);
+
+    @Query(value = """
+            SELECT * FROM invoicesv1
+            WHERE customer_id = :customerId
+                AND hostel_id = :hostelId
+                AND (:startDate IS NULL OR DATE(invoice_start_date) >= DATE(:startDate))
+                AND (:endDate IS NULL OR DATE(invoice_start_date) <= DATE(:endDate))
+            ORDER BY invoice_start_date DESC
+            """, nativeQuery = true)
+    Page<InvoicesV1> findPagedInvoicesBetweenStartAndEndDate(String hostelId,
+                                                             String customerId,
+                                                             Date startDate,
+                                                             Date endDate,
+                                                             Pageable pageable);
 
     @Query(value = """
             SELECT

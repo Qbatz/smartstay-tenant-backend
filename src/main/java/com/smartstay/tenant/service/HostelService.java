@@ -115,13 +115,17 @@ public class HostelService {
                         previousMonthInvoices.getPaymentDate(), previousMonthCanShowPaymentDate, false,
                         buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
 
+        Date invoiceGeneratedDate = Utils.convertStringToDate(currentMonthInvoices != null ?
+                currentMonthInvoices.getInvoiceGeneratedDate() : null);
+        LocalDate invoiceGeneratedLocalDate = Utils.dateToLocalDate(invoiceGeneratedDate);
+
         InvoiceSummary currentSummary = currentMonthInvoices != null ?
                 new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getDiscountAmount(),
                         currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
                         currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(),
                         currentMonthInvoices.getCurrentInvoiceEndDate(), currentMonthInvoices.getPaymentStatus(),
                         currentMonthInvoices.getPaymentDate(), currentMonthCanShowPaymentDate,
-                        isToday(currentMonthInvoices.getInvoiceGeneratedDate()), buildHint(currentMonthInvoices),
+                        isToday(invoiceGeneratedLocalDate), buildHint(currentMonthInvoices),
                         buildMessage(currentMonthInvoices)) : null;
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
@@ -202,7 +206,8 @@ public class HostelService {
 
         boolean isEb = invoice.getEb() != null && invoice.getEb() > 0;
 
-        LocalDate invoiceMonth = invoice.getCurrentInvoiceStartDate();
+        Date currentInvoiceStartDate = Utils.convertStringToDate(invoice.getCurrentInvoiceStartDate());
+        LocalDate invoiceMonth = Utils.dateToLocalDate(currentInvoiceStartDate);
 
         String monthName = invoiceMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
@@ -217,11 +222,15 @@ public class HostelService {
     }
 
     private String buildMessage(InvoiceSummaryResponse invoice) {
+
         if (invoice == null || invoice.getCurrentInvoiceStartDate() == null) {
             return "";
         }
 
-        String monthName = getMonthName(invoice.getCurrentInvoiceStartDate());
+        Date currentInvoiceStartDate = Utils.convertStringToDate(invoice.getCurrentInvoiceStartDate());
+        LocalDate currentInvoiceStartLocalDate = Utils.dateToLocalDate(currentInvoiceStartDate);
+
+        String monthName = getMonthName(currentInvoiceStartLocalDate);
         return monthName + " month bill generated";
     }
 

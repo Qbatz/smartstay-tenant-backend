@@ -14,6 +14,7 @@ import com.smartstay.tenant.dto.settlement.*;
 import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.repository.InvoicesV1Repository;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.eb.EbReadingsResponse;
 import com.smartstay.tenant.response.eb.InvoiceEbResponse;
@@ -27,6 +28,9 @@ import com.smartstay.tenant.response.receipt.ReceiptInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -174,18 +178,18 @@ public class InvoiceService {
         response.setDiscountAmount(discountAmount);
         response.setPaidAmount(latestInvoice.getPaidAmount());
         response.setInvoiceNumber(latestInvoice.getInvoiceNumber());
-        response.setInvoiceGeneratedDate(Utils.dateToLocalDate(latestInvoice.getInvoiceGeneratedDate()));
-        response.setInvoiceDueDate(Utils.dateToLocalDate(latestInvoice.getInvoiceDueDate()));
-        response.setCurrentInvoiceStartDate(Utils.dateToLocalDate(latestInvoice.getInvoiceStartDate()));
-        response.setCurrentInvoiceEndDate(Utils.dateToLocalDate(latestInvoice.getInvoiceEndDate()));
+        response.setInvoiceGeneratedDate(Utils.dateToString(latestInvoice.getInvoiceGeneratedDate()));
+        response.setInvoiceDueDate(Utils.dateToString(latestInvoice.getInvoiceDueDate()));
+        response.setCurrentInvoiceStartDate(Utils.dateToString(latestInvoice.getInvoiceStartDate()));
+        response.setCurrentInvoiceEndDate(Utils.dateToString(latestInvoice.getInvoiceEndDate()));
         response.setPaymentStatus(latestInvoice.getPaymentStatus());
-        response.setPaymentDate(Utils.dateToLocalDate(paymentDate));
+        response.setPaymentDate(Utils.dateToString(paymentDate));
 
         return response;
     }
 
-    public ResponseEntity<?> getInvoiceList(String hostelId, Date startDate,
-                                            Date endDate, String dateFilterOption) {
+    public ResponseEntity<?> getInvoiceList(String hostelId, int page, int size,
+                                            Date startDate, Date endDate, String dateFilterOption) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -200,6 +204,11 @@ public class InvoiceService {
         if (hostel == null) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
+
+        Pageable pageable = PageRequest.of(page, size);
 
         Calendar calendar = Calendar.getInstance();
 
@@ -244,8 +253,13 @@ public class InvoiceService {
 //            return new ResponseEntity<>(Utils.INVOICE_ITEMS_NOT_FOUND, HttpStatus.NOT_FOUND);
 //        }
 
-        List<InvoicesV1> invoices = invoicesV1Repository
-                .findInvoicesBetweenStartAndEndDate(hostelId, customerId, startDate, endDate);
+        Page<InvoicesV1> pagedInvoices = invoicesV1Repository
+                .findPagedInvoicesBetweenStartAndEndDate(hostelId, customerId, startDate, endDate, pageable);
+
+        List<InvoicesV1> invoices = pagedInvoices.getContent();
+
+//        List<InvoicesV1> invoices = invoicesV1Repository
+//                .findInvoicesBetweenStartAndEndDate(hostelId, customerId, startDate, endDate);
 
         Set<String> invoiceIds = invoices.stream()
                 .map(InvoicesV1::getInvoiceId)
@@ -352,12 +366,12 @@ public class InvoiceService {
             response.setInvoiceNumber(invoice.getInvoiceNumber());
             response.setAmount(invoice.getTotalAmount());
             response.setDiscountAmount(discountAmount);
-            response.setInvoiceDueDate(Utils.dateToLocalDate(invoice.getInvoiceDueDate()));
-            response.setInvoiceGeneratedDate(Utils.dateToLocalDate(invoice.getInvoiceGeneratedDate()));
-            response.setInvoiceStartDate(Utils.dateToLocalDate(invoice.getInvoiceStartDate()));
-            response.setInvoiceEndDate(Utils.dateToLocalDate(invoice.getInvoiceEndDate()));
-            response.setPaidAt(Utils.dateToLocalDate(paidAt));
-            response.setPaymentDate(Utils.dateToLocalDate(paymentDate));
+            response.setInvoiceDueDate(Utils.dateToString(invoice.getInvoiceDueDate()));
+            response.setInvoiceGeneratedDate(Utils.dateToString(invoice.getInvoiceGeneratedDate()));
+            response.setInvoiceStartDate(Utils.dateToString(invoice.getInvoiceStartDate()));
+            response.setInvoiceEndDate(Utils.dateToString(invoice.getInvoiceEndDate()));
+            response.setPaidAt(Utils.dateToString(paidAt));
+            response.setPaymentDate(Utils.dateToString(paymentDate));
             response.setPaidAmount(invoice.getPaidAmount());
             response.setBalanceAmount(balanceAmount);
             response.setDueAmount(dueAmount);
@@ -371,6 +385,9 @@ public class InvoiceService {
             responseList.add(response);
         }
 
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedInvoices.getTotalElements(), pagedInvoices.getTotalPages());
+
         InvoiceListDto invoiceListDto = new InvoiceListDto();
 //        invoiceListDto.setInvoices(invoiceItemDTOs);
         invoiceListDto.setInvoices(responseList);
@@ -378,6 +395,7 @@ public class InvoiceService {
         invoiceListDto.setHostelUrl(hostel.getMainImage());
         invoiceListDto.setInitials(Utils.getInitials(hostel.getHostelName()));
         invoiceListDto.setDateFilterOptions(List.of("Today", "This Week", "This Month"));
+        invoiceListDto.setPaginationData(paginationDataRes);
 
         return new ResponseEntity<>(invoiceListDto, HttpStatus.OK);
     }
