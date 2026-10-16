@@ -1,18 +1,13 @@
 package com.smartstay.tenant.service;
 
-import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.RestTemplateLoggingInterceptor;
-import com.smartstay.tenant.dao.BankingV1;
-import com.smartstay.tenant.dao.Credentials;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
-import com.smartstay.tenant.ennum.ServiceEnum;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
-import com.smartstay.tenant.repository.BankingV1Repository;
 import com.smartstay.tenant.repository.TransactionV1Repository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,8 +26,6 @@ public class TransactionService {
     @Autowired
     private TransactionV1Repository transactionV1Repository;
     @Autowired
-    private BankingV1Repository bankingV1Repository;
-    @Autowired
     private CustomerService customerService;
     @Autowired
     private Authentication authentication;
@@ -41,6 +34,7 @@ public class TransactionService {
 
     @Value("${REPORTS_URL}")
     private String reportsUrl;
+
     private final RestTemplate restTemplate;
 
     public TransactionService(RestTemplate restTemplate) {
@@ -94,10 +88,6 @@ public class TransactionService {
 
     public Double getTotalPaidAmountByInvoiceId(String invoiceId) {
         return transactionV1Repository.getTotalPaid(invoiceId);
-    }
-
-    public BankingV1 getBankDetailsById(String bankId) {
-        return bankingV1Repository.findById(bankId).orElse(null);
     }
 
     public TransactionV1 getLatestTransactionByInvoiceId(String invoiceId) {
