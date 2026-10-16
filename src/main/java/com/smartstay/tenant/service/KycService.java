@@ -1,12 +1,10 @@
 package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Constants;
+import com.smartstay.tenant.Utils.DateUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.Customers;
-import com.smartstay.tenant.dao.HostelV1;
-import com.smartstay.tenant.dao.KYCUsage;
-import com.smartstay.tenant.dao.KycDetails;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycRequest;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycResponse;
 import com.smartstay.tenant.dto.kyc.DigioKycResponse;
@@ -22,6 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Service
@@ -52,6 +51,10 @@ public class KycService {
     private HostelService hostelService;
     @Autowired
     private KycUsageService kycUsageService;
+    @Autowired
+    private KycConfigService kycConfigService;
+    @Autowired
+    private KycHistoryService kycHistoryService;
 
     public ResponseEntity<?> verifyKycStatus() {
 
@@ -221,15 +224,107 @@ public class KycService {
                 return new ResponseEntity<>(Utils.CUSTOMER_VERIFIED_KYC, HttpStatus.BAD_REQUEST);
             }
             if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.WAITING_FOR_APPROVAL.name())) {
+                return new ResponseEntity<>(Utils.KYC_VERIFICATION_WAITING_FOR_APPROVAL, HttpStatus.BAD_REQUEST);
+            }
+            if (kycDetails.getCurrentStatus().equalsIgnoreCase(KycStatus.REQUESTED.name())) {
                 return new ResponseEntity<>(Utils.KYC_VERIFICATION_ALREADY_REQUESTED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        Date today = new Date();
+        Date todayStart = Utils.getStartOfDay(today);
+
+        KycConfig kycConfig = kycConfigService.getByHostelId(customer.getHostelId());
+        KycHistory latestKycHistory = kycHistoryService.getLatestByHostelId(customer.getHostelId());
+
+        if (kycConfig == null || latestKycHistory == null) {
+            return new ResponseEntity<>(Constants.KYC_NOT_ENABLED, HttpStatus.BAD_REQUEST);
+        }
+
+        if (latestKycHistory.getEndDate() != null){
+            Date historyEndDate = latestKycHistory.getEndDate();
+            Date historyEndDateStart = Utils.getStartOfDay(historyEndDate);
+
+            if (historyEndDateStart.before(todayStart)) {
+                return new ResponseEntity<>(Constants.KYC_NOT_ENABLED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        int limitPerMonth = kycConfig.getLimitPerMonth() != null ? kycConfig.getLimitPerMonth() : -1;
+
+        LocalDate todayLocalDate = Utils.dateToLocalDate(today);
+        Date monthStartDate = DateUtils.getStartDateOfMonth(todayLocalDate);
+
+        long kycDetailsCount = kycDetailsRepository
+                .findCountByHostelIdAndAfterDate(customer.getHostelId(), monthStartDate);
+
+        if (kycDetails == null){
+            if (limitPerMonth != -1 && kycDetailsCount >= limitPerMonth) {
+                return new ResponseEntity<>(Constants.KYC_LIMIT_REACHED, HttpStatus.BAD_REQUEST);
+            }
+        } else if (kycDetails.getCurrentStatus() != null
+                && !KycStatus.REQUESTED.name().equals(kycDetails.getCurrentStatus())){
+
+            if (limitPerMonth != -1 && kycDetailsCount > limitPerMonth) {
+                return new ResponseEntity<>(Constants.KYC_LIMIT_REACHED, HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        String verifyStatus = null;
+
+        if (kycDetails != null && kycDetails.getEntityId() != null) {
+
+            String digioVerifyUrl = digioUrl + kycDetails.getEntityId() + "/response";
+
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth(digioUserName, digioPassword);
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                HttpEntity<String> request = new HttpEntity<>("{}", headers);
+
+                ResponseEntity<DigioKycResponse> response = restTemplate.exchange(
+                        digioVerifyUrl,
+                        HttpMethod.POST,
+                        request,
+                        DigioKycResponse.class
+                );
+
+                DigioKycResponse digioKycResponse = response.getBody();
+                if (digioKycResponse == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No response body found");
+                }
+
+                String status = digioKycResponse.status();
+
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    verifyStatus = status;
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request");
+                }
+            } catch (HttpClientErrorException | HttpServerErrorException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Server error");
+            }
+        }
+
+        if (verifyStatus != null){
+            if (KycStatus.REQUESTED.name().equalsIgnoreCase(verifyStatus)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_REQUESTED);
+            }
+            if (KycStatus.VERIFIED.name().equalsIgnoreCase(verifyStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_VERIFIED);
+            }
+            if (KycStatus.APPROVED.name().equalsIgnoreCase(verifyStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_ALREADY_APPROVED);
+            }
+            if (KycStatus.EXPIRED.name().equalsIgnoreCase(verifyStatus)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.KYC_REQUEST_EXPIRED);
             }
         }
 
         KYCUsage kycUsage = kycUsageService.getByHostelId(customer.getHostelId());
 
         String digioInitiateUrl = digioRequestWithTemplateUrl;
-
-        Date today = new Date();
 
         try {
             HttpHeaders headers = new HttpHeaders();

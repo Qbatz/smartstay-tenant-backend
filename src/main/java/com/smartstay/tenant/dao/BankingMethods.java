@@ -1,0 +1,48 @@
+package com.smartstay.tenant.dao;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.Date;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class BankingMethods {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String paymentMethodId;
+
+    @ManyToOne
+    @JoinColumn(name = "bank_id")
+    private BankingV2 bank;
+
+    //PaymentMethod ENUM
+    private String paymentMethod;
+
+    private String upiId;
+    private Integer upiApp;
+    private String accountNumber;
+    private String displayName;
+    private String description;
+    private String cardNumber;
+    private Integer cardNetwork;
+    private String cardHolderName;
+    private Double creditLimit;
+    private Date billingCycle;
+    private String linkedUpiId;
+    private String qrImage;
+    private String hostelId;
+    private String userId;
+    private Double balance;
+    private Date createdAt;
+    private Date updatedAt;
+    private String createdBy;
+    private String updatedBy;
+}

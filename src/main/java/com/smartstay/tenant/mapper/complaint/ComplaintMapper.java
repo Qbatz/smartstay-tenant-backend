@@ -11,16 +11,18 @@ public class ComplaintMapper implements Function<ComplaintDTO, ComplaintResponse
 
     @Override
     public ComplaintResponse apply(ComplaintDTO dto) {
+
         if (dto == null) return null;
 
         Date complaintDate = dto.complaintDate();
         String complaintDateDisplay = Utils.formatComplaintDate(complaintDate);
+
         return new ComplaintResponse(
                 dto.complaintId(),
                 dto.complaintTypeName(),
                 dto.complaintTypeId(),
                 dto.assigneeMobileNumber(),
-                dto.complaintDate(),
+                Utils.dateToString(complaintDate),
                 dto.description(),
                 dto.status(),
                 dto.assigneeName(),

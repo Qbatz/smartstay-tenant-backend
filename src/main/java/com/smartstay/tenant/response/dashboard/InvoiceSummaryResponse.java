@@ -1,11 +1,8 @@
 package com.smartstay.tenant.response.dashboard;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -17,16 +14,11 @@ public class InvoiceSummaryResponse {
     private Double discountAmount;
     private Double paidAmount;
     private String invoiceNumber;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate invoiceGeneratedDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate invoiceDueDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate currentInvoiceStartDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate currentInvoiceEndDate;
+    private String invoiceGeneratedDate;
+    private String invoiceDueDate;
+    private String currentInvoiceStartDate;
+    private String currentInvoiceEndDate;
     private String paymentStatus;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    private LocalDate paymentDate;
+    private String paymentDate;
 }
 

@@ -21,4 +21,8 @@ public class InvoiceRedemptionService {
     public List<InvoiceRedemption> getInvoiceRedemptionByInvoiceIds(Set<String> invoiceIds){
         return invoiceRedemptionRepository.findByInvoiceIds(invoiceIds);
     }
+
+    public List<InvoiceRedemption> getInvoiceRedemptionBySourceInvoiceId(String invoiceId){
+        return invoiceRedemptionRepository.findBySourceInvoiceId(invoiceId);
+    }
 }
