@@ -452,6 +452,7 @@ public class InvoiceService {
         invoicesTypes.add(InvoiceType.RENT.name());
         invoicesTypes.add(InvoiceType.REASSIGN_RENT.name());
         invoicesTypes.add(InvoiceType.OTHER.name());
+        invoicesTypes.add(InvoiceType.EB.name());
 
         List<InvoicesV1> unpaidInvoices = invoicesV1Repository
                 .findOlderUnpaidInvoicesByInvoiceTypes(customerId, invoicesTypes,
