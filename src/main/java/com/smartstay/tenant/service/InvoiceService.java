@@ -1,5 +1,6 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.BankUtils;
 import com.smartstay.tenant.Utils.InvoiceUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
@@ -510,19 +511,7 @@ public class InvoiceService {
                 BankingV2 bankV2 = bankingService.getV2BankDetails(latestTransaction.getBankId());
 
                 if (bankV2 != null) {
-                    if (bankV2.getAccountType() != null) {
-                        if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                            lastPaymentMode = "Cash";
-                        } else if (BankAccountType.CARD.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                            lastPaymentMode = "Card";
-                        } else if (BankAccountType.UPI.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                            lastPaymentMode = "Upi";
-                        } else if (BankAccountType.BANK.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                            lastPaymentMode = "Bank";
-                        } else {
-                            lastPaymentMode = Utils.capitalize(bankV2.getAccountType());
-                        }
-                    }
+                    lastPaymentMode = BankUtils.formatPaymentMode(bankV2);
                 }
             }
         }
@@ -1260,19 +1249,7 @@ public class InvoiceService {
                 BankingV2 bankV2 = bankingService.getV2BankDetails(latestTransaction.getBankId());
 
                 if (bankV2 != null){
-                    if (bankV2.getAccountType() != null){
-                        if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())){
-                            lastPaymentMode = "Cash";
-                        } else if (BankAccountType.CARD.name().equalsIgnoreCase(bankV2.getAccountType())){
-                            lastPaymentMode = "Card";
-                        }  else if (BankAccountType.UPI.name().equalsIgnoreCase(bankV2.getAccountType())){
-                            lastPaymentMode = "Upi";
-                        }  else if (BankAccountType.BANK.name().equalsIgnoreCase(bankV2.getAccountType())){
-                            lastPaymentMode = "Bank";
-                        } else {
-                            lastPaymentMode = Utils.capitalize(bankV2.getAccountType());
-                        }
-                    }
+                    lastPaymentMode = BankUtils.formatPaymentMode(bankV2);
                 }
             }
         }
@@ -1612,11 +1589,13 @@ public class InvoiceService {
         String upiId = null;
 
         if (bankV2 != null){
-            if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                bankName = "Cash";
-            } else {
-                bankName = bankV2.getBankName();
-            }
+//            if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())) {
+//                bankName = "Cash";
+//            } else {
+//                bankName = bankV2.getBankName();
+//            }
+
+            bankName = BankUtils.getBankName(bankV2, bankingMethods);
 
             account = bankV2.getAccountHolderName() + "-" + bankName;
 
@@ -1967,11 +1946,13 @@ public class InvoiceService {
                 String upiId = null;
 
                 if (bankV2 != null){
-                    if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())) {
-                        bankName = "Cash";
-                    } else {
-                        bankName = bankV2.getBankName();
-                    }
+//                    if (BankAccountType.CASH.name().equalsIgnoreCase(bankV2.getAccountType())) {
+//                        bankName = "Cash";
+//                    } else {
+//                        bankName = bankV2.getBankName();
+//                    }
+
+                    bankName = BankUtils.formatBankName(bankV2);
 
                     accountNumber = bankV2.getAccountNumber();
 
