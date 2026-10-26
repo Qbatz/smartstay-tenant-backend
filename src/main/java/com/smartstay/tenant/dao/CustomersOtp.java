@@ -26,4 +26,5 @@ public class CustomersOtp {
     private String createdBy;
     private Date expiryAt;
     private boolean isVerified;
+    private String tenantPlatform;
 }

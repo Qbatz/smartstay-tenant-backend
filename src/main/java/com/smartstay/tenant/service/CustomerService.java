@@ -451,9 +451,21 @@ public class CustomerService {
 
         customerCredentials = customerCredentialsService.save(customerCredentials);
 
+        String tenantPlatform = payload.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", customerCredentials.getCustomerMobile());
         claims.put("mPin", customerCredentials.getCustomerPin());
+        claims.put("platform", tenantPlatform);
 
         String token = jwtService.generateToken(customerId, claims);
 

@@ -7,6 +7,7 @@ import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.InvoiceType;
+import com.smartstay.tenant.ennum.TenantPlatformEnum;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -68,8 +69,20 @@ public class LoginService {
                     .body("Customer not found.");
         }
 
+        String tenantPlatform = updateMpin.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         credentials.setPinVerified(true);
         credentials.setCustomerPin(updateMpin.mPin());
+        credentials.setTenantPlatform(tenantPlatform);
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 
@@ -110,9 +123,22 @@ public class LoginService {
                     .body("Customer not found for the specified hostel. Please register first.");
         }
 
+        String tenantPlatform = requestToken.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", credentials.getCustomerMobile());
         claims.put("mPin", credentials.getCustomerPin());
+        claims.put("platform", tenantPlatform);
+
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
 
         return new ResponseEntity<>(token, HttpStatus.OK);
@@ -155,7 +181,19 @@ public class LoginService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
 
+        String tenantPlatform = logOut.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         credentials.setFcmToken("");
+        credentials.setTenantPlatform(tenantPlatform);
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 

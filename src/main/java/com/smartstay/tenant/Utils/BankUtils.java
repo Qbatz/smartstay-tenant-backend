@@ -17,10 +17,10 @@ public class BankUtils {
                 if (bankingV2.getDisplayName() != null && !bankingV2.getDisplayName().isBlank()) {
                     builder.append(bankingV2.getDisplayName());
                 }
-                if (!builder.toString().isBlank()){
-                    builder.append("-");
-                }
                 if (bankingV2.getBankAccountType() != null && !bankingV2.getBankAccountType().isBlank()) {
+                    if (!builder.toString().isBlank()){
+                        builder.append("-");
+                    }
                     builder.append(bankingV2.getBankAccountType());
                 }
 
@@ -40,10 +40,10 @@ public class BankUtils {
                     if (bankingMethods.getPaymentMethod() != null && !bankingMethods.getPaymentMethod().isBlank()) {
                         builder.append(bankingMethods.getPaymentMethod());
                     }
-                    if (!builder.toString().isBlank()){
-                        builder.append("-");
-                    }
                     if (bankingMethods.getDisplayName() != null && !bankingMethods.getDisplayName().isBlank()) {
+                        if (!builder.toString().isBlank()){
+                            builder.append("-");
+                        }
                         builder.append(bankingMethods.getDisplayName());
                     }
 

@@ -25,7 +25,7 @@ public class DateUtils {
             return null;
         }
 
-        Period period = Period.between(start, end);
+        Period period = Period.between(start, end.plusDays(1));
 
         int years = period.getYears();
         int months = period.getMonths();

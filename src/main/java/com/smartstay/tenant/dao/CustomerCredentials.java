@@ -24,4 +24,5 @@ public class CustomerCredentials {
     private String defaultHostel;
     private String fcmToken;
     private Date createdAt;
+    private String tenantPlatform;
 }

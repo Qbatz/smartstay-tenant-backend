@@ -25,7 +25,6 @@ public class JWTService {
 
     public static final long TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000; // 30 days
 
-
     public JWTService() {
 //        secretKey = generateSecretKey();
     }
@@ -92,5 +91,4 @@ public class JWTService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
 }
