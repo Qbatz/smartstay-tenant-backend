@@ -41,6 +41,7 @@ public class Customers {
     private Date lastUpdatedAt;
     private String updatedBy;
     private String mobSerialNo;
+    private String tenantPlatform;
 
     @OneToOne(mappedBy = "customers", cascade = CascadeType.ALL, orphanRemoval = true)
     private Advance advance;

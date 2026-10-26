@@ -136,6 +136,8 @@ public class KycService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customer = customerService.getCustomerInformation(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
@@ -180,6 +182,7 @@ public class KycService {
 
         kycDetails.setCurrentStatus(KycStatus.WAITING_FOR_APPROVAL.name());
         kycDetails.setUpdatedAt(today);
+        kycDetails.setTenantPlatform(tenantPlatform);
 
         int existingVerificationCount = 0;
         if (kycUsage.getVerifiedCount() != null){
@@ -188,6 +191,7 @@ public class KycService {
         kycUsage.setLatestCompletionBy(customerId);
         kycUsage.setLatestVerified(today);
         kycUsage.setVerifiedCount(existingVerificationCount + 1);
+        kycUsage.setTenantPlatform(tenantPlatform);
 
         kycDetailsRepository.save(kycDetails);
         kycUsageService.save(kycUsage);
@@ -202,6 +206,8 @@ public class KycService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customer = customerService.getCustomerInformation(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
@@ -368,6 +374,7 @@ public class KycService {
                     kycDetails.setAccessTokenId(kycAccessToken.id());
                     kycDetails.setExpireAt(Utils.stringDateToDate(kycAccessToken.validTill()));
                 }
+                kycDetails.setTenantPlatform(tenantPlatform);
 
                 if (kycUsage == null){
                     kycUsage = new KYCUsage();
@@ -383,6 +390,7 @@ public class KycService {
                 }
                 kycUsage.setLatestRequest(today);
                 kycUsage.setLatestRequestTo(customerId);
+                kycUsage.setTenantPlatform(tenantPlatform);
 
                 kycDetails = kycDetailsRepository.save(kycDetails);
                 kycUsageService.save(kycUsage);

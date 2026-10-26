@@ -33,6 +33,8 @@ public class CustomerJobDetailsService {
     public ResponseEntity<?> createOrUpdateCustomerJobDetails(List<CustomerJobDetailsPayload> payloads) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customer = customerService.getCustomerById(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
@@ -120,6 +122,7 @@ public class CustomerJobDetailsService {
                     customerJobDetails.setUpdatedBy(customerId);
                     customerJobDetails.setUpdatedAt(today);
                 }
+                customerJobDetails.setTenantPlatform(tenantPlatform);
                 updatableCustomerJobDetails.add(customerJobDetails);
             }
         }

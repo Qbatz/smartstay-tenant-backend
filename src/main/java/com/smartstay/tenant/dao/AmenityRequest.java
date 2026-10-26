@@ -31,4 +31,5 @@ public class AmenityRequest {
     String description;
     Date createdAt;
     Date updatedAt;
+    String tenantPlatform;
 }

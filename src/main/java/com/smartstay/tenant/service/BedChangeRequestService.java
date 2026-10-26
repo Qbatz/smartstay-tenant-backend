@@ -45,9 +45,11 @@ public class BedChangeRequestService {
         return bedChangeRequestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
     }
 
-    public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId, BedChangePayload request) {
+    public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId,
+                                                 BedChangePayload request, String tenantPlatform) {
 
         BedChangeRequest bedRequest = new BedChangeRequest();
+
         bedRequest.setHostelId(hostelId);
         bedRequest.setCustomerId(customerId);
         if (request.bedId() != null) {
@@ -81,6 +83,8 @@ public class BedChangeRequestService {
         bedRequest.setCreatedAt(new Date());
         bedRequest.setActive(true);
         bedRequest.setDeleted(false);
+        bedRequest.setTenantPlatform(tenantPlatform);
+
         return bedChangeRequestRepo.save(bedRequest);
     }
 

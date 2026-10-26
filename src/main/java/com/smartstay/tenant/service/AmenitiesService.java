@@ -118,6 +118,8 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
 
+        String tenantPlatform = authentication.getPlatform();
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -141,7 +143,7 @@ public class AmenitiesService {
         }
 
         notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
-        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
+        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request, tenantPlatform);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -172,6 +174,7 @@ public class AmenitiesService {
     public ResponseEntity<?> deactivateAmenity(String hostelId, String amenityId) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -203,6 +206,7 @@ public class AmenitiesService {
         customersAmenity.setEndDate(endDate != null ? endDate : today);
         customersAmenity.setUpdatedBy(authentication.getName());
         customersAmenity.setUpdatedAt(today);
+        customersAmenity.setTenantPlatform(tenantPlatform);
 
         customerAmenityRepository.save(customersAmenity);
 

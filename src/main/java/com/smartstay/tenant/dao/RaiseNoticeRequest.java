@@ -37,4 +37,5 @@ public class RaiseNoticeRequest {
     private String updatedBy;
     private boolean isActive = true;
     private boolean isDeleted = false;
+    private String tenantPlatform;
 }

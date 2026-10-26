@@ -32,4 +32,5 @@ public class CustomerDocuments {
     private String createdByUserType;
     private Date createdAt;
     private Date updatedAt;
+    private String tenantPlatform;
 }

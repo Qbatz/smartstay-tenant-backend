@@ -35,4 +35,5 @@ public class CustomerAdditionalContacts {
     private String updatedBy;
     private Date createdAt;
     private Date updatedAt;
+    private String tenantPlatform;
 }

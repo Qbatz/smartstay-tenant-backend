@@ -43,6 +43,8 @@ public class CustomerAdditionalContactsService {
     public ResponseEntity<?> addAdditionalContacts(List<CustomerAdditionalContactsPayload> payloads) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customer = customerService.getCustomerById(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
@@ -60,7 +62,9 @@ public class CustomerAdditionalContactsService {
         List<CustomerAdditionalContacts> additionalContacts = new ArrayList<>();
 
         for (CustomerAdditionalContactsPayload payload : payloads) {
+
             CustomerAdditionalContacts additionalContact = new CustomerAdditionalContacts();
+
             additionalContact.setName(payload.name());
             additionalContact.setRelationship(payload.relationship());
             additionalContact.setOccupation(payload.occupation());
@@ -76,6 +80,7 @@ public class CustomerAdditionalContactsService {
             additionalContact.setUpdatedBy(null);
             additionalContact.setCreatedAt(new Date());
             additionalContact.setUpdatedAt(null);
+            additionalContact.setTenantPlatform(tenantPlatform);
 
             additionalContacts.add(additionalContact);
         }

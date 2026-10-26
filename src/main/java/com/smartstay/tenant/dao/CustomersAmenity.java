@@ -26,4 +26,5 @@ public class CustomersAmenity {
     String updatedBy;
     Date startDate;
     Date endDate;
+    String tenantPlatform;
 }

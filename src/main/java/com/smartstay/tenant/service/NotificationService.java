@@ -275,6 +275,7 @@ public class NotificationService {
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.AMENITY_REQUEST.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -296,11 +297,13 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
+
         notificationService.saveAdminNotification(notification);
     }
 
     public String markAsRead(List<Long> notificationIds, String hostelId) {
-        int updatedCount = notificationService.markNotificationsAsRead(notificationIds, hostelId);
+        int updatedCount = notificationService
+                .markNotificationsAsRead(notificationIds, hostelId);
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 

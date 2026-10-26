@@ -38,4 +38,5 @@ public class CustomerJobDetails {
     private Date createdAt;
     private String updatedBy;
     private Date updatedAt;
+    private String tenantPlatform;
 }

@@ -51,12 +51,15 @@ public class DateUtils {
                     .append(months == 1 ? " month" : " months");
         }
 
-        // Only show days when there are no months or years
-        if (years == 0 && months == 0) {
-            duration.append(days == 1 ? "1 day" : days + " days");
+        if (days > 0) {
+            if (!duration.isEmpty()) {
+                duration.append(" ");
+            }
+            duration.append(days)
+                    .append(days == 1 ? " day" : " days");
         }
 
-        return duration.toString();
+        return duration.isEmpty() ? "1 day" : duration.toString();
     }
 
     public static Date getStartDateOfMonth(LocalDate date){

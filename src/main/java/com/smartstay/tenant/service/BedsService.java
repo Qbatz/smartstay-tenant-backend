@@ -42,6 +42,8 @@ public class BedsService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
 
+        String tenantPlatform = authentication.getPlatform();
+
         String customerId = authentication.getName();
         Customers customers = customerService.getCustomerInformation(customerId);
         if (customers == null) {
@@ -67,7 +69,7 @@ public class BedsService {
             return new ResponseEntity<>(Utils.PENDING_REQUEST_EXISTS, HttpStatus.BAD_REQUEST);
         }
 
-        bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request);
+        bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request, tenantPlatform);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
         fcmNotificationService.sendNotificationBedChangeRequest(hostelId);
 

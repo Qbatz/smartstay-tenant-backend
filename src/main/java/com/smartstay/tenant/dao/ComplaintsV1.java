@@ -35,6 +35,7 @@ public class  ComplaintsV1 {
     private Date assignedDate;
     private Boolean isActive;
     private Boolean isDeleted;
+    private String tenantPlatform;
 
     @OneToMany(mappedBy = "complaint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude

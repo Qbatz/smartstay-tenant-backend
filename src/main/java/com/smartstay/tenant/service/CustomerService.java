@@ -129,6 +129,8 @@ public class CustomerService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customers = customersRepository.findById(customerId).orElse(null);
         if (customers == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
@@ -185,6 +187,7 @@ public class CustomerService {
                     return new ResponseEntity<>(Utils.INVALID_GENDER_VALUE, HttpStatus.BAD_REQUEST);
                 }
             }
+            customers.setTenantPlatform(tenantPlatform);
 
             customersRepository.save(customers);
 
@@ -228,6 +231,7 @@ public class CustomerService {
                         additionalContact.setUpdatedByUserType(UserType.TENANT.name());
                         additionalContact.setUpdatedBy(customerId);
                         additionalContact.setUpdatedAt(new Date());
+                        additionalContact.setTenantPlatform(tenantPlatform);
                     }
                 }
 
@@ -301,12 +305,15 @@ public class CustomerService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customers = customersRepository.findById(customerId).orElse(null);
         if (customers == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
         customers.setProfilePic(null);
+        customers.setTenantPlatform(tenantPlatform);
 
         customersRepository.save(customers);
 
@@ -316,6 +323,7 @@ public class CustomerService {
     public ResponseEntity<?> changeMpin(CustomerMpinPayload payload) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         Customers customer = customersRepository.findById(customerId).orElse(null);
         if (customer == null) {
@@ -335,7 +343,8 @@ public class CustomerService {
             return new ResponseEntity<>(Constants.CHANGE_MPIN_CAN_NOT_BE_SAME, HttpStatus.BAD_REQUEST);
         }
 
-        CustomersOtp customersOtp = customersOtpService.createNewCustomersOtp(customerCredentials);
+        CustomersOtp customersOtp = customersOtpService
+                .createNewCustomersOtp(customerCredentials, tenantPlatform);
 
         int otp = customersOtp.getOtp();
 
@@ -355,6 +364,7 @@ public class CustomerService {
     public ResponseEntity<?> resendMpinOtp() {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         Customers customer = customersRepository.findById(customerId).orElse(null);
         if (customer == null) {
@@ -382,6 +392,7 @@ public class CustomerService {
         if (!customersOtp.isVerified()) {
             customersOtp.setExpiryAt(expiryAt);
             customersOtp.setUpdatedAt(new Date());
+            customersOtp.setTenantPlatform(tenantPlatform);
             customersOtp = customersOtpService.save(customersOtp);
         } else {
             return new ResponseEntity<>(Constants.NO_UNVERIFIED_OTP, HttpStatus.FORBIDDEN);
@@ -405,6 +416,7 @@ public class CustomerService {
     public ResponseEntity<?> verifyMpinOtp(CustomerMpinOtpPayload payload) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         Customers customer = customersRepository.findById(customerId).orElse(null);
         if (customer == null) {
@@ -443,29 +455,31 @@ public class CustomerService {
         customersOtp.setOtp(0);
         customersOtp.setUpdatedAt(new Date());
         customersOtp.setExpiryAt(null);
+        customersOtp.setTenantPlatform(tenantPlatform);
 
         customersOtpService.save(customersOtp);
 
         customerCredentials.setCustomerPin(payload.mpin());
         customerCredentials.setPinVerified(true);
+        customerCredentials.setTenantPlatform(tenantPlatform);
 
         customerCredentials = customerCredentialsService.save(customerCredentials);
 
-        String tenantPlatform = payload.platform();
-        if (tenantPlatform != null && !tenantPlatform.isBlank()){
-            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
-                tenantPlatform = TenantPlatformEnum.IOS.name();
+        String payloadPlatform = payload.platform();
+        if (payloadPlatform != null && !payloadPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(payloadPlatform)){
+                payloadPlatform = TenantPlatformEnum.IOS.name();
             } else {
-                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+                payloadPlatform = TenantPlatformEnum.ANDROID.name();
             }
         } else {
-            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            payloadPlatform = TenantPlatformEnum.ANDROID.name();
         }
 
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", customerCredentials.getCustomerMobile());
         claims.put("mPin", customerCredentials.getCustomerPin());
-        claims.put("platform", tenantPlatform);
+        claims.put("platform", payloadPlatform);
 
         String token = jwtService.generateToken(customerId, claims);
 
@@ -475,6 +489,7 @@ public class CustomerService {
     public ResponseEntity<?> raiseNoticeRequest(String hostelId, RaiseNoticePayload payload) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -541,6 +556,7 @@ public class CustomerService {
         raiseNoticeRequest.setCreatedBy(customerId);
         raiseNoticeRequest.setActive(true);
         raiseNoticeRequest.setDeleted(false);
+        raiseNoticeRequest.setTenantPlatform(tenantPlatform);
 
         raiseNoticeRequest = raiseNoticeRequestService.save(raiseNoticeRequest);
 

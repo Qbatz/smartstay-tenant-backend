@@ -57,6 +57,7 @@ public class ComplaintsController {
                                           @PathVariable("hostelId") String hostelId) {
         return complaintsService.addComplaint(complaintImages, payloads, hostelId);
     }
+
     @PutMapping("/{hostelId}/{complaintId}")
     public ResponseEntity<?> editComplaint(@RequestPart(required = false, name = "complaintImage") List<MultipartFile> complaintImages,
                                            @RequestPart(value = "payloads", required = false) UpdateComplaint payloads,
