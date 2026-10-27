@@ -533,13 +533,13 @@ public class InvoiceService {
 
         if (advanceInvoice != null) {
             advanceInvoiceNumber = advanceInvoice.getInvoiceNumber();
-            advanceAmount = advanceInvoice.getTotalAmount();
+            advanceAmount = advanceInvoice.getTotalAmount() != null ? advanceInvoice.getTotalAmount() : 0.0;
             if (advanceInvoice.getPaidAmount() != null) {
                 advancePaid = advanceInvoice.getPaidAmount();
             }
         }
         if (bookingInvoice != null) {
-            bookingAmount = bookingInvoice.getTotalAmount();
+            bookingAmount = bookingInvoice.getTotalAmount() != null ? bookingInvoice.getTotalAmount() : 0.0;
         }
 
         if (customers != null) {
@@ -677,14 +677,18 @@ public class InvoiceService {
                                 Utils.dateToString(createdAt) : null;
                         String createdAtTime = createdAt != null ?
                                 Utils.dateToTime(createdAt) : null;
+                        double unpaidInvTotalAmount = unpaidInvoice.getTotalAmount() != null ?
+                                unpaidInvoice.getTotalAmount() : 0.0;
+                        double unpaidInvPaidAmount = unpaidInvoice.getPaidAmount() != null ?
+                                unpaidInvoice.getPaidAmount() : 0.0;
                         return new UnpaidInvoices(
                                 unpaidInvoice.getInvoiceId(),
                                 unpaidInvoice.getInvoiceNumber(),
                                 unpaidInvoice.getInvoiceType(),
-                                unpaidInvoice.getTotalAmount(),
-                                unpaidInvoice.getPaidAmount(),
-                                Utils.roundOffWithTwoDigit(unpaidInvoice.getTotalAmount()
-                                        - unpaidInvoice.getPaidAmount()),
+                                unpaidInvTotalAmount,
+                                unpaidInvPaidAmount,
+                                Utils.roundOffWithTwoDigit(unpaidInvTotalAmount
+                                        - unpaidInvPaidAmount),
                                 cancelledDateString,
                                 generatedDateString,
                                 createdAtDate,
@@ -771,10 +775,11 @@ public class InvoiceService {
         }
 
         double dueAmount;
-        if (invoice.getTotalAmount() < 0) {
-            dueAmount = invoice.getTotalAmount() + totalPaid;
+        double invTotalAmount = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+        if (invTotalAmount < 0) {
+            dueAmount = invTotalAmount + totalPaid;
         } else {
-            dueAmount = invoice.getTotalAmount() - totalPaid;
+            dueAmount = invTotalAmount - totalPaid;
         }
 
         String status = dueAmount == 0 ? "Paid" : totalPaid == 0 ? "Pending" : "Partially Paid";
@@ -1471,10 +1476,11 @@ public class InvoiceService {
         }
 
         double dueAmount;
-        if (invoice.getTotalAmount() < 0) {
-            dueAmount = invoice.getTotalAmount() + totalPaid + redeemedFromAmount;
+        double invTotalAmount = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+        if (invTotalAmount < 0) {
+            dueAmount = invTotalAmount + totalPaid + redeemedFromAmount;
         } else {
-            dueAmount = invoice.getTotalAmount() - totalPaid - redeemedFromAmount;
+            dueAmount = invTotalAmount - totalPaid - redeemedFromAmount;
         }
 
         String paymentStatus = null;
