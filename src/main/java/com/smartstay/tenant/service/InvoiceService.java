@@ -1282,14 +1282,18 @@ public class InvoiceService {
                                 Utils.dateToString(createdAt) : null;
                         String createdAtTime = createdAt != null ?
                                 Utils.dateToTime(createdAt) : null;
+                        double unpaidInvTotalAmount = unpaidInvoice.getTotalAmount() != null ?
+                                unpaidInvoice.getTotalAmount() : 0.0;
+                        double unpaidInvPaidAmount = unpaidInvoice.getPaidAmount() != null ?
+                                unpaidInvoice.getPaidAmount() : 0.0;
                         return new UnpaidInvoices(
                                 unpaidInvoice.getInvoiceId(),
                                 unpaidInvoice.getInvoiceNumber(),
                                 unpaidInvoice.getInvoiceType(),
-                                unpaidInvoice.getTotalAmount(),
-                                unpaidInvoice.getPaidAmount(),
-                                Utils.roundOffWithTwoDigit(unpaidInvoice.getTotalAmount()
-                                        - unpaidInvoice.getPaidAmount()),
+                                unpaidInvTotalAmount,
+                                unpaidInvPaidAmount,
+                                Utils.roundOffWithTwoDigit(unpaidInvTotalAmount
+                                        - unpaidInvPaidAmount),
                                 cancelledDateString,
                                 generatedDateString,
                                 createdAtDate,
