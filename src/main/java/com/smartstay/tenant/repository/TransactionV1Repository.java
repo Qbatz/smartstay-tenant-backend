@@ -27,7 +27,7 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
                 t.transactionReferenceId
             )
             FROM TransactionV1 t
-            LEFT JOIN BankingV1 b ON b.bankId = t.bankId
+            LEFT JOIN bankingv2 b ON b.bankId = t.bankId
             WHERE t.invoiceId = :invoiceId
             ORDER BY t.paidAt DESC
             """)
