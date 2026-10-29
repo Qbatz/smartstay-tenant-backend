@@ -3,6 +3,8 @@ package com.smartstay.tenant.repository;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -70,4 +72,6 @@ public interface TransactionV1Repository extends JpaRepository<TransactionV1, St
             WHERE t.invoice_id IN (:invoiceIds)
             """, nativeQuery = true)
     List<TransactionV1> findLatestTransactionsByInvoiceIds(@Param("invoiceIds") Set<String> invoiceIds);
+
+    Page<TransactionV1> findAllByCustomerIdAndHostelId(String customerId, String hostelId, Pageable pageable);
 }

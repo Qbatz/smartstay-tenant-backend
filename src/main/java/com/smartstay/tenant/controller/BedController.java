@@ -27,8 +27,10 @@ public class BedController {
     }
 
     @GetMapping("all-requests/{hostelId}")
-    public ResponseEntity<?> getBedRequests(@PathVariable("hostelId") String hostelId) {
-        return bedsService.getBedRequests(hostelId);
+    public ResponseEntity<?> getBedRequests(@PathVariable("hostelId") String hostelId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return bedsService.getBedRequests(hostelId, page, size);
     }
 
     @GetMapping("/bed-change-urgency")

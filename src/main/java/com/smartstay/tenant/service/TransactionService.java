@@ -9,8 +9,13 @@ import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
 import com.smartstay.tenant.repository.TransactionV1Repository;
+import com.smartstay.tenant.response.PaginationDataRes;
+import com.smartstay.tenant.response.receipt.TransactionResWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -46,7 +51,7 @@ public class TransactionService {
         return transactionV1Repository.findById(transactionId).orElse(null);
     }
 
-    public ResponseEntity<?> getTransactionList(String hostelId) {
+    public ResponseEntity<?> getTransactionList(String hostelId, int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -57,25 +62,53 @@ public class TransactionService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<TransactionDto> transactionDtos = getTransactionInfoByCustomerId(customerId, hostelId);
-        if (transactionDtos.isEmpty()) {
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<TransactionV1> pagedTransactions = transactionV1Repository
+                .findAllByCustomerIdAndHostelId(hostelId, customerId, pageable);
+
+        List<TransactionV1> transactions = pagedTransactions.getContent();
+
+        List<TransactionDto> transactionRes = transactions.stream()
+                .map(i -> new TransactionForCustomerDetailsMapper()
+                        .apply(i))
+                .toList();
+
+        if (transactionRes.isEmpty()) {
             return new ResponseEntity<>(Utils.PAYMENTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(transactionDtos, HttpStatus.OK);
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedTransactions.getTotalElements(), pagedTransactions.getTotalPages());
+
+        TransactionResWrapper response = new TransactionResWrapper(paginationDataRes, transactionRes);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public List<TransactionDto> getTransactionInfoByCustomerId(String customerId, String hostelId) {
-        if (authentication.isAuthenticated()) {
-            List<TransactionV1> listTransactions = transactionV1Repository.findByCustomerIdAndHostelId(customerId, hostelId);
 
-            return listTransactions.stream().map(i -> new TransactionForCustomerDetailsMapper().apply(i)).toList();
+        if (authentication.isAuthenticated()) {
+
+            List<TransactionV1> listTransactions = transactionV1Repository
+                    .findByCustomerIdAndHostelId(customerId, hostelId);
+
+            return listTransactions.stream()
+                    .map(i -> new TransactionForCustomerDetailsMapper()
+                            .apply(i))
+                    .toList();
         }
+
         return new ArrayList<>();
     }
 
     public List<ReceiptDTO> getReceiptsByInvoiceId(String invoiceId) {
-        List<ReceiptDTO> receipts = transactionV1Repository.getReceiptsByInvoiceId(invoiceId);
+
+        List<ReceiptDTO> receipts = transactionV1Repository
+                .getReceiptsByInvoiceId(invoiceId);
 
         for (ReceiptDTO r : receipts) {
             if (r.getPaymentMode() != null) {

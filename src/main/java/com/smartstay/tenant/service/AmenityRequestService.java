@@ -11,6 +11,8 @@ import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
@@ -102,5 +104,10 @@ public class AmenityRequestService {
 
     public AmenityRequest getAmenityRequestByCustomerIdAndAmenityId(String customerId, String amenityId) {
         return amenityRequestRepository.findByCustomerIdAndAmenityIdAndIsActiveTrue(customerId, amenityId);
+    }
+
+    public Page<AmenityRequest> getPagedAmenityRequestsByCustomerIdAndHostelId(String customerId, String hostelId,
+                                                                               Pageable pageable) {
+        return amenityRequestRepository.findAllByHostelIdAndCustomerId(hostelId, customerId, pageable);
     }
 }

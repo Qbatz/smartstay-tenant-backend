@@ -39,8 +39,10 @@ public class AmenityController {
     }
 
     @GetMapping("/all-requests/{hostelId}")
-    public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId) {
-        return amenitiesService.getAmenityRequest(hostelId);
+    public ResponseEntity<?> getAmenityRequest(@PathVariable("hostelId") String hostelId,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size) {
+        return amenitiesService.getAmenityRequest(hostelId, page, size);
     }
 
     @DeleteMapping("/request/{hostelId}/{requestId}")

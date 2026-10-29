@@ -53,8 +53,10 @@ public class InvoiceController {
     }
 
     @GetMapping("payment-list/{hostelId}")
-    public ResponseEntity<?> getPaymentList(@PathVariable String hostelId) {
-        return transactionService.getTransactionList(hostelId);
+    public ResponseEntity<?> getPaymentList(@PathVariable String hostelId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return transactionService.getTransactionList(hostelId, page, size);
     }
 
     @GetMapping("/pdf/{hostelId}/{invoiceId}")
