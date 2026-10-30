@@ -1,6 +1,5 @@
 package com.smartstay.tenant.service;
 
-
 import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.dto.BillingDates;
@@ -12,6 +11,8 @@ import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
@@ -21,13 +22,10 @@ import java.util.List;
 @Service
 public class AmenityRequestService {
 
-
     @Autowired
     private AmenityRequestRepository amenityRequestRepository;
-
     @Autowired
     private HostelConfigService hostelConfigService;
-
     private AmenitiesService amenitiesService;
 
     @Autowired
@@ -35,8 +33,11 @@ public class AmenityRequestService {
         this.amenitiesService = amenitiesService;
     }
 
-    public void createAmenityEntry(String customerId, String hostelId, String amenityId, RequestAmenity request) {
+    public void createAmenityEntry(String customerId, String hostelId, String amenityId,
+                                   RequestAmenity request, String tenantPlatform) {
+
         AmenityRequest amenityRequest = new AmenityRequest();
+
         amenityRequest.setCustomerId(customerId);
         amenityRequest.setHostelId(hostelId);
         amenityRequest.setAmenityId(amenityId);
@@ -52,20 +53,25 @@ public class AmenityRequestService {
         amenityRequest.setCreatedAt(new Date());
         amenityRequest.setUpdatedAt(new Date());
         amenityRequest.setUpdatedBy(customerId);
+        amenityRequest.setTenantPlatform(tenantPlatform);
 
         amenityRequestRepository.save(amenityRequest);
     }
 
     public BillingDates getLatestBillRuleByHostelIdAndStartDate(String hostelId, Date date) {
+
         BillingDates billingDates = hostelConfigService.getBillingRuleByDateAndHostelId(hostelId, new Date());
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(billingDates.currentBillStartDate());
         calendar.add(Calendar.MONTH, 1);
+
         return hostelConfigService.getBillingRuleByDateAndHostelId(hostelId, calendar.getTime());
     }
 
     public boolean existsPendingRequest(String customerId, String amenityId) {
-        return amenityRequestRepository.existsPendingRequest(customerId, amenityId, List.of(RequestStatus.OPEN.name(), RequestStatus.INPROGRESS.name()));
+        return amenityRequestRepository.existsPendingRequest(customerId, amenityId,
+                List.of(RequestStatus.OPEN.name(), RequestStatus.INPROGRESS.name()));
     }
 
     public List<RequestItemResponse> getRequests(String customerId, String hostelId) {
@@ -98,5 +104,10 @@ public class AmenityRequestService {
 
     public AmenityRequest getAmenityRequestByCustomerIdAndAmenityId(String customerId, String amenityId) {
         return amenityRequestRepository.findByCustomerIdAndAmenityIdAndIsActiveTrue(customerId, amenityId);
+    }
+
+    public Page<AmenityRequest> getPagedAmenityRequestsByCustomerIdAndHostelId(String customerId, String hostelId,
+                                                                               Pageable pageable) {
+        return amenityRequestRepository.findAllByHostelIdAndCustomerId(hostelId, customerId, pageable);
     }
 }

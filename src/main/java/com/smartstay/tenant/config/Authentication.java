@@ -29,4 +29,21 @@ public class Authentication {
 
         return null;
     }
+
+    public String getPlatform() {
+
+        org.springframework.security.core.Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.isAuthenticated()) {
+
+            Object details = authentication.getDetails();
+
+            if (details instanceof Claims claims) {
+                return claims.get("platform", String.class);
+            }
+        }
+
+        return null;
+    }
 }

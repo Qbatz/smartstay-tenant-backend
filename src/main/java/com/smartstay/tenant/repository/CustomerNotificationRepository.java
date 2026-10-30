@@ -4,6 +4,8 @@ import com.smartstay.tenant.dao.AdminNotifications;
 import com.smartstay.tenant.dao.CustomerNotifications;
 import com.smartstay.tenant.response.notification.NotificationProjection;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +24,8 @@ public interface CustomerNotificationRepository extends JpaRepository<CustomerNo
                     CONCAT(UCASE(LEFT(notification_type, 1)), LCASE(SUBSTRING(notification_type, 2))) AS notificationType,
                     notification_type as fullNotificationType,
                     DATE_FORMAT(created_at, '%d/%m/%Y') AS createdDate,
-                    is_read
+                    is_read,
+                    source_id
                 FROM customer_notifications
                 WHERE hostel_id = :hostelId
                 AND user_id = :userId
@@ -32,6 +35,38 @@ public interface CustomerNotificationRepository extends JpaRepository<CustomerNo
             """, nativeQuery = true)
     List<NotificationProjection> getActiveNotifications(@Param("hostelId") String hostelId,
                                                         @Param("userId") String userId);
+
+    @Query(
+            value = """
+                    SELECT
+                        id,
+                        CONCAT(UCASE(LEFT(title, 1)), LCASE(SUBSTRING(title, 2))) AS title,
+                        description,
+                        CONCAT(UCASE(LEFT(notification_type, 1)), LCASE(SUBSTRING(notification_type, 2))) AS notificationType,
+                        notification_type AS fullNotificationType,
+                        DATE_FORMAT(created_at, '%d/%m/%Y') AS createdDate,
+                        is_read,
+                        source_id
+                    FROM customer_notifications
+                    WHERE hostel_id = :hostelId
+                      AND user_id = :userId
+                      AND is_deleted = false
+                      AND is_active = true
+                    ORDER BY created_at DESC
+                    """,
+            countQuery = """
+                    SELECT COUNT(*)
+                    FROM customer_notifications
+                    WHERE hostel_id = :hostelId
+                      AND user_id = :userId
+                      AND is_deleted = false
+                      AND is_active = true
+                    """,
+            nativeQuery = true
+    )
+    Page<NotificationProjection> findPagedActiveNotifications(@Param("hostelId") String hostelId,
+                                                              @Param("userId") String userId,
+                                                              Pageable pageable);
 
     @Query(value = """
                 SELECT

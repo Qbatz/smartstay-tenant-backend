@@ -1,7 +1,9 @@
 package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.dao.BankingV1;
+import com.smartstay.tenant.dao.BankingV2;
 import com.smartstay.tenant.repository.BankingV1Repository;
+import com.smartstay.tenant.repository.BankingV2Repository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,8 +12,14 @@ public class BankingService {
 
     @Autowired
     private BankingV1Repository bankingV1Repository;
+    @Autowired
+    private BankingV2Repository bankingV2Repository;
 
     public BankingV1 getBankDetails(String bankAccountId) {
         return bankingV1Repository.findByBankId(bankAccountId);
+    }
+
+    public BankingV2 getV2BankDetails(String bankId) {
+        return bankingV2Repository.findByBankIdAndIsActiveTrueAndIsDeletedFalse(bankId);
     }
 }

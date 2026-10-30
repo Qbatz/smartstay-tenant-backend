@@ -34,4 +34,5 @@ public class BedChangeRequest {
     String currentStatus;
     boolean isActive;
     boolean isDeleted;
+    String tenantPlatform;
 }

@@ -14,13 +14,19 @@ import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
 import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.HostelRepository;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.customer.CustomerHostels;
+import com.smartstay.tenant.response.customer.CustomerRequestsResWrapper;
 import com.smartstay.tenant.response.dashboard.InvoiceSummaryResponse;
 import com.smartstay.tenant.response.hostel.HostelDetails;
+import com.smartstay.tenant.response.hostel.HostelResWrapper;
 import com.smartstay.tenant.response.hostel.InvoiceSummary;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,7 +55,7 @@ public class HostelService {
     @Autowired
     private BedChangeRequestService bedChangeRequestService;
 
-    public ResponseEntity<?> getHostels() {
+    public ResponseEntity<?> getHostels(int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -57,9 +63,21 @@ public class HostelService {
 
         String customerId = authentication.getName();
 
-        List<CustomerHostels> hostels = hostelRepository.findHostels(customerId);
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
 
-        return new ResponseEntity<>(hostels, HttpStatus.OK);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<CustomerHostels> pagedHostels = hostelRepository.findHostels(customerId, pageable);
+
+        List<CustomerHostels> hostels = pagedHostels.getContent();
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedHostels.getTotalElements(), pagedHostels.getTotalPages());
+
+        HostelResWrapper response = new HostelResWrapper(paginationDataRes, hostels);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getHostelDetails(String hostelId) {
@@ -115,17 +133,23 @@ public class HostelService {
                         previousMonthInvoices.getPaymentDate(), previousMonthCanShowPaymentDate, false,
                         buildHint(previousMonthInvoices), buildMessage(previousMonthInvoices)) : null;
 
+        Date invoiceGeneratedDate = Utils.convertStringToDate(currentMonthInvoices != null ?
+                currentMonthInvoices.getInvoiceGeneratedDate() : null);
+        LocalDate invoiceGeneratedLocalDate = Utils.dateToLocalDate(invoiceGeneratedDate);
+
         InvoiceSummary currentSummary = currentMonthInvoices != null ?
                 new InvoiceSummary(currentMonthInvoices.getRent(), currentMonthInvoices.getEb(), currentMonthInvoices.getDiscountAmount(),
                         currentMonthInvoices.getPaidAmount(), currentMonthInvoices.getInvoiceNumber(), currentMonthInvoices.getInvoiceGeneratedDate(),
                         currentMonthInvoices.getInvoiceDueDate(), currentMonthInvoices.getCurrentInvoiceStartDate(),
                         currentMonthInvoices.getCurrentInvoiceEndDate(), currentMonthInvoices.getPaymentStatus(),
                         currentMonthInvoices.getPaymentDate(), currentMonthCanShowPaymentDate,
-                        isToday(currentMonthInvoices.getInvoiceGeneratedDate()), buildHint(currentMonthInvoices),
+                        isToday(invoiceGeneratedLocalDate), buildHint(currentMonthInvoices),
                         buildMessage(currentMonthInvoices)) : null;
 
         List<ComplaintDTO> complaints = complaintService.getComplaints(hostelId, customerId);
+
         ComplaintDateResponseMapper complaintDateResponseMapper = new ComplaintDateResponseMapper();
+
         List<ComplaintDateResponse> complaintDateResponseList = complaints.stream()
                 .map(complaintDateResponseMapper).toList();
 
@@ -202,7 +226,8 @@ public class HostelService {
 
         boolean isEb = invoice.getEb() != null && invoice.getEb() > 0;
 
-        LocalDate invoiceMonth = invoice.getCurrentInvoiceStartDate();
+        Date currentInvoiceStartDate = Utils.convertStringToDate(invoice.getCurrentInvoiceStartDate());
+        LocalDate invoiceMonth = Utils.dateToLocalDate(currentInvoiceStartDate);
 
         String monthName = invoiceMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
@@ -217,11 +242,15 @@ public class HostelService {
     }
 
     private String buildMessage(InvoiceSummaryResponse invoice) {
+
         if (invoice == null || invoice.getCurrentInvoiceStartDate() == null) {
             return "";
         }
 
-        String monthName = getMonthName(invoice.getCurrentInvoiceStartDate());
+        Date currentInvoiceStartDate = Utils.convertStringToDate(invoice.getCurrentInvoiceStartDate());
+        LocalDate currentInvoiceStartLocalDate = Utils.dateToLocalDate(currentInvoiceStartDate);
+
+        String monthName = getMonthName(currentInvoiceStartLocalDate);
         return monthName + " month bill generated";
     }
 
@@ -231,7 +260,7 @@ public class HostelService {
                 .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 
-    public ResponseEntity<?> getCustomerRequests(String hostelId) {
+    public ResponseEntity<?> getCustomerRequests(String hostelId, int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -242,6 +271,9 @@ public class HostelService {
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
 
         List<RequestItemResponse> result = new ArrayList<>();
 
@@ -266,7 +298,20 @@ public class HostelService {
 
         result.sort(Comparator.comparing(RequestItemResponse::getDbRequestedDate).reversed());
 
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        int totalElements = result.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        int start = Math.min(page * size, totalElements);
+        int end = Math.min(start + size, totalElements);
+
+        List<RequestItemResponse> pagedRequests = result.subList(start, end);
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                totalElements, totalPages);
+
+        CustomerRequestsResWrapper response = new CustomerRequestsResWrapper(paginationDataRes, pagedRequests);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getCustomerRequestById(String hostelId, String requestId) {
@@ -296,19 +341,23 @@ public class HostelService {
         }
 
         if (prefix == 'A') {
+
             AmenityRequestResponse amenityRequest =
                     amenityRequestService.getRequestById(customerId, hostelId, actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             return new ResponseEntity<>(amenityRequest, HttpStatus.OK);
 
         } else if (prefix == 'B') {
+
             BedChangeRequestResponse bedRequest =
                     bedChangeRequestService.getRequestsById(customerId, hostelId, actualId);
             if (bedRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             return new ResponseEntity<>(bedRequest, HttpStatus.OK);
 
         } else {

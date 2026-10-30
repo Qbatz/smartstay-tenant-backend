@@ -7,6 +7,7 @@ import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.ennum.InvoiceType;
+import com.smartstay.tenant.ennum.TenantPlatformEnum;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -68,12 +69,24 @@ public class LoginService {
                     .body("Customer not found.");
         }
 
+        String tenantPlatform = updateMpin.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         credentials.setPinVerified(true);
         credentials.setCustomerPin(updateMpin.mPin());
+        credentials.setTenantPlatform(tenantPlatform);
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -89,7 +102,7 @@ public class LoginService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -110,9 +123,22 @@ public class LoginService {
                     .body("Customer not found for the specified hostel. Please register first.");
         }
 
+        String tenantPlatform = requestToken.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("mobile", credentials.getCustomerMobile());
         claims.put("mPin", credentials.getCustomerPin());
+        claims.put("platform", tenantPlatform);
+
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
 
         return new ResponseEntity<>(token, HttpStatus.OK);
@@ -138,7 +164,7 @@ public class LoginService {
                     .body("Invalid M-Pin. Please try again.");
         }
 
-        List<CustomerHostels> customerHostels = getHostels(credentials.getCustomerMobile());
+        List<CustomerHostels> customerHostels = getAllHostels(credentials.getCustomerMobile());
 
         return new ResponseEntity<>(customerHostels, HttpStatus.OK);
     }
@@ -155,15 +181,23 @@ public class LoginService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Customer not found.");
         }
 
+        String tenantPlatform = logOut.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         credentials.setFcmToken("");
+        credentials.setTenantPlatform(tenantPlatform);
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
-    }
-
-    public List<CustomerHostels> getHostels(String mobileNo) {
-        return hostelRepository.findHostelsByMobile(mobileNo);
     }
 
     public List<CustomerHostels> getAllHostels(String mobileNo) {
@@ -332,6 +366,11 @@ public class LoginService {
                         (existing, replacement) -> existing
                 ));
 
+        List<InvoicesV1> refundedInvoices = invoiceService
+                .getAllRefundedInvoicesByCustomerIds(customerIds);
+        Map<String, List<InvoicesV1>> refundedInvoiceMap = refundedInvoices.stream()
+                .collect(Collectors.groupingBy(InvoicesV1::getCustomerId));
+
         List<HostelWithRentDTO> activeStays = new ArrayList<>();
         List<HostelWithRentDTO> previousStays = new ArrayList<>();
         List<HostelWithRentDTO> otherStays = new ArrayList<>();
@@ -359,11 +398,12 @@ public class LoginService {
             InvoicesV1 bookingInvoice = bookingInvoiceMap.getOrDefault(thisCustomerId, null);
             InvoicesV1 advanceInvoice = advanceInvoiceMap.getOrDefault(thisCustomerId, null);
             RaiseNoticeRequest raiseNoticeRequest = noticeRequestMap.getOrDefault(compositeKey, null);
+            List<InvoicesV1> refundedInvoiceList = refundedInvoiceMap.getOrDefault(thisCustomerId, null);
 
             HostelDetailsMapper mapper = new HostelDetailsMapper(hostel, customer,
                     owner, billingRules, thisCustomerDocs, latestBedHistory,
                     bedsMap, roomsMap, floorsMap, booking, bookingInvoice, advanceInvoice,
-                    raiseNoticeRequest);
+                    raiseNoticeRequest, refundedInvoiceList);
 
             if (CustomerStatus.VACATED.name().equals(customer.getCurrentStatus())){
                 previousStays.add(mapper.apply(customerHostel));

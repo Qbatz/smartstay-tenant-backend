@@ -7,5 +7,6 @@ public record CustomerMpinOtpPayload(@NotBlank(message = "MPIN is required")
                                      String mpin,
                                      @NotBlank(message = "OTP is required")
                                      @Pattern(regexp = "^\\d{6}$", message = "OTP must be exactly 6 digits")
-                                     String otp) {
+                                     String otp,
+                                     String platform) {
 }

@@ -6,6 +6,8 @@ import com.smartstay.tenant.dto.invoice.InvoiceItemProjection;
 import com.smartstay.tenant.dto.invoice.InvoiceSummaryProjection;
 import com.smartstay.tenant.response.hostel.InvoiceItems;
 import com.smartstay.tenant.response.invoices.InvoiceSummary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -115,6 +117,20 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                                         Date endDate);
 
     @Query(value = """
+            SELECT * FROM invoicesv1
+            WHERE customer_id = :customerId
+                AND hostel_id = :hostelId
+                AND (:startDate IS NULL OR DATE(invoice_start_date) >= DATE(:startDate))
+                AND (:endDate IS NULL OR DATE(invoice_start_date) <= DATE(:endDate))
+            ORDER BY invoice_start_date DESC
+            """, nativeQuery = true)
+    Page<InvoicesV1> findPagedInvoicesBetweenStartAndEndDate(String hostelId,
+                                                             String customerId,
+                                                             Date startDate,
+                                                             Date endDate,
+                                                             Pageable pageable);
+
+    @Query(value = """
             SELECT
                 i.invoice_id            AS invoiceId,
                 i.invoice_type          AS invoiceType,
@@ -163,7 +179,7 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
                                            @Param("customerId") String customerId);
 
     @Query("""
-            SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem)
+            SELECT new com.smartstay.tenant.dto.invoice.InvoiceItemDTO(ii.amount, ii.invoiceItem, ii.otherItem)
             FROM InvoiceItems ii
             WHERE ii.invoice.invoiceId = :invoiceId
             """)
@@ -290,4 +306,9 @@ public interface InvoicesV1Repository extends JpaRepository<InvoicesV1, String> 
             """)
     List<InvoicesV1> findOlderUnpaidInvoicesByInvoiceTypes(String customerId, Set<String> invoiceTypes,
                                                            Date beforeDate, String paidName);
+
+    List<InvoicesV1> findAllByCustomerIdInAndPaymentStatusInAndIsCancelledFalse(Set<String> customerIds,
+                                                                                Set<String> paymentStatuses);
+
+    List<InvoicesV1> findAllByInvoiceIdIn(Set<String> invoiceIds);
 }

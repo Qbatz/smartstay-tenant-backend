@@ -28,4 +28,5 @@ public class KYCUsage {
     private Integer verifiedCount;
     private Date latestRequest;
     private Date latestVerified;
+    private String tenantPlatform;
 }

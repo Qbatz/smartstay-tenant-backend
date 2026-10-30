@@ -1,6 +1,7 @@
 package com.smartstay.tenant.controller;
 
 import com.smartstay.tenant.payload.login.Login;
+import com.smartstay.tenant.payload.login.PlatformPayload;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.service.UserService;
 import jakarta.validation.Valid;
@@ -22,8 +23,9 @@ public class UserController {
     }
 
     @PostMapping("/resend-otp/{xuid}")
-    public ResponseEntity<?> resendOtp(@PathVariable String xuid) {
-        return userService.resendOtp(xuid);
+    public ResponseEntity<?> resendOtp(@PathVariable String xuid,
+                                       @RequestBody(required = false) PlatformPayload payload) {
+        return userService.resendOtp(xuid, payload);
     }
 
     @PostMapping("/verify-otp")

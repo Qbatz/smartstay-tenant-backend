@@ -10,12 +10,16 @@ import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.payload.notification.MarkAsReadRequest;
 import com.smartstay.tenant.repository.HostelRepository;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.kyc.NotificationKycInfo;
 import com.smartstay.tenant.response.notification.NotificationProjection;
 import com.smartstay.tenant.response.notification.NotificationResWrapper;
 import com.smartstay.tenant.response.notification.NotificationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,7 +42,7 @@ public class NotificationService {
     @Lazy
     private FCMNotificationService fcmNotificationService;
 
-    public ResponseEntity<?> getNotificationList(String hostelId) {
+    public ResponseEntity<?> getNotificationList(String hostelId, int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
@@ -60,8 +64,15 @@ public class NotificationService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<NotificationProjection> notifications = notificationService
-                .getActiveNotifications(hostelId, customerId);
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NotificationProjection> pagedNotifications = notificationService
+                .getPagedActiveNotifications(hostelId, customerId, pageable);
+
+        List<NotificationProjection> notifications = pagedNotifications.getContent();
 
         if (notifications.isEmpty()) {
             return new ResponseEntity<>(Utils.NOTIFICATION_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -86,13 +97,23 @@ public class NotificationService {
                         }
                     }
 
+                    boolean isClickable = false;
+                    if (NotificationType.INVOICE_GENERATION.name().equals(notification.getFullNotificationType())
+                            || NotificationType.COMPLAINT.name().equals(notification.getFullNotificationType())) {
+                        isClickable = true;
+                    }
+
                     return new NotificationResWrapper(notification.getId(), notification.getTitle(),
                             notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
-                            notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+                            notification.getCreatedDate(), notification.getIsRead(), isKycRequest, isClickable,
+                            notification.getSourceId(), kycInfo);
                 })
                 .toList();
 
-        NotificationResponse notificationResponse = new NotificationResponse(resWrappers,
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedNotifications.getTotalElements(), pagedNotifications.getTotalPages());
+
+        NotificationResponse notificationResponse = new NotificationResponse(paginationDataRes, resWrappers,
                 hostelV1.getHostelName(), Utils.getInitials(hostelV1.getHostelName()), hostelV1.getMainImage());
 
         return new ResponseEntity<>(notificationResponse, HttpStatus.OK);
@@ -138,9 +159,16 @@ public class NotificationService {
             }
         }
 
+        boolean isClickable = false;
+        if (NotificationType.INVOICE_GENERATION.name().equals(notification.getFullNotificationType())
+                || NotificationType.COMPLAINT.name().equals(notification.getFullNotificationType())) {
+            isClickable = true;
+        }
+
         NotificationResWrapper response = new NotificationResWrapper(notification.getId(), notification.getTitle(),
                 notification.getDescription(), notification.getNotificationType(), notification.getFullNotificationType(),
-                notification.getCreatedDate(), notification.getIsRead(), isKycRequest, kycInfo);
+                notification.getCreatedDate(), notification.getIsRead(), isKycRequest, isClickable,
+                notification.getSourceId(), kycInfo);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -261,6 +289,7 @@ public class NotificationService {
     public void createNotificationForAmenity(String userId, String hostelId, RequestAmenity request, String amenityId) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.AMENITY_REQUEST.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -282,11 +311,13 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
+
         notificationService.saveAdminNotification(notification);
     }
 
     public String markAsRead(List<Long> notificationIds, String hostelId) {
-        int updatedCount = notificationService.markNotificationsAsRead(notificationIds, hostelId);
+        int updatedCount = notificationService
+                .markNotificationsAsRead(notificationIds, hostelId);
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 

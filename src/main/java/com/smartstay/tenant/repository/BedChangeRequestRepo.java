@@ -2,6 +2,8 @@ package com.smartstay.tenant.repository;
 
 import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,6 +47,10 @@ public interface BedChangeRequestRepo extends JpaRepository<BedChangeRequest, Lo
                                                        @Param("requestId") Long requestId);
 
     List<BedChangeRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
+
+    Page<BedChangeRequest> findAllByHostelIdAndCustomerIdAndIsActiveTrueAndIsDeletedFalse(String hostelId,
+                                                                                          String customerId,
+                                                                                          Pageable pageable);
 
     BedChangeRequest findByIdAndIsActiveTrueAndIsDeletedFalse(long requestId);
 }

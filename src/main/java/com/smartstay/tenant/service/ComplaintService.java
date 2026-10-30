@@ -24,6 +24,7 @@ import com.smartstay.tenant.payload.complaint.AddComplaintComment;
 import com.smartstay.tenant.payload.complaint.DeleteComplaintRequest;
 import com.smartstay.tenant.payload.complaint.UpdateComplaint;
 import com.smartstay.tenant.repository.*;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.complaints.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,7 +33,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -67,10 +67,15 @@ public class ComplaintService {
     private CommentRepository commentRepository;
 
     public List<ComplaintDTO> getComplaints(String hostelId, String customerId) {
-        return complaintsV1Repository.findComplaintsByHostelAndCustomer(hostelId, customerId, PageRequest.of(0, 5));
+
+        Pageable pageable = PageRequest.of(0, 5);
+
+        return complaintsV1Repository
+                .findComplaintsByHostelAndCustomer(hostelId, customerId, pageable);
     }
 
     public ResponseEntity<?> getComplaintByIdOld(String hostelId, Integer complaintId) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
@@ -81,19 +86,27 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        ComplaintDetails complaint = complaintsV1Repository.getComplaintById(hostelId, customerId, complaintId);
-
+        ComplaintDetails complaint = complaintsV1Repository
+                .getComplaintById(hostelId, customerId, complaintId);
         if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINT_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
+
         List<ComplaintImage> images = complaintImagesRepository.findImagesByComplaintId(complaintId);
 
         List<ComplaintCommentProjection> comments = commentsRepository.findCommentsByComplaintIds(complaintId);
 
         CommentsMapper commentsMapper = new CommentsMapper();
-        List<CommentsListResponse> commentslist = comments.stream().map(commentsMapper).toList();
 
-        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(), complaint.complaintTypeName(), complaint.complaintTypeId(), complaint.complaintDate(), complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(), complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(), complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images, commentslist);
+        List<CommentsListResponse> commentslist = comments.stream()
+                .map(commentsMapper).toList();
+
+        ComplaintDetailsResponse complaintDetails = new ComplaintDetailsResponse(complaint.complaintId(),
+                complaint.complaintTypeName(), complaint.complaintTypeId(), complaint.complaintDate(),
+                complaint.description(), complaint.status(), complaint.assigneeName(), complaint.floorName(),
+                complaint.roomName(), complaint.bedName(), complaint.customerName(), complaint.assignedDate(),
+                complaint.createdBy(), complaint.hostelName(), complaint.assigneeMobileNumber(), images,
+                commentslist);
 
         return new ResponseEntity<>(complaintDetails, HttpStatus.OK);
     }
@@ -120,15 +133,19 @@ public class ComplaintService {
         catch (Exception e) {
             return new ResponseEntity<>(Utils.INVALID_COMPLAINT_ID, HttpStatus.BAD_REQUEST);
         }
+
         if (complaintId == 0) {
             return new ResponseEntity<>(Utils.INVALID_COMPLAINT_ID, HttpStatus.BAD_REQUEST);
         }
-        ComplaintsV1 complaintsV1 = complaintsV1Repository.findByComplaintIdAndHostelIdAndIsDeletedFalse(complaintId, hostelId);
+
+        ComplaintsV1 complaintsV1 = complaintsV1Repository
+                .findByComplaintIdAndHostelIdAndIsDeletedFalse(complaintId, hostelId);
         if (complaintsV1 == null) {
             return new ResponseEntity<>(Utils.INVALID_COMPLAINT_ID, HttpStatus.BAD_REQUEST);
         }
 
-        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaintsV1.getComplaintTypeId(), hostelId);
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                .getComplaintTypeById(complaintsV1.getComplaintTypeId(), hostelId);
         if (complaintTypeV1 == null) {
             return new ResponseEntity<>(Utils.INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
@@ -164,7 +181,9 @@ public class ComplaintService {
         if (complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())
                 || complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.PENDING.name())
                 || complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.RESOLVED.name())) {
+
             Users users = userService.findUserByUserId(complaintsV1.getAssigneeId());
+
             if (users != null) {
                 StringBuilder uFullName = new StringBuilder();
                 StringBuilder uInitials = new StringBuilder();
@@ -319,24 +338,41 @@ public class ComplaintService {
     }
 
     public ResponseEntity<?> getComplaintList(String hostelId, int page, int size) {
+
         if (!authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Utils.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
+
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ComplaintDTO> complaints = complaintsV1Repository.getAllComplaints(hostelId, customerId, pageable);
+        Page<ComplaintDTO> pagedComplaints = complaintsV1Repository
+                .getAllComplaints(hostelId, customerId, pageable);
+
+        List<ComplaintDTO> complaints = pagedComplaints.getContent();
 
         if (complaints.isEmpty()) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         ComplaintMapper complaintMapper = new ComplaintMapper();
-        Page<ComplaintResponse> response = complaints.map(complaintMapper);
+
+        List<ComplaintResponse> complaintsResList = complaints.stream()
+                .map(complaintMapper)
+                .toList();
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedComplaints.getTotalElements(), pagedComplaints.getTotalPages());
+
+        ComplaintResWrapper response = new ComplaintResWrapper(paginationDataRes, complaintsResList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -347,12 +383,14 @@ public class ComplaintService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         ComplaintsV1 complaint = new ComplaintsV1();
+
         if (request.floorId() != null) {
             complaint.setFloorId(request.floorId());
         } else {
@@ -371,24 +409,33 @@ public class ComplaintService {
         } else {
             complaint.setBedId(0);
         }
+
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
 
-        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+        boolean customerExist = customerService
+                .existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
         if (!customerExist) {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(request.complaintTypeId(), hostelId);
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                .getComplaintTypeById(request.complaintTypeId(), hostelId);
         if (complaintTypeV1 == null) {
             return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
+        List<ComplaintsV1> existingComplaint = complaintsV1Repository
+                .findExistingOpenComplaint(customerId, hostelId, request.complaintTypeId(),
+                        List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(),
+                                ComplaintStatus.ASSIGNED.name()));
 
         if (existingComplaint != null && !existingComplaint.isEmpty()) {
-            return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.",
+                    HttpStatus.BAD_REQUEST);
         }
+
         HostelV1 hostelV1 = hostelRepository.findById(hostelId).orElse(null);
+
         complaint.setCustomerId(customerId);
         complaint.setComplaintTypeId(request.complaintTypeId());
         complaint.setComplaintDate(new Date());
@@ -405,24 +452,34 @@ public class ComplaintService {
         }
         List<String> listImageUrls = new ArrayList<>();
         if (complaintImages != null && !complaintImages.isEmpty()) {
-            listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile), "CustomerComplaint-Images")).toList();
+            listImageUrls = complaintImages.stream()
+                    .map(multipartFile -> uploadToS3
+                            .uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile),
+                                    "CustomerComplaint-Images"))
+                    .toList();
         }
         if (!listImageUrls.isEmpty()) {
-            List<ComplaintImages> complaintImagesList = listImageUrls.stream().map(item -> {
-                ComplaintImages complaintImages1 = new ComplaintImages();
-                complaintImages1.setIsActive(true);
-                complaintImages1.setIsDeleted(false);
-                complaintImages1.setCreatedAt(new Date());
-                complaintImages1.setCreatedBy(customerId);
-                complaintImages1.setImageUrl(item);
-                complaintImages1.setComplaints(complaint);
-                return complaintImages1;
-            }).toList();
+            List<ComplaintImages> complaintImagesList = listImageUrls.stream()
+                    .map(item -> {
+
+                        ComplaintImages complaintImages1 = new ComplaintImages();
+
+                        complaintImages1.setIsActive(true);
+                        complaintImages1.setIsDeleted(false);
+                        complaintImages1.setCreatedAt(new Date());
+                        complaintImages1.setCreatedBy(customerId);
+                        complaintImages1.setImageUrl(item);
+                        complaintImages1.setComplaints(complaint);
+
+                        return complaintImages1;
+                    }).toList();
 
             complaint.setAdditionalImages(complaintImagesList);
         }
+        complaint.setTenantPlatform(tenantPlatform);
 
         ComplaintUpdates complaintUpdates = new ComplaintUpdates();
+
         complaintUpdates.setStatus(ComplaintStatus.OPENED.name());
         complaintUpdates.setUserType(UserType.TENANT.name());
         complaintUpdates.setUpdatedBy(authentication.getName());
@@ -430,33 +487,39 @@ public class ComplaintService {
         complaintUpdates.setComplaint(complaint);
         complaintUpdates.setCreatedAt(new Date());
 
-
         List<ComplaintUpdates> listComplaintUpdates = new ArrayList<>();
         listComplaintUpdates.add(complaintUpdates);
         complaint.setComplaintUpdates(listComplaintUpdates);
 
         ComplaintsV1 savedComplaint = complaintsV1Repository.save(complaint);
 
-        notificationService.createNotificationForComplaint(customerId, hostelId, savedComplaint.getComplaintId().toString(), complaintTypeV1.getComplaintTypeName(), request.description());
+        notificationService.createNotificationForComplaint(customerId, hostelId,
+                savedComplaint.getComplaintId().toString(), complaintTypeV1.getComplaintTypeName(),
+                request.description());
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
 
-    public ResponseEntity<?> updateComplaint(List<MultipartFile> complaintImages, UpdateComplaint request, String hostelId, Integer complaintId) {
+    public ResponseEntity<?> updateComplaint(List<MultipartFile> complaintImages, UpdateComplaint request,
+                                             String hostelId, Integer complaintId) {
 
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        ComplaintsV1 complaint = complaintsV1Repository.findByComplaintIdAndHostelIdAndCustomerId(complaintId, hostelId, customerId);
+        ComplaintsV1 complaint = complaintsV1Repository
+                .findByComplaintIdAndHostelIdAndCustomerId(complaintId, hostelId, customerId);
         if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         if (request != null && request.floorId() != null) {
             complaint.setFloorId(request.floorId());
         }
@@ -467,26 +530,32 @@ public class ComplaintService {
 
         if (request != null && request.bedId() != null) {
             complaint.setBedId(request.bedId());
-
         }
+
         List<String> currentStatus = Arrays.asList(CustomerStatus.CHECK_IN.name(), CustomerStatus.NOTICE.name());
 
-
-        boolean customerExist = customerService.existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
+        boolean customerExist = customerService
+                .existsByHostelIdAndCustomerIdAndStatusesIn(hostelId, customerId, currentStatus);
         if (!customerExist) {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         if (request != null && request.complaintTypeId() != null) {
-            ComplaintTypeV1 complaintTypeV1Check = complaintTypeService.getComplaintTypeById(request.complaintTypeId(), hostelId);
+
+            ComplaintTypeV1 complaintTypeV1Check = complaintTypeService
+                    .getComplaintTypeById(request.complaintTypeId(), hostelId);
             if (complaintTypeV1Check == null) {
                 return new ResponseEntity<>(Utils.COMPLAINT_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            List<ComplaintsV1> existingComplaint = complaintsV1Repository.findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId(), List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(), ComplaintStatus.ASSIGNED.name()));
+            List<ComplaintsV1> existingComplaint = complaintsV1Repository
+                    .findExistingOpenComplaintForEdit(complaintId, customerId, hostelId, request.complaintTypeId(),
+                            List.of(ComplaintStatus.OPENED.name(), ComplaintStatus.PENDING.name(),
+                                    ComplaintStatus.ASSIGNED.name()));
 
             if (existingComplaint != null && !existingComplaint.isEmpty()) {
-                return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("A complaint of this type is already open. Please wait until it is resolved.",
+                        HttpStatus.BAD_REQUEST);
             }
 
             complaint.setComplaintTypeId(request.complaintTypeId());
@@ -503,47 +572,57 @@ public class ComplaintService {
 
         List<String> listImageUrls = new ArrayList<>();
         if (complaintImages != null && !complaintImages.isEmpty()) {
-            listImageUrls = complaintImages.stream().map(multipartFile -> uploadToS3.uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile), "CustomerComplaint-Images")).toList();
-
+            listImageUrls = complaintImages.stream()
+                    .map(multipartFile -> uploadToS3
+                            .uploadFileToS3(FilesConfig.convertMultipartToFileNew(multipartFile),
+                                    "CustomerComplaint-Images"))
+                    .toList();
         }
 
         if (!listImageUrls.isEmpty()) {
             List<ComplaintImages> complaintImagesList = complaint.getAdditionalImages();
 
             if (complaintImages == null || complaintImages.isEmpty()) {
-                complaintImagesList = listImageUrls.stream().map(item -> {
-                    ComplaintImages complaintImages1 = new ComplaintImages();
-                    complaintImages1.setIsActive(true);
-                    complaintImages1.setIsDeleted(false);
-                    complaintImages1.setCreatedAt(new Date());
-                    complaintImages1.setCreatedBy(customerId);
-                    complaintImages1.setImageUrl(item);
-                    complaintImages1.setComplaints(complaint);
-                    return complaintImages1;
-                }).toList();
+                complaintImagesList = listImageUrls.stream()
+                        .map(item -> {
+                            ComplaintImages complaintImages1 = new ComplaintImages();
+                            complaintImages1.setIsActive(true);
+                            complaintImages1.setIsDeleted(false);
+                            complaintImages1.setCreatedAt(new Date());
+                            complaintImages1.setCreatedBy(customerId);
+                            complaintImages1.setImageUrl(item);
+                            complaintImages1.setComplaints(complaint);
+                            return complaintImages1;
+                        }).toList();
             } else {
-
-                complaintImagesList.addAll(listImageUrls.stream().map(item -> {
-                    ComplaintImages complaintImages1 = new ComplaintImages();
-                    complaintImages1.setIsActive(true);
-                    complaintImages1.setIsDeleted(false);
-                    complaintImages1.setCreatedAt(new Date());
-                    complaintImages1.setCreatedBy(customerId);
-                    complaintImages1.setImageUrl(item);
-                    complaintImages1.setComplaints(complaint);
-                    return complaintImages1;
-                }).toList());
+                complaintImagesList.addAll(listImageUrls.stream()
+                        .map(item -> {
+                            ComplaintImages complaintImages1 = new ComplaintImages();
+                            complaintImages1.setIsActive(true);
+                            complaintImages1.setIsDeleted(false);
+                            complaintImages1.setCreatedAt(new Date());
+                            complaintImages1.setCreatedBy(customerId);
+                            complaintImages1.setImageUrl(item);
+                            complaintImages1.setComplaints(complaint);
+                            return complaintImages1;
+                        }).toList());
             }
 
             complaint.setAdditionalImages(complaintImagesList);
         }
+        complaint.setTenantPlatform(tenantPlatform);
+
         complaintsV1Repository.save(complaint);
-        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaint.getComplaintTypeId(), hostelId);
+
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                .getComplaintTypeById(complaint.getComplaintTypeId(), hostelId);
         String title = null;
         if (complaintTypeV1 != null) {
             title = "Complaint raised for " + complaintTypeV1.getComplaintTypeName();
         }
+
         notificationService.findAndUpdateComplaints(complaint, title);
+
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
 
@@ -579,23 +658,29 @@ public class ComplaintService {
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> addComplaintComments(@RequestBody AddComplaintComment request, int complaintId) {
+    public ResponseEntity<?> addComplaintComments(AddComplaintComment request, int complaintId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>("Invalid user.", HttpStatus.UNAUTHORIZED);
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, request.hostelId())) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         Customers customers = customerService.getCustomerById(customerId);
-        ComplaintsV1 complaintExist = complaintsV1Repository.findByComplaintIdAndCustomerIdAndHostelId(complaintId, customerId, request.hostelId());
+
+        ComplaintsV1 complaintExist = complaintsV1Repository
+                .findByComplaintIdAndCustomerIdAndHostelId(complaintId, customerId, request.hostelId());
         if (complaintExist == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         ComplaintComments complaintComments = new ComplaintComments();
+
         complaintComments.setCommentDate(new Date());
         complaintComments.setComplaint(complaintExist);
         complaintComments.setComment(request.message());
@@ -605,14 +690,17 @@ public class ComplaintService {
         complaintComments.setCreatedBy(customerId);
         complaintComments.setUserName(customers.getFirstName() + " " + customers.getLastName());
         complaintComments.setCreatedAt(new Date());
+        complaintComments.setTenantPlatform(tenantPlatform);
+
         commentsRepository.save(complaintComments);
 
         if (complaintExist.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())) {
             String assigneeId = complaintExist.getAssigneeId();
-            ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaintExist.getComplaintTypeId(), complaintExist.getHostelId());
+            ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                    .getComplaintTypeById(complaintExist.getComplaintTypeId(), complaintExist.getHostelId());
+
             notificationService.sendPushNotification(assigneeId, complaintTypeV1.getComplaintTypeName());
         }
-
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
@@ -649,13 +737,16 @@ public class ComplaintService {
     }
 
     public ResponseEntity<?> getUpdates(String hostelId, String complaintId) {
+
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         Customers customers = customerService.getCustomerById(authentication.getName());
         if (customers == null) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
+
         Integer cId = 0;
         if (complaintId == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -667,20 +758,26 @@ public class ComplaintService {
         catch (Exception e) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         ComplaintsV1 complaints = complaintsV1Repository.findById(cId).orElse(null);
         if (complaints == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         if (!complaints.getHostelId().equalsIgnoreCase(hostelId)) {
             return new ResponseEntity<>(Utils.INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
+
         if (!customerService.existsByCustomerIdAndHostelId(customers.getCustomerId(), hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-        ComplaintTypeV1 complaintTypeV1 = complaintTypeService.getComplaintTypeById(complaints.getComplaintTypeId(), hostelId);
+
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                .getComplaintTypeById(complaints.getComplaintTypeId(), hostelId);
         if (complaintTypeV1 == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
+
         String complaintTypeName = complaintTypeV1.getComplaintTypeName();
         List<ComplaintUpdates> listComplaintUpdates = complaints.getComplaintUpdates();
         List<ComplaintComments> listComplaintComments = complaints.getComplaintComments();
@@ -714,14 +811,20 @@ public class ComplaintService {
                 .filter(i -> i.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name()))
                 .map(ComplaintUpdates::getAssignedTo)
                 .toList();
+
         List<Users> assignedUsers = userService.findAllUsersById(assignedUsersIds);
 
         List<ComplaintUpdatesList> listComments =
                 listComplaintUpdates
                         .stream()
-                        .map(i -> new ComplaintUpdatesMapper(tenantUsers, adminUsers, listComplaintComments, complaints.getDescription(), assignedUsers, complaintTypeName).apply(i))
+                        .map(i -> new ComplaintUpdatesMapper(tenantUsers, adminUsers,
+                                listComplaintComments, complaints.getDescription(), assignedUsers,
+                                complaintTypeName)
+                                .apply(i))
                         .toList();
+
         ComplaintsUpdates updates = new ComplaintsUpdates(complaintId, complaints.getStatus(), listComments);
+
         return new ResponseEntity<>(updates, HttpStatus.OK);
     }
 }

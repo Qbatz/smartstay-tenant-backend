@@ -7,6 +7,8 @@ import com.smartstay.tenant.repository.AdminNotificationRepository;
 import com.smartstay.tenant.repository.CustomerNotificationRepository;
 import com.smartstay.tenant.response.notification.NotificationProjection;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -29,7 +31,11 @@ public class AdminNotificationService {
     }
 
     public List<NotificationProjection> getActiveNotifications(String hostelId, String customerId) {
-        return customerNotificationRepository.getActiveNotifications(hostelId,customerId);
+        return customerNotificationRepository.getActiveNotifications(hostelId, customerId);
+    }
+
+    public Page<NotificationProjection> getPagedActiveNotifications(String hostelId, String customerId, Pageable pageable) {
+        return customerNotificationRepository.findPagedActiveNotifications(hostelId, customerId, pageable);
     }
 
     public NotificationProjection getNotificationById(String hostelId, long id) {

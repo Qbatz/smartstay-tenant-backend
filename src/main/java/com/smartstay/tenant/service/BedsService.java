@@ -2,16 +2,23 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
+import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BedDetails;
 import com.smartstay.tenant.ennum.BedChangeUrgencyEnum;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.repository.BedsRepository;
+import com.smartstay.tenant.response.PaginationDataRes;
+import com.smartstay.tenant.response.bed.BedChangeRequestResWrapper;
 import com.smartstay.tenant.response.bed.BedChangeUrgencyDropdownRes;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -42,6 +49,8 @@ public class BedsService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
 
+        String tenantPlatform = authentication.getPlatform();
+
         String customerId = authentication.getName();
         Customers customers = customerService.getCustomerInformation(customerId);
         if (customers == null) {
@@ -67,14 +76,14 @@ public class BedsService {
             return new ResponseEntity<>(Utils.PENDING_REQUEST_EXISTS, HttpStatus.BAD_REQUEST);
         }
 
-        bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request);
+        bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request, tenantPlatform);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
         fcmNotificationService.sendNotificationBedChangeRequest(hostelId);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> getBedRequests(String hostelId) {
+    public ResponseEntity<?> getBedRequests(String hostelId, int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -94,10 +103,27 @@ public class BedsService {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<RequestItemResponse> requestResponses = bedChangeRequestService
-                .getRequests(hostelId, customerId);
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
 
-        return new ResponseEntity<>(requestResponses, HttpStatus.OK);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<BedChangeRequest> pagedBedChangeRequests = bedChangeRequestService
+                .getPagedBedChangeRequests(hostelId, customerId, pageable);
+
+        List<BedChangeRequest> bedChangeRequests = pagedBedChangeRequests.getContent();
+
+        List<RequestItemResponse> bedChangeRequestRes = bedChangeRequests.stream()
+                .map(i -> new BedChangeRequestMapper(bedsRepository)
+                        .apply(i))
+                .toList();
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedBedChangeRequests.getTotalElements(), pagedBedChangeRequests.getTotalPages());
+
+        BedChangeRequestResWrapper response = new BedChangeRequestResWrapper(paginationDataRes, bedChangeRequestRes);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public BedDetails getBedDetails(Integer bedId) {

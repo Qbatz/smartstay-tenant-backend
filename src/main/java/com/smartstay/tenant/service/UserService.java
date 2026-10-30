@@ -2,7 +2,9 @@ package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.dao.*;
+import com.smartstay.tenant.ennum.TenantPlatformEnum;
 import com.smartstay.tenant.payload.login.Login;
+import com.smartstay.tenant.payload.login.PlatformPayload;
 import com.smartstay.tenant.payload.login.VerifyOtp;
 import com.smartstay.tenant.repository.CustomersOtpRepository;
 import com.smartstay.tenant.repository.UserRepository;
@@ -42,29 +44,52 @@ public class UserService {
     }
 
     public ResponseEntity<?> login(Login login) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByMobile(login.mobile());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByMobile(login.mobile());
+
         if (credentials != null) {
+
             CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
+
             Date now = new Date();
             Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
+
             int otp = generateSixDigitOtp();
+
             if (login.mobile().equalsIgnoreCase("8344715078")) {
                 otp = 555555;
             }
+
+            String tenantPlatform = login.platform();
+            if (tenantPlatform != null && !tenantPlatform.isBlank()){
+                if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                    tenantPlatform = TenantPlatformEnum.IOS.name();
+                } else {
+                    tenantPlatform = TenantPlatformEnum.ANDROID.name();
+                }
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+
             if (customersOtp != null) {
                 customersOtp.setOtp(otp);
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setUpdatedAt(new Date());
                 customersOtp.setVerified(false);
-                customersOtpRepository.save(customersOtp);
+                customersOtp.setTenantPlatform(tenantPlatform);
 
+                customersOtpRepository.save(customersOtp);
             } else {
                 customersOtp = new CustomersOtp();
+
                 customersOtp.setXuid(credentials.getXuid());
                 customersOtp.setOtp(otp);
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setCreatedAt(new Date());
                 customersOtp.setVerified(false);
+                customersOtp.setTenantPlatform(tenantPlatform);
+
                 customersOtpRepository.save(customersOtp);
             }
 
@@ -84,15 +109,34 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<?> resendOtp(String xuid) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByXUuid(xuid);
+    public ResponseEntity<?> resendOtp(String xuid, PlatformPayload payload) {
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByXUuid(xuid);
+
         if (credentials != null) {
+
             CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
+
             Date now = new Date();
             Date expiryAt = new Date(now.getTime() + (15 * 60 * 1000));
+
+            String tenantPlatform = payload.platform();
+            if (tenantPlatform != null && !tenantPlatform.isBlank()){
+                if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                    tenantPlatform = TenantPlatformEnum.IOS.name();
+                } else {
+                    tenantPlatform = TenantPlatformEnum.ANDROID.name();
+                }
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+
             if (customersOtp != null && !customersOtp.isVerified()) {
                 customersOtp.setExpiryAt(expiryAt);
                 customersOtp.setUpdatedAt(new Date());
+                customersOtp.setTenantPlatform(tenantPlatform);
+
                 customersOtpRepository.save(customersOtp);
             } else {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -113,28 +157,49 @@ public class UserService {
     }
 
     public ResponseEntity<?> verifyOtp(VerifyOtp verifyOtp) {
-        CustomerCredentials credentials = customerCredentialsService.getCustomerCredentialsByMobile(verifyOtp.mobileNo());
+
+        CustomerCredentials credentials = customerCredentialsService
+                .getCustomerCredentialsByMobile(verifyOtp.mobileNo());
         if (credentials == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer not found. Please register first.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Customer not found. Please register first.");
         }
 
         CustomersOtp customersOtp = getOtpByMobile(credentials.getXuid());
         if (customersOtp == null || customersOtp.getOtp() == 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No OTP generated for this mobile number. Please request a new OTP.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("No OTP generated for this mobile number. Please request a new OTP.");
         }
 
         if (customersOtp.getExpiryAt().before(new Date())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OTP has expired. Please request a new one.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("OTP has expired. Please request a new one.");
         }
 
         if (customersOtp.getOtp() != verifyOtp.otp()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP. Please check and try again.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid OTP. Please check and try again.");
         }
+
+        String tenantPlatform = verifyOtp.platform();
+        if (tenantPlatform != null && !tenantPlatform.isBlank()){
+            if (TenantPlatformEnum.IOS.name().equalsIgnoreCase(tenantPlatform)){
+                tenantPlatform = TenantPlatformEnum.IOS.name();
+            } else {
+                tenantPlatform = TenantPlatformEnum.ANDROID.name();
+            }
+        } else {
+            tenantPlatform = TenantPlatformEnum.ANDROID.name();
+        }
+
         customersOtp.setVerified(true);
         customersOtp.setOtp(0);
         customersOtp.setUpdatedAt(new Date());
         customersOtp.setExpiryAt(null);
+        customersOtp.setTenantPlatform(tenantPlatform);
+
         customersOtpRepository.save(customersOtp);
+
         return new ResponseEntity<>(
                 new VerifyOtpResponse(credentials.getXuid(), credentials.isPinVerified())
                 , HttpStatus.OK);

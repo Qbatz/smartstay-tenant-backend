@@ -1,9 +1,6 @@
 package com.smartstay.tenant.dto.invoice;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-
-import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -15,18 +12,12 @@ public class InvoiceItemResponseDTO {
     private String invoiceNumber;
     private Double amount;
     private Double discountAmount;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate invoiceDueDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate invoiceGeneratedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate invoiceStartDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate invoiceEndDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate paidAt;
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate paymentDate;
+    private String invoiceDueDate;
+    private String invoiceGeneratedDate;
+    private String invoiceStartDate;
+    private String invoiceEndDate;
+    private String paidAt;
+    private String paymentDate;
     private Double paidAmount;
     private Double balanceAmount;
     private Double dueAmount;

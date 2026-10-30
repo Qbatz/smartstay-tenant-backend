@@ -23,6 +23,8 @@ public class ConfigService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.UNAUTHORIZED);
         }
 
+        String tenantPlatform = authentication.getPlatform();
+
         CustomerCredentials credentials = customerCredentialsService
                 .getCustomerCredentialsByXUuid(updateFcm.xuid());
         if (credentials == null) {
@@ -30,6 +32,7 @@ public class ConfigService {
         }
 
         credentials.setFcmToken(updateFcm.fcmToken());
+        credentials.setTenantPlatform(tenantPlatform);
 
         customerCredentialsService.saveCustomerCredentials(credentials);
 

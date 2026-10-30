@@ -46,6 +46,8 @@ public class CustomerDocumentService {
                                                   UploadDocuments uploadDocuments) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
         Customers customer = customerService.getCustomerById(customerId);
         if (customer == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Utils.CUSTOMER_NOT_FOUND);
@@ -106,6 +108,7 @@ public class CustomerDocumentService {
                         else {
                             cd.setDocumentType(DocumentType.OTHER.name());
                         }
+                        cd.setTenantPlatform(tenantPlatform);
 
                         return cd;
                     }).toList();

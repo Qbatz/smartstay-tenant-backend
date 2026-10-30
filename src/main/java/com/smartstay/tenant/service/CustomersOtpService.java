@@ -14,7 +14,8 @@ public class CustomersOtpService {
     @Autowired
     private CustomersOtpRepository customersOtpRepository;
 
-    public CustomersOtp createNewCustomersOtp(CustomerCredentials customerCredentials) {
+    public CustomersOtp createNewCustomersOtp(CustomerCredentials customerCredentials,
+                                              String tenantPlatform) {
 
         if (customerCredentials == null) {
             return null;
@@ -38,6 +39,7 @@ public class CustomersOtpService {
         customersOtp.setOtp(otp);
         customersOtp.setExpiryAt(expiryAt);
         customersOtp.setVerified(false);
+        customersOtp.setTenantPlatform(tenantPlatform);
 
         return customersOtpRepository.save(customersOtp);
     }

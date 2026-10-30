@@ -1,6 +1,5 @@
 package com.smartstay.tenant.dao;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,11 +23,11 @@ public class ComplaintComments {
     private String comment;
     private String complaintStatus;
     private String userName;
-    //
+    //from usertype enum
     private String userType;
     private Boolean isActive;
     private Date commentDate;
-
+    private String tenantPlatform;
 
     @ManyToOne
     @JoinColumn(name = "complaint_id")

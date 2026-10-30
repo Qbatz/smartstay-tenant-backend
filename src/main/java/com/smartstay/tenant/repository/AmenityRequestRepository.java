@@ -2,6 +2,8 @@ package com.smartstay.tenant.repository;
 
 import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -67,6 +69,8 @@ public interface AmenityRequestRepository extends JpaRepository<AmenityRequest, 
                                                        @Param("requestId") Long requestId);
 
     List<AmenityRequest> findByHostelIdAndCustomerId(String hostelId, String customerId);
+
+    Page<AmenityRequest> findAllByHostelIdAndCustomerId(String hostelId, String customerId, Pageable pageable);
 
     AmenityRequest findByAmenityRequestIdAndIsActiveTrue(long requestId);
 

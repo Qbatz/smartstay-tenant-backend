@@ -26,10 +26,12 @@ public class InvoiceController {
 
     @GetMapping("/{hostelId}")
     public ResponseEntity<?> getInvoicesList(@PathVariable String hostelId,
+                                             @RequestParam(value = "page", defaultValue = "0") int page,
+                                             @RequestParam(value = "size", defaultValue = "10") int size,
                                              @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") Date startDate,
                                              @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") Date endDate,
                                              @RequestParam(required = false) String dateFilterOption) {
-        return invoiceService.getInvoiceList(hostelId, startDate, endDate, dateFilterOption);
+        return invoiceService.getInvoiceList(hostelId, page, size, startDate, endDate, dateFilterOption);
     }
 
     @GetMapping("receipt-details/{hostelId}/{transactionId}")
@@ -51,8 +53,10 @@ public class InvoiceController {
     }
 
     @GetMapping("payment-list/{hostelId}")
-    public ResponseEntity<?> getPaymentList(@PathVariable String hostelId) {
-        return transactionService.getTransactionList(hostelId);
+    public ResponseEntity<?> getPaymentList(@PathVariable String hostelId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return transactionService.getTransactionList(hostelId, page, size);
     }
 
     @GetMapping("/pdf/{hostelId}/{invoiceId}")

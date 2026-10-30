@@ -9,13 +9,18 @@ import com.smartstay.tenant.dao.BillingRules;
 import com.smartstay.tenant.dao.CustomersAmenity;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmentityRepository;
 import com.smartstay.tenant.repository.CustomerAmenityRepository;
+import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.amenity.*;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +28,8 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AmenitiesService {
@@ -66,7 +73,7 @@ public class AmenitiesService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> getAmenityRequest(String hostelId) {
+    public ResponseEntity<?> getAmenityRequest(String hostelId, int page, int size) {
 
         if (!authentication.isAuthenticated()) {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
@@ -77,9 +84,34 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<RequestItemResponse> requests = amenityRequestService.getRequests(customerId, hostelId);
+        page = Math.max(page - 1, 0);
+        size = Math.max(size, 1);
 
-        return new ResponseEntity<>(requests, HttpStatus.OK);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<AmenityRequest> pagedAmenityRequests = amenityRequestService
+                .getPagedAmenityRequestsByCustomerIdAndHostelId(customerId, hostelId, pageable);
+
+        List<AmenityRequest> amenityRequests = pagedAmenityRequests.getContent();
+
+        Set<String> amenityIds = amenityRequests.stream()
+                .map(AmenityRequest::getAmenityId)
+                .collect(Collectors.toSet());
+
+        List<AmenitiesV1> amenities = amenityRepository
+                .findAllByAmenityIdInAndIsActiveTrueAndIsDeletedFalse(amenityIds);
+
+        List<RequestItemResponse> amenityRequestsRes = amenityRequests.stream()
+                .map(i -> new AmenityRequestMapper(amenities)
+                        .apply(i))
+                .toList();
+
+        PaginationDataRes paginationDataRes = new PaginationDataRes(page + 1, size,
+                pagedAmenityRequests.getTotalElements(), pagedAmenityRequests.getTotalPages());
+
+        AmenityRequestResWrapper response = new AmenityRequestResWrapper(paginationDataRes, amenityRequestsRes);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     public ResponseEntity<?> getAmenityByAmenityId(String hostelId, String amenityId) {
@@ -118,6 +150,8 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
         }
 
+        String tenantPlatform = authentication.getPlatform();
+
         String customerId = authentication.getName();
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -141,7 +175,7 @@ public class AmenitiesService {
         }
 
         notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
-        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request);
+        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request, tenantPlatform);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -172,6 +206,7 @@ public class AmenitiesService {
     public ResponseEntity<?> deactivateAmenity(String hostelId, String amenityId) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -203,6 +238,7 @@ public class AmenitiesService {
         customersAmenity.setEndDate(endDate != null ? endDate : today);
         customersAmenity.setUpdatedBy(authentication.getName());
         customersAmenity.setUpdatedAt(today);
+        customersAmenity.setTenantPlatform(tenantPlatform);
 
         customerAmenityRepository.save(customersAmenity);
 

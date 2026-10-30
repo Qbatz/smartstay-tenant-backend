@@ -21,8 +21,10 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @GetMapping("/all-notifications/{hostelId}")
-    public ResponseEntity<?> getNotificationsList(@PathVariable String hostelId) {
-        return notificationService.getNotificationList(hostelId);
+    public ResponseEntity<?> getNotificationsList(@PathVariable String hostelId,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "10") int size) {
+        return notificationService.getNotificationList(hostelId, page, size);
     }
 
     @GetMapping("/{hostelId}/{notificationId}")

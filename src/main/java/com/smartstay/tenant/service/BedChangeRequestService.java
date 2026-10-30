@@ -12,6 +12,8 @@ import com.smartstay.tenant.repository.BedChangeRequestRepo;
 import com.smartstay.tenant.repository.BedsRepository;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -37,17 +39,25 @@ public class BedChangeRequestService {
                 .findByHostelIdAndCustomerId(hostelId, customerId);
 
         return listBedChangeRequest.stream()
-                .map(i -> new BedChangeRequestMapper(bedsRepository).apply(i))
+                .map(i -> new BedChangeRequestMapper(bedsRepository)
+                        .apply(i))
                 .toList();
+    }
+
+    public Page<BedChangeRequest> getPagedBedChangeRequests(String hostelId, String customerId, Pageable pageable) {
+        return bedChangeRequestRepo
+                .findAllByHostelIdAndCustomerIdAndIsActiveTrueAndIsDeletedFalse(hostelId, customerId, pageable);
     }
 
     public BedChangeRequestResponse getRequestsById(String hostelId, String customerId, Long requestId) {
         return bedChangeRequestRepo.findBedChangeRequestsById(hostelId, customerId, requestId);
     }
 
-    public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId, BedChangePayload request) {
+    public BedChangeRequest saveBedChangeRequest(String hostelId, String customerId,
+                                                 BedChangePayload request, String tenantPlatform) {
 
         BedChangeRequest bedRequest = new BedChangeRequest();
+
         bedRequest.setHostelId(hostelId);
         bedRequest.setCustomerId(customerId);
         if (request.bedId() != null) {
@@ -81,6 +91,8 @@ public class BedChangeRequestService {
         bedRequest.setCreatedAt(new Date());
         bedRequest.setActive(true);
         bedRequest.setDeleted(false);
+        bedRequest.setTenantPlatform(tenantPlatform);
+
         return bedChangeRequestRepo.save(bedRequest);
     }
 

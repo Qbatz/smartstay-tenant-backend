@@ -10,10 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsersConfig {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long configId;
-    private Integer pin;
+    private String pin;
     private String fcmToken;
     private String fcmWebToken;
 
