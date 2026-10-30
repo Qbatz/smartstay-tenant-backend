@@ -219,6 +219,7 @@ public class NotificationService {
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.CHANGE_BED.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -242,6 +243,7 @@ public class NotificationService {
         if (request.bedId() != null) {
             notification.setSourceId(String.valueOf(request.bedId()));
         }
+
         notificationService.saveAdminNotification(notification);
     }
 
@@ -271,6 +273,7 @@ public class NotificationService {
     public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description, String customerId, String hostelId) {
 
         CustomerNotifications notification = new CustomerNotifications();
+
         notification.setUserId(customerId);
         notification.setNotificationType(RequestType.INVOICE_GENERATION.name());
         notification.setTitle(title);
@@ -283,6 +286,7 @@ public class NotificationService {
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notification.setSourceId(invoiceId);
+
         notificationService.saveCustomerNotification(notification);
     }
 
@@ -324,6 +328,7 @@ public class NotificationService {
     public void createNotificationForComplaint(String userId, String hostelId, String complaintId, String complaintTitle, String complaintDescription) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.COMPLAINT.name());
         notification.setTitle(complaintTitle);
@@ -337,7 +342,9 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
+
         notificationService.saveAdminNotification(notification);
+
         fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
     }
 
