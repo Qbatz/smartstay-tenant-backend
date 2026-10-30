@@ -325,7 +325,8 @@ public class NotificationService {
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 
-    public void createNotificationForComplaint(String userId, String hostelId, String complaintId, String complaintTitle, String complaintDescription) {
+    public void createNotificationForComplaint(String userId, String hostelId, String complaintId,
+                                               String complaintTitle, String complaintDescription) {
 
         AdminNotifications notification = new AdminNotifications();
 
