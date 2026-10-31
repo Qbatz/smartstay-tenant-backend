@@ -188,7 +188,8 @@ public class TransactionService {
 
                 Credentials credential = credentialsService.getByService(ServiceEnum.SS_REPORTS.name());
                 if (credential == null || credential.getAuthToken() == null) {
-                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+//                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>(Constants.UN_AUTHORIZED, HttpStatus.BAD_REQUEST);
                 }
 
                 HttpHeaders headers = new HttpHeaders();
