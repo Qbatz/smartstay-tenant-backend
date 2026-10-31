@@ -1,6 +1,7 @@
 package com.smartstay.tenant.service;
 
 import com.smartstay.tenant.Utils.BankUtils;
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.InvoiceUtils;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
@@ -48,6 +49,7 @@ public class InvoiceService {
 
     @Value("${REPORTS_URL}")
     private String reportsUrl;
+
     private final RestTemplate restTemplate;
 
     @Autowired
@@ -2147,14 +2149,15 @@ public class InvoiceService {
             }
         }
 
-//        Credentials credential = credentialsService.getByService(ServiceEnum.reports.name());
-//        if (credential == null || credential.getAuthToken() == null) {
+        Credentials credential = credentialsService.getByService(ServiceEnum.SS_REPORTS.name());
+        if (credential == null || credential.getAuthToken() == null) {
 //            return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
-//        }
+            return new ResponseEntity<>(Constants.UN_AUTHORIZED, HttpStatus.BAD_REQUEST);
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        //headers.setBearerAuth(credential.getAuthToken());
+        headers.setBearerAuth(credential.getAuthToken());
 
         String endpoint = reportsUrl + "/v2/reports/invoices/"+ hostelId + "/" +  invoiceId;
 

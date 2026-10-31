@@ -31,4 +31,5 @@ public class Constants {
     public static final String CREDENTIALS_NOT_FOUND = "Credentials not found";
     public static final String KYC_NOT_ENABLED = "Kyc is not enabled";
     public static final String KYC_LIMIT_REACHED = "Kyc limit reached";
+    public static final String UN_AUTHORIZED = "Unauthorized Access";
 }

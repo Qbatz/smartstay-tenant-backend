@@ -51,8 +51,10 @@ public class AdminNotificationService {
     }
 
     public void updateComplaintsOnNotification(ComplaintsV1 complaint, String title) {
+
         List<AdminNotifications> listNotifications = adminNotificationRepository
                 .findByUserIdAndSourceId(complaint.getCustomerId(), String.valueOf(complaint.getComplaintId()));
+
         if (!listNotifications.isEmpty()) {
             AdminNotifications an = listNotifications
                     .stream()

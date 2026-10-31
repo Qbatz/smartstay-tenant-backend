@@ -3,10 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.AmenitiesV1;
-import com.smartstay.tenant.dao.AmenityRequest;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.CustomersAmenity;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
@@ -48,6 +45,8 @@ public class AmenitiesService {
     private HostelConfigService hostelConfigService;
     @Autowired
     private CustomerAmenityRepository customerAmenityRepository;
+    @Autowired
+    private FCMNotificationService fcmNotificationService;
 
     public ResponseEntity<?> getAllAmenities(String hostelId) {
 
@@ -174,8 +173,14 @@ public class AmenitiesService {
             return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
         }
 
-        notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
+
         amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request, tenantPlatform);
+        notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
+        fcmNotificationService.sendAmenityRequestNotification(hostelId, customer);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
