@@ -34,7 +34,13 @@ public class FCMNotificationService {
     private UserService userService;
 
     public ResponseEntity<?> sendTestMessage() {
-        Message message = Message.builder().setToken("eutSAEryT3uMKc98cnVOfY:APA91bEhI2eWe1Iv5nbyqx4SulyV8nlVc86uNKYPBDCaAZhR8o5FnKfWggbcrftdmQ2Nqc8uHZXwhhUDOdGtMMXm9ZkQURTpOhKFsBq65OTA67sNgZUiUtY").putData("test", "testing.....").putData("title", "test titile").putData("body", "This is sample body data").build();
+        Message message = Message
+                .builder()
+                .setToken("eutSAEryT3uMKc98cnVOfY:APA91bEhI2eWe1Iv5nbyqx4SulyV8nlVc86uNKYPBDCaAZhR8o5FnKfWggbcrftdmQ2Nqc8uHZXwhhUDOdGtMMXm9ZkQURTpOhKFsBq65OTA67sNgZUiUtY")
+                .putData("test", "testing.....")
+                .putData("title", "test titile")
+                .putData("body", "This is sample body data")
+                .build();
 
         try {
             return new ResponseEntity<>(tenantMessaging.send(message), HttpStatus.OK);
@@ -44,16 +50,29 @@ public class FCMNotificationService {
     }
 
     public void notifyCustomersForTodayInvoices() {
-        List<InvoicesV1> invoices = invoicesV1Repository.findInvoicesGeneratedTodayForActiveCustomers();
+
+        List<InvoicesV1> invoices = invoicesV1Repository
+                .findInvoicesGeneratedTodayForActiveCustomers();
 
         for (InvoicesV1 invoice : invoices) {
+
             String fCmToken = customerCredentialsService.getFCmToken(invoice.getCustomerId());
+
             if (fCmToken != null && !fCmToken.isEmpty()) {
-                notificationService.createNotificationForInvoiceGeneration(invoice.getInvoiceId(), "Invoice Generated", "Hi " + invoice.getCustomerMobile() + ", your " + Utils.capitalize(invoice.getInvoiceType()) + " invoice for this month has been generated.", invoice.getCustomerId(), invoice.getHostelId());
+
+                notificationService.createNotificationForInvoiceGeneration(invoice.getInvoiceId(),
+                        "Invoice Generated", "Hi " + invoice.getCustomerMobile() +
+                                ", your " + Utils.capitalize(invoice.getInvoiceType())
+                                + " invoice for this month has been generated.",
+                        invoice.getCustomerId(), invoice.getHostelId());
+
                 HashMap<String, String> payloads = new HashMap<>();
                 payloads.put("title", "Invoice Generated");
                 payloads.put("type", NotificationType.INVOICE_NOTIFICATION.name());
-                payloads.put("description", "Hi " + invoice.getCustomerMobile() + ", your " + Utils.capitalize(invoice.getInvoiceType()) + " invoice for this month has been generated.");
+                payloads.put("description", "Hi " + invoice.getCustomerMobile() + ", your "
+                        + Utils.capitalize(invoice.getInvoiceType())
+                        + " invoice for this month has been generated.");
+
                 Message message = Message.builder().setToken(fCmToken).putAllData(payloads).build();
                 try {
                     tenantMessaging.send(message);
@@ -64,6 +83,7 @@ public class FCMNotificationService {
     }
 
     public void sendCreateComplaintNotification(String hostelId, String complaintType, String description) {
+
         if (!authentication.isAuthenticated()) {
             return;
         }
@@ -71,7 +91,9 @@ public class FCMNotificationService {
         List<Users> adminUsers = userService.findMasters(hostelId);
 
         Customers customers = customerService.getCustomerById(authentication.getName());
+
         if (customers != null) {
+
             StringBuilder fullName = new StringBuilder();
             if (customers.getFirstName() != null) {
                 fullName.append(customers.getFirstName());
@@ -82,11 +104,14 @@ public class FCMNotificationService {
             }
 
             if (adminUsers != null) {
+
                 List<String> fcmTokens = new ArrayList<>();
+
                 List<UsersConfig> userConfigs = adminUsers
                         .stream()
                         .map(Users::getConfig)
                         .toList();
+
                 if (userConfigs != null) {
                     userConfigs.forEach(item -> {
                        if (item != null) {
@@ -101,9 +126,11 @@ public class FCMNotificationService {
                 }
 
                 if (!fcmTokens.isEmpty()) {
+
                     HashMap<String, String> payloads = new HashMap<>();
                     payloads.put("title", "New complaints for " + complaintType);
                     payloads.put("type", NotificationType.COMPLAINTS_RAISED.name());
+//                    payloads.put("description", description);
                     payloads.put("description", "Hi," + fullName.toString() + " has raised a complaints for" + complaintType);
 
                     MulticastMessage multicastMessage = MulticastMessage.builder()
@@ -119,11 +146,63 @@ public class FCMNotificationService {
                     }
                 }
             }
+        }
+    }
 
+    public void sendAmenityRequestNotification(String hostelId, Customers customer) {
+
+        List<Users> adminUsers = userService.findMasters(hostelId);
+
+        if (customer != null){
+
+            String fullName = Utils.getFullName(customer.getFirstName(), customer.getLastName());
+
+            if (adminUsers != null) {
+
+                List<String> fcmTokens = new ArrayList<>();
+
+                List<UsersConfig> userConfigs = adminUsers
+                        .stream()
+                        .map(Users::getConfig)
+                        .toList();
+
+                if (!userConfigs.isEmpty()) {
+                    userConfigs.forEach(item -> {
+                        if (item != null) {
+                            if (item.getFcmToken() != null) {
+                                fcmTokens.add(item.getFcmToken());
+                            }
+                            if (item.getFcmWebToken() != null) {
+                                fcmTokens.add(item.getFcmWebToken());
+                            }
+                        }
+                    });
+                }
+
+                if (!fcmTokens.isEmpty()) {
+                    HashMap<String, String> payloads = new HashMap<>();
+                    payloads.put("title", "Amenity Request");
+                    payloads.put("type", NotificationType.AMENITY_REQUEST.name());
+                    payloads.put("description", fullName + " has requested an amenity.");
+
+                    MulticastMessage multicastMessage = MulticastMessage.builder()
+                            .addAllTokens(fcmTokens)
+                            .putAllData(payloads)
+                            .build();
+
+                    try {
+                        BatchResponse response = FirebaseMessaging.getInstance()
+                                .sendEachForMulticast(multicastMessage);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
         }
     }
 
     public void sendNotificationBedChangeRequest(String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return;
         }
@@ -131,7 +210,9 @@ public class FCMNotificationService {
         List<Users> adminUsers = userService.findMasters(hostelId);
 
         Customers customers = customerService.getCustomerById(authentication.getName());
+
         if (customers != null) {
+
             StringBuilder fullName = new StringBuilder();
             if (customers.getFirstName() != null) {
                 fullName.append(customers.getFirstName());
@@ -179,7 +260,6 @@ public class FCMNotificationService {
                     }
                 }
             }
-
         }
     }
 

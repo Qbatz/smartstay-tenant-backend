@@ -178,9 +178,7 @@ public class ComplaintService {
 
         UserDetails userDetails = null;
 
-        if (complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())
-                || complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.PENDING.name())
-                || complaintsV1.getStatus().equalsIgnoreCase(ComplaintStatus.RESOLVED.name())) {
+        if (!ComplaintStatus.OPENED.name().equalsIgnoreCase(complaintsV1.getStatus())) {
 
             Users users = userService.findUserByUserId(complaintsV1.getAssigneeId());
 
@@ -314,7 +312,7 @@ public class ComplaintService {
                                 fullName.toString(),
                                 initials.toString(),
                                 profilePic,
-                               Utils.dateToString(i.getCreatedAt()),
+                                Utils.dateToString(i.getCreatedAt()),
                                 Utils.dateToTime(i.getCreatedAt()));
                     })
                     .toList();
@@ -694,7 +692,7 @@ public class ComplaintService {
 
         commentsRepository.save(complaintComments);
 
-        if (complaintExist.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())) {
+        if (ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(complaintExist.getStatus())) {
             String assigneeId = complaintExist.getAssigneeId();
             ComplaintTypeV1 complaintTypeV1 = complaintTypeService
                     .getComplaintTypeById(complaintExist.getComplaintTypeId(), complaintExist.getHostelId());
@@ -808,7 +806,7 @@ public class ComplaintService {
 
         List<String> assignedUsersIds = listComplaintUpdates
                 .stream()
-                .filter(i -> i.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name()))
+                .filter(i -> ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(i.getStatus()))
                 .map(ComplaintUpdates::getAssignedTo)
                 .toList();
 
