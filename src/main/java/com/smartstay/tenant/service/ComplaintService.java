@@ -178,10 +178,7 @@ public class ComplaintService {
 
         UserDetails userDetails = null;
 
-        if (ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(complaintsV1.getStatus())
-                || ComplaintStatus.PENDING.name().equalsIgnoreCase(complaintsV1.getStatus())
-                || ComplaintStatus.RESOLVED.name().equalsIgnoreCase(complaintsV1.getStatus())
-                || ComplaintStatus.IN_PROGRESS.name().equalsIgnoreCase(complaintsV1.getStatus())) {
+        if (!ComplaintStatus.OPENED.name().equalsIgnoreCase(complaintsV1.getStatus())) {
 
             Users users = userService.findUserByUserId(complaintsV1.getAssigneeId());
 
