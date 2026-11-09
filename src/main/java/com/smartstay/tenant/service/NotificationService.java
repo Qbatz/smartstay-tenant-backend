@@ -319,6 +319,27 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
     }
 
+    public void createNotificationForDeactivatingAmenity(String userId, String hostelId, String amenityId) {
+
+        AdminNotifications notification = new AdminNotifications();
+
+        notification.setUserId(userId);
+        notification.setNotificationType(RequestType.AMENITY_REQUEST.name());
+        notification.setTitle("Amenity Request");
+        notification.setDescription("Deactivate amenity request submitted by customer.");
+        notification.setUserType(UserType.TENANT.name());
+        notification.setHostelId(hostelId);
+        notification.setCreatedBy(userId);
+        notification.setSourceId(amenityId);
+        notification.setActive(true);
+        notification.setRead(false);
+        notification.setDeleted(false);
+        notification.setCreatedAt(new Date());
+        notification.setUpdatedAt(new Date());
+
+        notificationService.saveAdminNotification(notification);
+    }
+
     public String markAsRead(List<Long> notificationIds, String hostelId) {
         int updatedCount = notificationService
                 .markNotificationsAsRead(notificationIds, hostelId);

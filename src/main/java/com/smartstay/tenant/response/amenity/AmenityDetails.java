@@ -13,4 +13,5 @@ public interface AmenityDetails {
     String getHostelId();
     Boolean getIsAssigned();
     Date getAmenityStartDate();
+    Date getAmenityEndDate();
 }

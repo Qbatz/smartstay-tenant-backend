@@ -4,8 +4,8 @@ import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.*;
-import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.mapper.amenities.AmenityInfoResMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
@@ -60,14 +60,24 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        List<AmenityInfoProjection> assigned = amenityRepository
-                .findCurrentlyAssignedAmenities(hostelId, customerId);
-        List<AmenityInfoProjection> unassigned = amenityRepository
-                .findUnassignedAmenities(hostelId, customerId);
+        Date today = new Date();
 
-        AmenitiesStatusResponse response = new AmenitiesStatusResponse(
-                assigned != null ? assigned : List.of(),
-                unassigned != null ? unassigned : List.of());
+        List<AmenityInfoProjection> assigned = amenityRepository
+                .findCurrentlyAssignedAmenities(hostelId, customerId, today);
+        List<AmenityInfoProjection> unassigned = amenityRepository
+                .findUnassignedAmenities(hostelId, customerId, today);
+
+        AmenityInfoResMapper mapper = new AmenityInfoResMapper();
+
+        List<AmenityInfoResponse> assignedRes = assigned.stream()
+                .map(mapper)
+                .toList();
+
+        List<AmenityInfoResponse> unassignedRes = unassigned.stream()
+                .map(mapper)
+                .toList();
+
+        AmenitiesStatusResponse response = new AmenitiesStatusResponse(assignedRes, unassignedRes);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -125,8 +135,10 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
+        Date today = new Date();
+
         AmenityDetails amenityInfo = amenityRepository
-                .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId);
+                .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId, today);
 
         AmenityRequest amenityRequest = amenityRequestService
                 .getAmenityRequestByCustomerIdAndAmenityId(customerId, amenityId);
@@ -229,24 +241,19 @@ public class AmenitiesService {
             return new ResponseEntity<>(Constants.AMENITY_IS_NOT_ASSIGNED, HttpStatus.BAD_REQUEST);
         }
 
-        Date today = new Date();
-
-        Date endDate = null;
-        if (amenity.getIsProRate()){
-            endDate = today;
-        } else {
-            BillingRules billingRules = hostelConfigService.getCurrentMonthTemplate(hostelId);
-            BillingDates billingDates = hostelConfigService.computeBillingDates(billingRules, today);
-            endDate = billingDates != null ? billingDates.currentBillEndDate() : today;
+        if (amenityRequestService.existsPendingRequest(customerId, amenityId)) {
+            return new ResponseEntity<>("Already requested. Please wait for approval.", HttpStatus.BAD_REQUEST);
         }
 
-        customersAmenity.setEndDate(endDate != null ? endDate : today);
-        customersAmenity.setUpdatedBy(authentication.getName());
-        customersAmenity.setUpdatedAt(today);
-        customersAmenity.setTenantPlatform(tenantPlatform);
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
+        }
 
-        customerAmenityRepository.save(customersAmenity);
+        amenityRequestService.createDeactivationAmenityRequest(customerId, hostelId, amenityId, tenantPlatform);
+        notificationService.createNotificationForDeactivatingAmenity(customerId, hostelId, amenityId);
+        fcmNotificationService.sendDeactivateAmenityRequestNotification(hostelId, customer);
 
-        return new ResponseEntity<>(Constants.DEACTIVATED, HttpStatus.OK);
+        return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -17,7 +18,9 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
                 a.amenity_id AS amenityId,
                 a.amenity_name AS amenityName,
                 a.amenity_amount AS amenityAmount,
-                a.is_pro_rate AS proRate
+                a.is_pro_rate AS proRate,
+                ca.start_date AS amenityStartDate,
+                ca.end_date AS amenityEndDate
             FROM amenitiesv1 a
             INNER JOIN customers_amenity ca
                 ON ca.amenity_id = a.amenity_id
@@ -32,10 +35,11 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
               AND a.is_active = TRUE
               AND a.is_deleted = FALSE
               AND ca.start_date IS NOT NULL
-              AND ca.end_date IS NULL
+              AND (ca.end_date IS NULL OR DATE(ca.end_date) > DATE(:currentDate))
             """, nativeQuery = true)
     List<AmenityInfoProjection> findCurrentlyAssignedAmenities(@Param("hostelId") String hostelId,
-                                                               @Param("customerId") String customerId);
+                                                               @Param("customerId") String customerId,
+                                                               @Param("currentDate") Date currentDate);
 
     @Query(value = """
             SELECT COUNT(*)
@@ -67,12 +71,13 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
                         WHERE ca2.customer_id = ca.customer_id
                           AND ca2.amenity_id = ca.amenity_id
                     )
-                    AND ca.end_date IS NULL
+                    AND (ca.end_date IS NULL OR DATE(ca.end_date) > DATE(:currentDate))
                     AND ca.start_date IS NOT NULL
               )
             """, nativeQuery = true)
     List<AmenityInfoProjection> findUnassignedAmenities(@Param("hostelId") String hostelId,
-                                                        @Param("customerId") String customerId);
+                                                        @Param("customerId") String customerId,
+                                                        @Param("currentDate") Date currentDate);
 
     @Query(value = """
               SELECT
@@ -88,7 +93,8 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
                       THEN 'true'
                       ELSE 'false'
                   END AS isAssigned,
-                  ca.start_date AS amenityStartDate
+                  ca.start_date AS amenityStartDate,
+                  ca.end_date AS amenityEndDate
               FROM amenitiesv1 a
               LEFT JOIN customers_amenity ca
                   ON ca.amenity_id = a.amenity_id
@@ -100,7 +106,7 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
                         AND ca2.amenity_id = a.amenity_id
                   )
                   AND ca.start_date IS NOT NULL
-                  AND ca.end_date IS NULL
+                  AND (ca.end_date IS NULL OR DATE(ca.end_date) > DATE(:currentDate))
               WHERE a.hostel_id = :hostelId
                 AND a.amenity_id = :amenityId
                 AND a.is_active = TRUE
@@ -108,7 +114,8 @@ public interface AmentityRepository extends JpaRepository<AmenitiesV1, String> {
             """, nativeQuery = true)
     AmenityDetails findAmenityByAmenityIdAndCustomerStatus(@Param("hostelId") String hostelId,
                                                            @Param("amenityId") String amenityId,
-                                                           @Param("customerId") String customerId);
+                                                           @Param("customerId") String customerId,
+                                                           @Param("currentDate") Date currentDate);
 
     AmenitiesV1 findByAmenityIdAndIsActiveTrueAndIsDeletedFalse(String amenityId);
 
