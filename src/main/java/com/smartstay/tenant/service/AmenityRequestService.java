@@ -3,6 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.dto.BillingDates;
+import com.smartstay.tenant.ennum.ActionTypeEnum;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
@@ -54,6 +55,7 @@ public class AmenityRequestService {
         amenityRequest.setUpdatedAt(new Date());
         amenityRequest.setUpdatedBy(customerId);
         amenityRequest.setTenantPlatform(tenantPlatform);
+        amenityRequest.setActionType(ActionTypeEnum.ACTIVATION.name());
 
         amenityRequestRepository.save(amenityRequest);
     }
@@ -109,5 +111,29 @@ public class AmenityRequestService {
     public Page<AmenityRequest> getPagedAmenityRequestsByCustomerIdAndHostelId(String customerId, String hostelId,
                                                                                Pageable pageable) {
         return amenityRequestRepository.findAllByHostelIdAndCustomerId(hostelId, customerId, pageable);
+    }
+
+    public void createDeactivationAmenityRequest(String customerId, String hostelId,
+                                                 String amenityId, String tenantPlatform) {
+
+        Date today = new Date();
+
+        AmenityRequest amenityRequest = new AmenityRequest();
+
+        amenityRequest.setCustomerId(customerId);
+        amenityRequest.setHostelId(hostelId);
+        amenityRequest.setAmenityId(amenityId);
+        amenityRequest.setRequestedDate(today);
+        amenityRequest.setDescription(null);
+        amenityRequest.setStartFrom(null);
+        amenityRequest.setCurrentStatus(RequestStatus.OPEN.name());
+        amenityRequest.setIsActive(true);
+        amenityRequest.setCreatedAt(today);
+        amenityRequest.setUpdatedAt(today);
+        amenityRequest.setUpdatedBy(customerId);
+        amenityRequest.setTenantPlatform(tenantPlatform);
+        amenityRequest.setActionType(ActionTypeEnum.DEACTIVATION.name());
+
+        amenityRequestRepository.save(amenityRequest);
     }
 }
