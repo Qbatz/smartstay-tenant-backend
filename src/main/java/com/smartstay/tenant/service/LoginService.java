@@ -5,9 +5,7 @@ import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.hostel.HostelWithRentDTO;
 import com.smartstay.tenant.dto.hostel.RentalDetailsDTO;
-import com.smartstay.tenant.ennum.CustomerStatus;
-import com.smartstay.tenant.ennum.InvoiceType;
-import com.smartstay.tenant.ennum.TenantPlatformEnum;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.mapper.hostel.HostelDetailsMapper;
 import com.smartstay.tenant.payload.login.*;
 import com.smartstay.tenant.repository.CustomerRepository;
@@ -59,6 +57,8 @@ public class LoginService {
     private InvoiceService invoiceService;
     @Autowired
     private RaiseNoticeRequestService raiseNoticeRequestService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> updateMpin(UpdateMpin updateMpin) {
 
@@ -140,6 +140,10 @@ public class LoginService {
         claims.put("platform", tenantPlatform);
 
         String token = jwtService.generateToken(customers.getCustomerId(), claims);
+
+        customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
+                CustomerActivityTypeEnum.LOGIN, CustomerActivitySourceEnum.LOGGED_IN,
+                customers.getCustomerId());
 
         return new ResponseEntity<>(token, HttpStatus.OK);
     }
