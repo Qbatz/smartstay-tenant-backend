@@ -88,6 +88,7 @@ public class BedChangeRequestMapper implements Function<BedChangeRequest, Reques
                 false,
                 bedChangeRequest.getPreferredType(),
                 bedChangeRequest.getBedChangeUrgency(),
-                startsFrom);
+                startsFrom,
+                null);
     }
 }

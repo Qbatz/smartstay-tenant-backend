@@ -20,6 +20,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
 
     @Override
     public RequestItemResponse apply(AmenityRequest amenityRequest) {
+
         String status = "";
         int statusCode = 0;
         String amenityName = null;
@@ -83,6 +84,7 @@ public class AmenityRequestMapper implements Function<AmenityRequest, RequestIte
                 amenityProRate,
                 null,
                 null,
-                null);
+                null,
+                amenityRequest.getActionType());
     }
 }

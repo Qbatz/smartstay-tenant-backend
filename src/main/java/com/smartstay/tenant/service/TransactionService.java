@@ -1,12 +1,15 @@
 package com.smartstay.tenant.service;
 
+import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.config.RestTemplateLoggingInterceptor;
+import com.smartstay.tenant.dao.Credentials;
 import com.smartstay.tenant.dao.TransactionV1;
 import com.smartstay.tenant.dto.TransactionDto;
 import com.smartstay.tenant.dto.bills.PaymentHistoryProjection;
 import com.smartstay.tenant.dto.invoice.ReceiptDTO;
+import com.smartstay.tenant.ennum.ServiceEnum;
 import com.smartstay.tenant.mapper.TransactionForCustomerDetailsMapper;
 import com.smartstay.tenant.repository.TransactionV1Repository;
 import com.smartstay.tenant.response.PaginationDataRes;
@@ -183,14 +186,14 @@ public class TransactionService {
             }
             else {
 
-//                Credentials credential = credentialsService.getByService(ServiceEnum.reports.name());
-//                if (credential == null || credential.getAuthToken() == null) {
-//                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
-//                }
+                Credentials credential = credentialsService.getByService(ServiceEnum.SS_REPORTS.name());
+                if (credential == null || credential.getAuthToken() == null) {
+                    return new ResponseEntity<>(Constants.CREDENTIALS_NOT_FOUND, HttpStatus.BAD_REQUEST);
+                }
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                //headers.setBearerAuth(credential.getAuthToken());
+                headers.setBearerAuth(credential.getAuthToken());
 
                 String endpoint = reportsUrl + "/v2/reports/receipts/"+ hostelId + "/" +  receiptId;
 
