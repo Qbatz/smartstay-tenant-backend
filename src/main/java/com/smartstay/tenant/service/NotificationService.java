@@ -370,8 +370,31 @@ public class NotificationService {
         fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
     }
 
-    public void sendPushNotification(String assigneeId, String complaintType) {
-        fcmNotificationService.sendCommentNotification(assigneeId, complaintType);
+    public void createComplaintCommentsNotification(String customerId, String hostelId, Integer complaintId) {
+
+        Date today = new Date();
+
+        AdminNotifications adminNotification = new AdminNotifications();
+
+        adminNotification.setUserId(customerId);
+        adminNotification.setNotificationType(RequestType.COMPLAINT_COMMENTS.name());
+        adminNotification.setTitle("New comment added for a complaint");
+        adminNotification.setDescription("New comment added by customer for a complaint");
+        adminNotification.setUserType(UserType.TENANT.name());
+        adminNotification.setHostelId(hostelId);
+        adminNotification.setCreatedBy(customerId);
+        adminNotification.setActive(true);
+        adminNotification.setRead(false);
+        adminNotification.setDeleted(false);
+        adminNotification.setCreatedAt(today);
+        adminNotification.setUpdatedAt(today);
+        adminNotification.setSourceId(String.valueOf(complaintId));
+
+        notificationService.saveAdminNotification(adminNotification);
+    }
+
+    public void sendPushNotification(String assigneeId, String complaintType, String hostelId) {
+        fcmNotificationService.sendCommentNotification(assigneeId, complaintType, hostelId);
     }
 
     public void findAndUpdateComplaints(ComplaintsV1 complaint, String title) {

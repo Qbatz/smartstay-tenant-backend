@@ -671,19 +671,19 @@ public class ComplaintService {
 
         Customers customers = customerService.getCustomerById(customerId);
 
-        ComplaintsV1 complaintExist = complaintsV1Repository
+        ComplaintsV1 complaint = complaintsV1Repository
                 .findByComplaintIdAndCustomerIdAndHostelId(complaintId, customerId, request.hostelId());
-        if (complaintExist == null) {
+        if (complaint == null) {
             return new ResponseEntity<>(Utils.COMPLAINTS_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         ComplaintComments complaintComments = new ComplaintComments();
 
         complaintComments.setCommentDate(new Date());
-        complaintComments.setComplaint(complaintExist);
+        complaintComments.setComplaint(complaint);
         complaintComments.setComment(request.message());
         complaintComments.setIsActive(true);
-        complaintComments.setComplaintStatus(complaintExist.getStatus());
+        complaintComments.setComplaintStatus(complaint.getStatus());
         complaintComments.setUserType(UserType.TENANT.name());
         complaintComments.setCreatedBy(customerId);
         complaintComments.setUserName(customers.getFirstName() + " " + customers.getLastName());
@@ -692,13 +692,15 @@ public class ComplaintService {
 
         commentsRepository.save(complaintComments);
 
-        if (ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(complaintExist.getStatus())) {
-            String assigneeId = complaintExist.getAssigneeId();
-            ComplaintTypeV1 complaintTypeV1 = complaintTypeService
-                    .getComplaintTypeById(complaintExist.getComplaintTypeId(), complaintExist.getHostelId());
+        String assigneeId = complaint.getAssigneeId();
 
-            notificationService.sendPushNotification(assigneeId, complaintTypeV1.getComplaintTypeName());
-        }
+        ComplaintTypeV1 complaintTypeV1 = complaintTypeService
+                .getComplaintTypeById(complaint.getComplaintTypeId(), complaint.getHostelId());
+
+        notificationService.sendPushNotification(assigneeId, complaintTypeV1.getComplaintTypeName(),
+                complaint.getHostelId());
+        notificationService.createComplaintCommentsNotification(customerId, complaint.getHostelId(),
+                complaint.getComplaintId());
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
