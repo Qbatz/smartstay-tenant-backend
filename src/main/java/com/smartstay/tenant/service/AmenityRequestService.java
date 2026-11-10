@@ -8,7 +8,6 @@ import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmenityRequestRepository;
-import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -79,7 +78,7 @@ public class AmenityRequestService {
     public List<RequestItemResponse> getRequests(String customerId, String hostelId) {
 
         List<AmenityRequest> listAmenitiesRequests = amenityRequestRepository
-                .findByHostelIdAndCustomerId(hostelId, customerId);
+                .findAllByHostelIdAndCustomerIdAndIsActiveTrueOrderByAmenityRequestIdDesc(hostelId, customerId);
 
         List<String> listAmenitiesId = listAmenitiesRequests.stream()
                 .map(AmenityRequest::getAmenityId)
@@ -90,10 +89,6 @@ public class AmenityRequestService {
         return listAmenitiesRequests.stream()
                 .map(i -> new AmenityRequestMapper(listAmenities).apply(i))
                 .toList();
-    }
-
-    public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
-        return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
     }
 
     public AmenityRequest getAmenityRequestById(long requestId) {
@@ -110,7 +105,8 @@ public class AmenityRequestService {
 
     public Page<AmenityRequest> getPagedAmenityRequestsByCustomerIdAndHostelId(String customerId, String hostelId,
                                                                                Pageable pageable) {
-        return amenityRequestRepository.findAllByHostelIdAndCustomerId(hostelId, customerId, pageable);
+        return amenityRequestRepository
+                .findAllByHostelIdAndCustomerIdAndIsActiveTrueOrderByAmenityRequestIdDesc(hostelId, customerId, pageable);
     }
 
     public void createDeactivationAmenityRequest(String customerId, String hostelId,
