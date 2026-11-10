@@ -193,7 +193,7 @@ public class TransactionService {
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                //headers.setBearerAuth(credential.getAuthToken());
+                headers.setBearerAuth(credential.getAuthToken());
 
                 String endpoint = reportsUrl + "/v2/reports/receipts/"+ hostelId + "/" +  receiptId;
 
