@@ -1072,14 +1072,25 @@ public class InvoiceService {
             advanceInfoRes = buildAdvanceInfoRes(advanceInvoice);
         }
 
+        double totalAmount = 0;
+        if (invoice.getTotalAmount() != null){
+            totalAmount = invoice.getTotalAmount();
+        }
+
+        String totalAmountLabelText = "Total Payable";
+        if (totalAmount < 0){
+            totalAmountLabelText = "Total Refundable";
+        }
+
         finalSettlementDetails = new FinalSettlementDetails(invoice.getInvoiceId(), invoice.getInvoiceNumber(),
                 Utils.capitalize(invoice.getInvoiceType()), invoiceGeneratedDate, invoiceDueDate,
                 invoiceStartDateString, invoiceEndDateString, invoice.getTotalAmount(), invoiceDiscountAmount,
-                totalPaid, dueAmount, invoice.getDeductionAmount(), status, paymentStatus, invoice.getGst(), invoice.getCgst(),
-                invoice.getSgst(), invoice.getGstPercentile(), deductionsRes, invoiceItems, receipts, advanceInfo,
-                currentMonthInfo, unpaidInvoicesRes, invoiceEbResponse, lastPaidDate, lastPaymentMode, referenceId,
-                showMessage, settlementRetainerInfoRes, settlementAdditionalAdvance, bookingInfoRes, advanceInfoRes,
-                walletInfoRes, unpaidInvoiceInfo, currentMonthRentInfo, currentMonthEbInfo);
+                totalPaid, dueAmount, invoice.getDeductionAmount(), status, paymentStatus, totalAmountLabelText,
+                invoice.getGst(), invoice.getCgst(), invoice.getSgst(), invoice.getGstPercentile(), deductionsRes,
+                invoiceItems, receipts, advanceInfo, currentMonthInfo, unpaidInvoicesRes, invoiceEbResponse,
+                lastPaidDate, lastPaymentMode, referenceId, showMessage, settlementRetainerInfoRes,
+                settlementAdditionalAdvance, bookingInfoRes, advanceInfoRes, walletInfoRes, unpaidInvoiceInfo,
+                currentMonthRentInfo, currentMonthEbInfo);
 
         return new ResponseEntity<>(finalSettlementDetails, HttpStatus.OK);
     }

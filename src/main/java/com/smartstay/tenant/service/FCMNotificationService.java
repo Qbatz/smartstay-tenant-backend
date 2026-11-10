@@ -201,6 +201,58 @@ public class FCMNotificationService {
         }
     }
 
+    public void sendDeactivateAmenityRequestNotification(String hostelId, Customers customer) {
+
+        List<Users> adminUsers = userService.findMasters(hostelId);
+
+        if (customer != null){
+
+            String fullName = Utils.getFullName(customer.getFirstName(), customer.getLastName());
+
+            if (adminUsers != null) {
+
+                List<String> fcmTokens = new ArrayList<>();
+
+                List<UsersConfig> userConfigs = adminUsers
+                        .stream()
+                        .map(Users::getConfig)
+                        .toList();
+
+                if (!userConfigs.isEmpty()) {
+                    userConfigs.forEach(item -> {
+                        if (item != null) {
+                            if (item.getFcmToken() != null) {
+                                fcmTokens.add(item.getFcmToken());
+                            }
+                            if (item.getFcmWebToken() != null) {
+                                fcmTokens.add(item.getFcmWebToken());
+                            }
+                        }
+                    });
+                }
+
+                if (!fcmTokens.isEmpty()) {
+                    HashMap<String, String> payloads = new HashMap<>();
+                    payloads.put("title", "Amenity Request");
+                    payloads.put("type", NotificationType.AMENITY_REQUEST.name());
+                    payloads.put("description", fullName + " has requested to deactivate an amenity.");
+
+                    MulticastMessage multicastMessage = MulticastMessage.builder()
+                            .addAllTokens(fcmTokens)
+                            .putAllData(payloads)
+                            .build();
+
+                    try {
+                        BatchResponse response = FirebaseMessaging.getInstance()
+                                .sendEachForMulticast(multicastMessage);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+    }
+
     public void sendNotificationBedChangeRequest(String hostelId) {
 
         if (!authentication.isAuthenticated()) {
@@ -315,40 +367,60 @@ public class FCMNotificationService {
         }
     }
 
-    public void sendCommentNotification(String assigneeId, String complaintType) {
+    public void sendCommentNotification(String assigneeId, String complaintType, String hostelId) {
+
         if (!authentication.isAuthenticated()) {
             return;
         }
 
-        Users users = userService.findUserByUserId(assigneeId);
-        if (users != null) {
-            UsersConfig config = users.getConfig();
-            if (config != null) {
-                List<String> fcmIds = new ArrayList<>();
-                if (config.getFcmWebToken() != null) {
-                    fcmIds.add(config.getFcmWebToken());
-                }
-                if (config.getFcmToken() != null) {
-                    fcmIds.add(config.getFcmToken());
-                }
+        List<Users> adminUsers = userService.findMasters(hostelId);
 
-                if (!fcmIds.isEmpty()) {
-                    HashMap<String, String> payloads = new HashMap<>();
-                    payloads.put("title", "New Comment added for a complaint");
-                    payloads.put("type", NotificationType.COMPLAINT_COMMENTS.name());
-                    payloads.put("description", "New comment added for a complaint " + complaintType);
+        if (assigneeId != null) {
+            Users assignedUser = userService.findUserByUserId(assigneeId);
 
-                    MulticastMessage multicastMessage = MulticastMessage.builder()
-                            .addAllTokens(fcmIds)
-                            .putAllData(payloads)
-                            .build();
+            if (!adminUsers.contains(assignedUser)) {
+                adminUsers.add(assignedUser);
+            }
+        }
 
-                    try {
-                        BatchResponse response = FirebaseMessaging.getInstance()
-                                .sendEachForMulticast(multicastMessage);
-                    } catch (FirebaseMessagingException e) {
-                        throw new RuntimeException(e);
+        if (adminUsers != null) {
+
+            List<String> fcmTokens = new ArrayList<>();
+
+            List<UsersConfig> userConfigs = adminUsers
+                    .stream()
+                    .map(Users::getConfig)
+                    .toList();
+
+            if (!userConfigs.isEmpty()) {
+                userConfigs.forEach(item -> {
+                    if (item != null) {
+                        if (item.getFcmToken() != null) {
+                            fcmTokens.add(item.getFcmToken());
+                        }
+                        if (item.getFcmWebToken() != null) {
+                            fcmTokens.add(item.getFcmWebToken());
+                        }
                     }
+                });
+            }
+
+            if (!fcmTokens.isEmpty()) {
+                HashMap<String, String> payloads = new HashMap<>();
+                payloads.put("title", "New Comment added for a complaint");
+                payloads.put("type", NotificationType.COMPLAINT_COMMENTS.name());
+                payloads.put("description", "New comment added for a complaint " + complaintType);
+
+                MulticastMessage multicastMessage = MulticastMessage.builder()
+                        .addAllTokens(fcmTokens)
+                        .putAllData(payloads)
+                        .build();
+
+                try {
+                    BatchResponse response = FirebaseMessaging.getInstance()
+                            .sendEachForMulticast(multicastMessage);
+                } catch (FirebaseMessagingException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }

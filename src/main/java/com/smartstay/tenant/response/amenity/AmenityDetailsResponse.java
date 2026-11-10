@@ -16,5 +16,8 @@ public record AmenityDetailsResponse(String amenityId,
                                      String currentBillDueDate,
                                      String nextBillStartDate,
                                      String nextBillEndDate,
-                                     String nextBillDueDate) {
+                                     String nextBillDueDate,
+                                     String actionType,
+                                     String amenityStartDate,
+                                     String amenityEndDate) {
 }
