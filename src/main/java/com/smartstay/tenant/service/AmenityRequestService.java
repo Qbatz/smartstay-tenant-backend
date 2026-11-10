@@ -132,28 +132,4 @@ public class AmenityRequestService {
 
         amenityRequestRepository.save(amenityRequest);
     }
-
-    public void createDeactivationAmenityRequest(String customerId, String hostelId,
-                                                 String amenityId, String tenantPlatform) {
-
-        Date today = new Date();
-
-        AmenityRequest amenityRequest = new AmenityRequest();
-
-        amenityRequest.setCustomerId(customerId);
-        amenityRequest.setHostelId(hostelId);
-        amenityRequest.setAmenityId(amenityId);
-        amenityRequest.setRequestedDate(today);
-        amenityRequest.setDescription(null);
-        amenityRequest.setStartFrom(null);
-        amenityRequest.setCurrentStatus(RequestStatus.OPEN.name());
-        amenityRequest.setIsActive(true);
-        amenityRequest.setCreatedAt(today);
-        amenityRequest.setUpdatedAt(today);
-        amenityRequest.setUpdatedBy(customerId);
-        amenityRequest.setTenantPlatform(tenantPlatform);
-        amenityRequest.setActionType(ActionTypeEnum.DEACTIVATION.name());
-
-        amenityRequestRepository.save(amenityRequest);
-    }
 }
