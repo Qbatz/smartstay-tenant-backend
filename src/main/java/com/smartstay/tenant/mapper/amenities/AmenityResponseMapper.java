@@ -1,9 +1,10 @@
 package com.smartstay.tenant.mapper.amenities;
 
 import com.smartstay.tenant.Utils.Utils;
+import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.dao.AmenityRequest;
+import com.smartstay.tenant.dao.CustomersAmenity;
 import com.smartstay.tenant.dto.BillingDates;
-import com.smartstay.tenant.response.amenity.AmenityDetails;
 import com.smartstay.tenant.response.amenity.AmenityDetailsResponse;
 import com.smartstay.tenant.service.HostelConfigService;
 
@@ -11,19 +12,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.function.Function;
 
-public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDetailsResponse> {
+public class AmenityResponseMapper implements Function<AmenitiesV1, AmenityDetailsResponse> {
 
     private final HostelConfigService hostelConfigService;
     private final AmenityRequest amenityRequest;
+    private final CustomersAmenity customersAmenity;
 
     public AmenityResponseMapper(HostelConfigService hostelConfigService,
-                                 AmenityRequest amenityRequest) {
+                                 AmenityRequest amenityRequest,
+                                 CustomersAmenity customersAmenity) {
         this.hostelConfigService = hostelConfigService;
         this.amenityRequest = amenityRequest;
+        this.customersAmenity = customersAmenity;
     }
 
     @Override
-    public AmenityDetailsResponse apply(AmenityDetails amenityDetails) {
+    public AmenityDetailsResponse apply(AmenitiesV1 amenity) {
 
         String startDateString = null;
         String endDateString = null;
@@ -33,18 +37,26 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
         String nextDueDateString = null;
         String amenityStartDate = null;
         String amenityEndDate = null;
+        boolean isAssigned = false;
+        Date customersAmenityStartDate = null;
+        Date customersAmenityEndDate = null;
 
-        if (Boolean.TRUE.equals(amenityDetails.getIsAssigned())
-                && amenityDetails.getAmenityStartDate() != null){
+        if (customersAmenity != null) {
+            isAssigned = true;
+            customersAmenityStartDate = customersAmenity.getStartDate();
+            customersAmenityEndDate = customersAmenity.getEndDate();
+        }
 
-            amenityStartDate = Utils.dateToString(amenityDetails.getAmenityStartDate());
-            if (amenityDetails.getAmenityEndDate() != null){
-                amenityEndDate = Utils.dateToString(amenityDetails.getAmenityEndDate());
+        if (isAssigned && customersAmenityStartDate != null){
+
+            amenityStartDate = Utils.dateToString(customersAmenityStartDate);
+            if (customersAmenityEndDate != null){
+                amenityEndDate = Utils.dateToString(customersAmenityEndDate);
             }
 
             Date currentDate = new Date();
 
-            if (amenityDetails.getAmenityEndDate() == null) {
+            if (customersAmenityEndDate == null) {
 
 ////                For Testing with Different Dates
 //                Calendar dummyCal = Calendar.getInstance();
@@ -52,7 +64,7 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
 //                Date currentDate = dummyCal.getTime();
 
                 BillingDates billingDates = hostelConfigService
-                        .getBillingRuleOnDate(amenityDetails.getHostelId(), currentDate);
+                        .getBillingRuleOnDate(amenity.getHostelId(), currentDate);
 
                 Date monthStart = billingDates.currentBillStartDate();
                 Date monthEnd = billingDates.currentBillEndDate();
@@ -60,10 +72,10 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
 
                 Date billStartDate = monthStart;
 
-                if (Boolean.TRUE.equals(amenityDetails.getProRate())) {
+                if (Boolean.TRUE.equals(amenity.getIsProRate())) {
 
                     Calendar amenityCal = Calendar.getInstance();
-                    amenityCal.setTime(amenityDetails.getAmenityStartDate());
+                    amenityCal.setTime(customersAmenityStartDate);
                     int amenityDay = amenityCal.get(Calendar.DAY_OF_MONTH);
 
                     Calendar billCal = Calendar.getInstance();
@@ -122,10 +134,10 @@ public class AmenityResponseMapper implements Function<AmenityDetails, AmenityDe
             actionType = amenityRequest.getActionType();
         }
 
-        return new AmenityDetailsResponse(amenityDetails.getAmenityId(), amenityDetails.getAmenityName(),
-                amenityDetails.getAmenityAmount(), amenityDetails.getDescription(), amenityDetails.getTermsAndCondition(),
-                amenityDetails.getProRate(), amenityDetails.getIsAssigned(), isRequestRaised, amenityRequestId,
-                requestDate, requestTime, startDateString, endDateString, dueDateString, nextStartDateString,
+        return new AmenityDetailsResponse(amenity.getAmenityId(), amenity.getAmenityName(),
+                amenity.getAmenityAmount(), amenity.getDescription(), amenity.getTermsAndCondition(),
+                amenity.getIsProRate(), isAssigned, isRequestRaised, amenityRequestId, requestDate,
+                requestTime, startDateString, endDateString, dueDateString, nextStartDateString,
                 nextEndDateString, nextDueDateString, actionType, amenityStartDate, amenityEndDate);
     }
 }

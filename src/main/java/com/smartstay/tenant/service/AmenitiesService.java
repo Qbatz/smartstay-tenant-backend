@@ -9,8 +9,7 @@ import com.smartstay.tenant.mapper.amenities.AmenityInfoResMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
-import com.smartstay.tenant.repository.AmentityRepository;
-import com.smartstay.tenant.repository.CustomerAmenityRepository;
+import com.smartstay.tenant.repository.AmenityRepository;
 import com.smartstay.tenant.response.PaginationDataRes;
 import com.smartstay.tenant.response.amenity.*;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
@@ -22,17 +21,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class AmenitiesService {
 
     @Autowired
-    private AmentityRepository amenityRepository;
+    private AmenityRepository amenityRepository;
+    @Autowired
+    private CustomerAmenityService customerAmenityService;
     @Autowired
     private AmenityRequestService amenityRequestService;
     @Autowired
@@ -43,8 +42,6 @@ public class AmenitiesService {
     private CustomerService customerService;
     @Autowired
     private HostelConfigService hostelConfigService;
-    @Autowired
-    private CustomerAmenityRepository customerAmenityRepository;
     @Autowired
     private FCMNotificationService fcmNotificationService;
 
@@ -62,18 +59,41 @@ public class AmenitiesService {
 
         Date today = new Date();
 
-        List<AmenityInfoProjection> assigned = amenityRepository
-                .findCurrentlyAssignedAmenities(hostelId, customerId, today);
-        List<AmenityInfoProjection> unassigned = amenityRepository
-                .findUnassignedAmenities(hostelId, customerId, today);
+        List<AmenitiesV1> amenities = amenityRepository
+                .findAllByHostelIdAndIsActiveTrueAndIsDeletedFalse(hostelId);
 
-        AmenityInfoResMapper mapper = new AmenityInfoResMapper();
+        Set<String> amenityIds = amenities.stream()
+                .map(AmenitiesV1::getAmenityId)
+                .collect(Collectors.toSet());
 
-        List<AmenityInfoResponse> assignedRes = assigned.stream()
+        List<CustomersAmenity> customersAmenities = customerAmenityService
+                .getLatestWithEndDateByCustomerIdAndAmenityIds(today, customerId, amenityIds);
+
+        Map<String, CustomersAmenity> customersAmenityMap = customersAmenities.stream()
+                .collect(Collectors.toMap(CustomersAmenity::getAmenityId, Function.identity()));
+
+        List<AmenitiesV1> assignedAmenities = new ArrayList<>();
+        List<AmenitiesV1> unassignedAmenities = new ArrayList<>();
+
+        for (AmenitiesV1 amenity : amenities) {
+
+            CustomersAmenity customersAmenity = customersAmenityMap
+                    .getOrDefault(amenity.getAmenityId(), null);
+
+            if (customersAmenity != null) {
+                assignedAmenities.add(amenity);
+            } else {
+                unassignedAmenities.add(amenity);
+            }
+        }
+
+        AmenityInfoResMapper mapper = new AmenityInfoResMapper(customersAmenityMap);
+
+        List<AmenityInfoResponse> assignedRes = assignedAmenities.stream()
                 .map(mapper)
                 .toList();
 
-        List<AmenityInfoResponse> unassignedRes = unassigned.stream()
+        List<AmenityInfoResponse> unassignedRes = unassignedAmenities.stream()
                 .map(mapper)
                 .toList();
 
@@ -137,17 +157,21 @@ public class AmenitiesService {
 
         Date today = new Date();
 
-        AmenityDetails amenityInfo = amenityRepository
-                .findAmenityByAmenityIdAndCustomerStatus(hostelId, amenityId, customerId, today);
+        AmenitiesV1 amenity = amenityRepository
+                .findByAmenityIdAndIsActiveTrueAndIsDeletedFalse(amenityId);
+
+        CustomersAmenity customersAmenity = customerAmenityService
+                .findLatestWithEndDateByAmenityIdAndCustomerId(amenityId, customerId, today);
 
         AmenityRequest amenityRequest = amenityRequestService
                 .getAmenityRequestByCustomerIdAndAmenityId(customerId, amenityId);
 
-        if (amenityInfo != null) {
+        if (amenity != null) {
 
-            AmenityResponseMapper amenityResponseMapper = new AmenityResponseMapper(hostelConfigService, amenityRequest);
+            AmenityResponseMapper amenityResponseMapper = new AmenityResponseMapper(hostelConfigService,
+                    amenityRequest, customersAmenity);
 
-            AmenityDetailsResponse amenityDetailsResponse = amenityResponseMapper.apply(amenityInfo);
+            AmenityDetailsResponse amenityDetailsResponse = amenityResponseMapper.apply(amenity);
 
             return new ResponseEntity<>(amenityDetailsResponse, HttpStatus.OK);
         }
@@ -180,8 +204,9 @@ public class AmenitiesService {
             return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        Long count = amenityRepository.isAmenityAlreadyAssigned(customerId, amenityId);
-        if (count != null && count > 0) {
+        CustomersAmenity customersAmenity = customerAmenityService
+                .findLatestWithEndDateNullByAmenityIdAndCustomerId(amenityId, customerId);
+        if (customersAmenity != null) {
             return new ResponseEntity<>("Amenity already assigned to this customer.", HttpStatus.BAD_REQUEST);
         }
 
@@ -235,8 +260,8 @@ public class AmenitiesService {
             return new ResponseEntity<>(Constants.AMENITY_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        CustomersAmenity customersAmenity = customerAmenityRepository
-                .findTopByAmenityIdAndCustomerIdAndEndDateIsNullOrderByCreatedAtDesc(amenityId, customerId);
+        CustomersAmenity customersAmenity = customerAmenityService
+                .findLatestWithEndDateNullByAmenityIdAndCustomerId(amenityId, customerId);
         if (customersAmenity == null){
             return new ResponseEntity<>(Constants.AMENITY_IS_NOT_ASSIGNED, HttpStatus.BAD_REQUEST);
         }
@@ -255,5 +280,9 @@ public class AmenitiesService {
         fcmNotificationService.sendDeactivateAmenityRequestNotification(hostelId, customer);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
+    }
+
+    public AmenitiesV1 getAmenityByAmenityId(String amenityId) {
+        return amenityRepository.findByAmenityIdAndIsActiveTrueAndIsDeletedFalse(amenityId);
     }
 }
