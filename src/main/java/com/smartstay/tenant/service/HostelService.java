@@ -3,10 +3,7 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.AmenityRequest;
-import com.smartstay.tenant.dao.BedChangeRequest;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
@@ -54,6 +51,8 @@ public class HostelService {
     private AmenityRequestService amenityRequestService;
     @Autowired
     private BedChangeRequestService bedChangeRequestService;
+    @Autowired
+    private AmenitiesService amenitiesService;
 
     public ResponseEntity<?> getHostels(int page, int size) {
 
@@ -342,13 +341,34 @@ public class HostelService {
 
         if (prefix == 'A') {
 
-            AmenityRequestResponse amenityRequest =
-                    amenityRequestService.getRequestById(customerId, hostelId, actualId);
+            AmenityRequest amenityRequest = amenityRequestService.getAmenityRequestById(actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            return new ResponseEntity<>(amenityRequest, HttpStatus.OK);
+            AmenitiesV1 amenity = amenitiesService.getAmenityByAmenityId(amenityRequest.getAmenityId());
+
+            String amenityName = null;
+            if (amenity != null) {
+                amenityName = amenity.getAmenityName();
+            }
+
+            String requestedDate = null;
+            String startsFrom = null;
+            if (amenityRequest.getRequestedDate() != null) {
+                requestedDate = Utils.dateToString(amenityRequest.getRequestedDate());
+            }
+            if (amenityRequest.getStartFrom() != null) {
+                startsFrom = Utils.dateToString(amenityRequest.getStartFrom());
+            }
+
+            AmenityRequestResponse amenityRequestResponse = new AmenityRequestResponse(
+                    amenityRequest.getAmenityRequestId(), amenityRequest.getHostelId(), amenityRequest.getCustomerId(),
+                    amenityRequest.getAmenityId(), amenityName, requestedDate, startsFrom, amenityRequest.getCurrentStatus(),
+                    amenityRequest.getDescription()
+            );
+
+            return new ResponseEntity<>(amenityRequestResponse, HttpStatus.OK);
 
         } else if (prefix == 'B') {
 

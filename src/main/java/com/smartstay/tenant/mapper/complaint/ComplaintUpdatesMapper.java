@@ -48,7 +48,7 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
         String complaintTitle = null;
         String assignee = null;
 
-        if (complaintUpdates.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())) {
+        if (ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(complaintUpdates.getStatus())) {
             Users usr = assignedUsers
                     .stream()
                     .filter(i -> i.getUserId().equalsIgnoreCase(complaintUpdates.getAssignedTo()))
@@ -110,18 +110,18 @@ public class ComplaintUpdatesMapper implements Function<ComplaintUpdates, Compla
             }
         }
 
-        if (complaintUpdates.getStatus().equalsIgnoreCase(ComplaintStatus.OPENED.name())) {
+        if (ComplaintStatus.OPENED.name().equalsIgnoreCase(complaintUpdates.getStatus())) {
             update = fullName.toString() + " is raised - " + complaintType ;
         }
-        else if (complaintUpdates.getStatus().equalsIgnoreCase(ComplaintStatus.PENDING.name())) {
+        else if (ComplaintStatus.PENDING.name().equalsIgnoreCase(complaintUpdates.getStatus())) {
             update = complaintUpdates.getComments();
             description = complaintUpdates.getComments();
         }
-        else if (complaintUpdates.getStatus().equalsIgnoreCase(ComplaintStatus.ASSIGNED.name())) {
+        else if (ComplaintStatus.ASSIGNED.name().equalsIgnoreCase(complaintUpdates.getStatus())) {
             description = "Complaint is assigned to " + assignee;
             update = "Complaint is assigned";
         }
-        else if (complaintUpdates.getStatus().equalsIgnoreCase(ComplaintStatus.RESOLVED.name())) {
+        else if (ComplaintStatus.RESOLVED.name().equalsIgnoreCase(complaintUpdates.getStatus())) {
             description = fullName + " is marked the complaint as Resolved";
             update = "Complaint is resolved";
         }
