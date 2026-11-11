@@ -4,6 +4,8 @@ import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.*;
+import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
+import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.CustomerStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityInfoResMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
@@ -44,6 +46,8 @@ public class AmenitiesService {
     private HostelConfigService hostelConfigService;
     @Autowired
     private FCMNotificationService fcmNotificationService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> getAllAmenities(String hostelId) {
 
@@ -215,9 +219,14 @@ public class AmenitiesService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
-        amenityRequestService.createAmenityEntry(customerId, hostelId, amenityId, request, tenantPlatform);
+        AmenityRequest amenityRequest = amenityRequestService
+                .createAmenityEntry(customerId, hostelId, amenityId, request, tenantPlatform);
         notificationService.createNotificationForAmenity(customerId, hostelId, request, amenityId);
         fcmNotificationService.sendAmenityRequestNotification(hostelId, customer);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.AMENITY_REQUEST,
+                String.valueOf(amenityRequest.getAmenityRequestId()));
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -229,9 +238,15 @@ public class AmenitiesService {
     public ResponseEntity<?> deleteRequestById(String hostelId, long requestId) {
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
         AmenityRequest amenityRequest = amenityRequestService
@@ -241,6 +256,10 @@ public class AmenitiesService {
         }
 
         amenityRequestService.delete(amenityRequest);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.AMENITY_REQUEST,
+                String.valueOf(requestId));
 
         return new ResponseEntity<>(Constants.REQUEST_REMOVED_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -275,9 +294,14 @@ public class AmenitiesService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Utils.CUSTOMER_NOT_FOUND);
         }
 
-        amenityRequestService.createDeactivationAmenityRequest(customerId, hostelId, amenityId, tenantPlatform);
+        AmenityRequest amenityRequest = amenityRequestService
+                .createDeactivationAmenityRequest(customerId, hostelId, amenityId, tenantPlatform);
         notificationService.createNotificationForDeactivatingAmenity(customerId, hostelId, amenityId);
         fcmNotificationService.sendDeactivateAmenityRequestNotification(hostelId, customer);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.AMENITY_REQUEST,
+                String.valueOf(amenityRequest.getAmenityRequestId()));
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }

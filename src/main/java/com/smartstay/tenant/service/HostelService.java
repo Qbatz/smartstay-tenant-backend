@@ -8,6 +8,8 @@ import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
+import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
+import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.PaymentStatus;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.HostelRepository;
@@ -53,6 +55,8 @@ public class HostelService {
     private BedChangeRequestService bedChangeRequestService;
     @Autowired
     private AmenitiesService amenitiesService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> getHostels(int page, int size) {
 
@@ -396,6 +400,12 @@ public class HostelService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null){
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -416,19 +426,33 @@ public class HostelService {
         }
 
         if (prefix == 'A') {
+
             AmenityRequest amenityRequest = amenityRequestService
                     .getAmenityRequestById(actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Constants.AMENITY_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             amenityRequestService.delete(amenityRequest);
+
+            customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                    CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.AMENITY_REQUEST,
+                    String.valueOf(actualId));
+
         } else if (prefix == 'B') {
+
             BedChangeRequest bedChangeRequest = bedChangeRequestService
                     .getBedChangeRequestById(actualId);
             if (bedChangeRequest == null) {
                 return new ResponseEntity<>(Constants.BED_CHANGE_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             bedChangeRequestService.delete(bedChangeRequest);
+
+            customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                    CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
+                    String.valueOf(actualId));
+
         } else {
             return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
         }

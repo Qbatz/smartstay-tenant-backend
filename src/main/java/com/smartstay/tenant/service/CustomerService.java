@@ -69,6 +69,8 @@ public class CustomerService {
     @Autowired
     @Lazy
     private FCMNotificationService fcmNotificationService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> getCustomerDetails() {
 
@@ -236,7 +238,17 @@ public class CustomerService {
                 }
 
                 customerAdditionalContactsService.saveAll(additionalContacts);
+
+                for (CustomerAdditionalContacts additionalContact : additionalContacts) {
+                    customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
+                            CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_ADDITIONAL_CONTACTS,
+                            String.valueOf(additionalContact.getContactId()));
+                }
             }
+
+            customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
+                    CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER,
+                    customers.getCustomerId());
 
             return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
 
@@ -315,7 +327,11 @@ public class CustomerService {
         customers.setProfilePic(null);
         customers.setTenantPlatform(tenantPlatform);
 
-        customersRepository.save(customers);
+        customers = customersRepository.save(customers);
+
+        customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
+                CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER,
+                customers.getCustomerId());
 
         return new ResponseEntity<>(Utils.PROFILE_PICTURE_REMOVED, HttpStatus.OK);
     }
@@ -347,6 +363,10 @@ public class CustomerService {
                 .createNewCustomersOtp(customerCredentials, tenantPlatform);
 
         int otp = customersOtp.getOtp();
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_OTP,
+                String.valueOf(customersOtp.getId()));
 
         if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
 
@@ -399,6 +419,10 @@ public class CustomerService {
         }
 
         int otp = customersOtp.getOtp();
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_OTP,
+                String.valueOf(customersOtp.getId()));
 
         if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
 
@@ -464,6 +488,10 @@ public class CustomerService {
         customerCredentials.setTenantPlatform(tenantPlatform);
 
         customerCredentials = customerCredentialsService.save(customerCredentials);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_CREDENTIALS,
+                customerCredentials.getXuid());
 
         String payloadPlatform = payload.platform();
         if (payloadPlatform != null && !payloadPlatform.isBlank()){
@@ -563,6 +591,10 @@ public class CustomerService {
         notificationService.createRaiseNoticeRequestNotification(customerId,
                 hostelId, raiseNoticeRequest.getId());
         fcmNotificationService.sendRaiseNoticeNotification(hostelId, customer);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.RAISE_NOTICE_REQUEST,
+                String.valueOf(raiseNoticeRequest.getId()));
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

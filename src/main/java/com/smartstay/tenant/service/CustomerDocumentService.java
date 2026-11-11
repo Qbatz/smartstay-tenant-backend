@@ -7,10 +7,7 @@ import com.smartstay.tenant.config.UploadFileToS3;
 import com.smartstay.tenant.dao.CustomerDocuments;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.files.UploadFiles;
-import com.smartstay.tenant.ennum.CustomerStatus;
-import com.smartstay.tenant.ennum.DocumentType;
-import com.smartstay.tenant.ennum.FileFormat;
-import com.smartstay.tenant.ennum.UserType;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.payload.customer.CustomerDocumentsIdPayload;
 import com.smartstay.tenant.payload.customer.UploadDocuments;
 import com.smartstay.tenant.repository.CustomerDocumentRepository;
@@ -36,6 +33,8 @@ public class CustomerDocumentService {
     CustomerDuplicateService customerService;
     @Autowired
     UploadFileToS3 uploadFileToS3;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public List<CustomerDocuments> getDocumentsByCustomerId(String customerId) {
         return customerDocumentRepository
@@ -113,7 +112,13 @@ public class CustomerDocumentService {
                         return cd;
                     }).toList();
 
-            customerDocumentRepository.saveAll(customerDocuments);
+            customerDocuments = customerDocumentRepository.saveAll(customerDocuments);
+
+            for (CustomerDocuments customerDocument : customerDocuments) {
+                customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                        CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_DOCUMENTS,
+                        String.valueOf(customerDocument.getDocumentId()));
+            }
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
