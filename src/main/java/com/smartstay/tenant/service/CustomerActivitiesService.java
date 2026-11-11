@@ -42,4 +42,28 @@ public class CustomerActivitiesService {
 
         customerActivitiesRepository.save(customerActivities);
     }
+
+    public void createCustomerActivity(Customers loggedInCustomer, String tenantPlatform,
+                                       CustomerActivityTypeEnum customerActivityType,
+                                       CustomerActivitySourceEnum customerActivitySource,
+                                       String sourceId, Date createdAt) {
+
+        if (loggedInCustomer == null || customerActivityType == null
+                || customerActivitySource == null) {
+            return;
+        }
+
+        CustomerActivities customerActivities = new CustomerActivities();
+
+        customerActivities.setCustomerId(loggedInCustomer.getCustomerId());
+        customerActivities.setActivityType(customerActivityType.name());
+        customerActivities.setDescription(CustomerActivitiesUtils
+                .buildDescription(loggedInCustomer, customerActivityType, customerActivitySource));
+        customerActivities.setSource(customerActivitySource.name());
+        customerActivities.setSourceId(sourceId);
+        customerActivities.setCreatedAt(createdAt);
+        customerActivities.setTenantPlatform(tenantPlatform);
+
+        customerActivitiesRepository.save(customerActivities);
+    }
 }
