@@ -242,13 +242,14 @@ public class CustomerService {
                 for (CustomerAdditionalContacts additionalContact : additionalContacts) {
                     customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
                             CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_ADDITIONAL_CONTACTS,
-                            String.valueOf(additionalContact.getContactId()));
+                            String.valueOf(additionalContact.getContactId()), UserType.ALL_EXCEPT_TENANT.name(),
+                            null);
                 }
             }
 
             customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
                     CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER,
-                    customers.getCustomerId());
+                    customers.getCustomerId(), UserType.ALL_EXCEPT_TENANT.name(), null);
 
             return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
 
@@ -331,7 +332,7 @@ public class CustomerService {
 
         customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
                 CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER,
-                customers.getCustomerId());
+                customers.getCustomerId(), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.PROFILE_PICTURE_REMOVED, HttpStatus.OK);
     }
@@ -366,7 +367,7 @@ public class CustomerService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_OTP,
-                String.valueOf(customersOtp.getId()));
+                String.valueOf(customersOtp.getId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
 
@@ -422,7 +423,8 @@ public class CustomerService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_OTP,
-                String.valueOf(customersOtp.getId()));
+                String.valueOf(customersOtp.getId()), UserType.ALL_EXCEPT_TENANT.name(),
+                null);
 
         if (!environment.equalsIgnoreCase(Utils.ENVIRONMENT_LOCAL)) {
 
@@ -491,7 +493,7 @@ public class CustomerService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_CREDENTIALS,
-                customerCredentials.getXuid());
+                customerCredentials.getXuid(), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         String payloadPlatform = payload.platform();
         if (payloadPlatform != null && !payloadPlatform.isBlank()){
@@ -594,7 +596,7 @@ public class CustomerService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.RAISE_NOTICE_REQUEST,
-                String.valueOf(raiseNoticeRequest.getId()));
+                String.valueOf(raiseNoticeRequest.getId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

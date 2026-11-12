@@ -93,7 +93,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.AMENITY_REQUEST,
-//						String.valueOf(amenityRequest.getAmenityRequestId()), createdAt);
+//						String.valueOf(amenityRequest.getAmenityRequestId()), createdAt,
+//						UserType.ALL_EXCEPT_TENANT.name(), null);
 //
 //				existingActivities.add(key);
 //			}
@@ -124,7 +125,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
-//						String.valueOf(bedChangeRequest.getId()), createdAt);
+//						String.valueOf(bedChangeRequest.getId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -159,7 +161,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.COMPLAINT,
-//						String.valueOf(complaint.getComplaintId()), createdAt);
+//						String.valueOf(complaint.getComplaintId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -196,7 +199,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.COMPLAINT_COMMENTS,
-//						String.valueOf(complaintComment.getCommentId()), createdAt);
+//						String.valueOf(complaintComment.getCommentId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -232,7 +236,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_ADDITIONAL_CONTACTS,
-//						String.valueOf(customerAdditionalContact.getContactId()), createdAt);
+//						String.valueOf(customerAdditionalContact.getContactId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -263,7 +268,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.RAISE_NOTICE_REQUEST,
-//						String.valueOf(raiseNoticeRequest.getId()), createdAt);
+//						String.valueOf(raiseNoticeRequest.getId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -299,7 +305,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_DOCUMENTS,
-//						String.valueOf(customerDocument.getDocumentId()), createdAt);
+//						String.valueOf(customerDocument.getDocumentId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}
@@ -335,7 +342,8 @@ public class TenantApplication {
 //
 //				customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
 //						CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_JOB_DETAILS,
-//						String.valueOf(customerJobDetail.getJobId()), createdAt);
+//						String.valueOf(customerJobDetail.getJobId()), createdAt, UserType.ALL_EXCEPT_TENANT.name(),
+//						null);
 //
 //				existingActivities.add(key);
 //			}

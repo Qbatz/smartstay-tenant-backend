@@ -94,7 +94,7 @@ public class CustomerAdditionalContactsService {
         for (CustomerAdditionalContacts additionalContact : additionalContacts) {
             customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                     CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_ADDITIONAL_CONTACTS,
-                    String.valueOf(additionalContact.getContactId()));
+                    String.valueOf(additionalContact.getContactId()), UserType.ALL_EXCEPT_TENANT.name(), null);
         }
 
         return new ResponseEntity<>(HttpStatus.OK);

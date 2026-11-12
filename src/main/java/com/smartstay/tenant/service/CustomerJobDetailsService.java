@@ -145,11 +145,13 @@ public class CustomerJobDetailsService {
                 if (isNew){
                     customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                             CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_JOB_DETAILS,
-                            String.valueOf(customerJobDetails.getJobId()));
+                            String.valueOf(customerJobDetails.getJobId()), UserType.ALL_EXCEPT_TENANT.name(),
+                            null);
                 } else {
                     customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                             CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_JOB_DETAILS,
-                            String.valueOf(customerJobDetails.getJobId()));
+                            String.valueOf(customerJobDetails.getJobId()), UserType.ALL_EXCEPT_TENANT.name(),
+                            null);
                 }
             }
         }

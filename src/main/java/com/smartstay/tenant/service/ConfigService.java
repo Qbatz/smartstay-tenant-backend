@@ -6,6 +6,7 @@ import com.smartstay.tenant.dao.CustomerCredentials;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
 import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
+import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.login.UpdateFcm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,7 +52,7 @@ public class ConfigService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_CREDENTIALS,
-                credentials.getXuid());
+                credentials.getXuid(), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }

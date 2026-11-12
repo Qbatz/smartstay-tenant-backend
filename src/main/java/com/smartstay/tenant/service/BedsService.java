@@ -6,10 +6,7 @@ import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BedDetails;
-import com.smartstay.tenant.ennum.BedChangeUrgencyEnum;
-import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
-import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
-import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.repository.BedsRepository;
@@ -87,7 +84,7 @@ public class BedsService {
 
         customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
-                String.valueOf(bedChangeRequest.getId()));
+                String.valueOf(bedChangeRequest.getId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }

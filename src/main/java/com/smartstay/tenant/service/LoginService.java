@@ -143,7 +143,7 @@ public class LoginService {
 
         customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
                 CustomerActivityTypeEnum.LOGIN, CustomerActivitySourceEnum.LOGGED_IN,
-                customers.getCustomerId());
+                customers.getCustomerId(), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(token, HttpStatus.OK);
     }

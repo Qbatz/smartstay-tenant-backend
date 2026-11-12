@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class CustomerActivitiesService {
@@ -20,7 +21,7 @@ public class CustomerActivitiesService {
     public void createCustomerActivity(Customers loggedInCustomer, String tenantPlatform,
                                        CustomerActivityTypeEnum customerActivityType,
                                        CustomerActivitySourceEnum customerActivitySource,
-                                       String sourceId) {
+                                       String sourceId, String userType, List<String> sourceIds) {
 
         if (loggedInCustomer == null || customerActivityType == null
                 || customerActivitySource == null) {
@@ -32,13 +33,16 @@ public class CustomerActivitiesService {
         CustomerActivities customerActivities = new CustomerActivities();
 
         customerActivities.setCustomerId(loggedInCustomer.getCustomerId());
+        customerActivities.setHostelId(loggedInCustomer.getHostelId());
         customerActivities.setActivityType(customerActivityType.name());
         customerActivities.setDescription(CustomerActivitiesUtils
                 .buildDescription(loggedInCustomer, customerActivityType, customerActivitySource));
         customerActivities.setSource(customerActivitySource.name());
         customerActivities.setSourceId(sourceId);
+        customerActivities.setUserType(userType);
         customerActivities.setCreatedAt(today);
-        customerActivities.setTenantPlatform(tenantPlatform);
+        customerActivities.setPlatform(tenantPlatform);
+        customerActivities.setSourceIds(sourceIds);
 
         customerActivitiesRepository.save(customerActivities);
     }
@@ -46,7 +50,8 @@ public class CustomerActivitiesService {
     public void createCustomerActivity(Customers loggedInCustomer, String tenantPlatform,
                                        CustomerActivityTypeEnum customerActivityType,
                                        CustomerActivitySourceEnum customerActivitySource,
-                                       String sourceId, Date createdAt) {
+                                       String sourceId, Date createdAt, String userType,
+                                       List<String> sourceIds) {
 
         if (loggedInCustomer == null || customerActivityType == null
                 || customerActivitySource == null) {
@@ -56,13 +61,16 @@ public class CustomerActivitiesService {
         CustomerActivities customerActivities = new CustomerActivities();
 
         customerActivities.setCustomerId(loggedInCustomer.getCustomerId());
+        customerActivities.setHostelId(loggedInCustomer.getHostelId());
         customerActivities.setActivityType(customerActivityType.name());
         customerActivities.setDescription(CustomerActivitiesUtils
                 .buildDescription(loggedInCustomer, customerActivityType, customerActivitySource));
         customerActivities.setSource(customerActivitySource.name());
         customerActivities.setSourceId(sourceId);
+        customerActivities.setUserType(userType);
         customerActivities.setCreatedAt(createdAt);
-        customerActivities.setTenantPlatform(tenantPlatform);
+        customerActivities.setPlatform(tenantPlatform);
+        customerActivities.setSourceIds(sourceIds);
 
         customerActivitiesRepository.save(customerActivities);
     }

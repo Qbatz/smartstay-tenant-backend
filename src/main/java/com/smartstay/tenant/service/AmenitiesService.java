@@ -7,6 +7,7 @@ import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
 import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.amenities.AmenityInfoResMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.mapper.amenities.AmenityResponseMapper;
@@ -226,7 +227,8 @@ public class AmenitiesService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.AMENITY_REQUEST,
-                String.valueOf(amenityRequest.getAmenityRequestId()));
+                String.valueOf(amenityRequest.getAmenityRequestId()), UserType.ALL_EXCEPT_TENANT.name(),
+                null);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -259,7 +261,7 @@ public class AmenitiesService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.AMENITY_REQUEST,
-                String.valueOf(requestId));
+                String.valueOf(requestId), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Constants.REQUEST_REMOVED_SUCCESSFULLY, HttpStatus.OK);
     }
@@ -301,7 +303,8 @@ public class AmenitiesService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.AMENITY_REQUEST,
-                String.valueOf(amenityRequest.getAmenityRequestId()));
+                String.valueOf(amenityRequest.getAmenityRequestId()), UserType.ALL_EXCEPT_TENANT.name()
+                , null);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }

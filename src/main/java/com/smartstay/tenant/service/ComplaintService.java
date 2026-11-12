@@ -503,7 +503,7 @@ public class ComplaintService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.COMPLAINT,
-                String.valueOf(savedComplaint.getComplaintId()));
+                String.valueOf(savedComplaint.getComplaintId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
@@ -638,7 +638,8 @@ public class ComplaintService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.COMPLAINT,
-                String.valueOf(updatedComplaint.getComplaintId()));
+                String.valueOf(updatedComplaint.getComplaintId()), UserType.ALL_EXCEPT_TENANT.name(),
+                null);
 
         return new ResponseEntity<>(Utils.UPDATED, HttpStatus.OK);
     }
@@ -688,7 +689,7 @@ public class ComplaintService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.COMPLAINT,
-                String.valueOf(complaintId));
+                String.valueOf(complaintId), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.DELETED, HttpStatus.OK);
     }
@@ -744,7 +745,7 @@ public class ComplaintService {
 
         customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                 CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.COMPLAINT_COMMENTS,
-                String.valueOf(complaintComments.getCommentId()));
+                String.valueOf(complaintComments.getCommentId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.CREATED, HttpStatus.CREATED);
     }
@@ -788,7 +789,7 @@ public class ComplaintService {
 
             customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                     CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.COMPLAINT_IMAGES,
-                    String.valueOf(imageId));
+                    String.valueOf(imageId), UserType.ALL_EXCEPT_TENANT.name(), null);
 
             return ResponseEntity.ok(Utils.DELETED);
 

@@ -117,7 +117,8 @@ public class CustomerDocumentService {
             for (CustomerDocuments customerDocument : customerDocuments) {
                 customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                         CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_DOCUMENTS,
-                        String.valueOf(customerDocument.getDocumentId()));
+                        String.valueOf(customerDocument.getDocumentId()), UserType.ALL_EXCEPT_TENANT.name(),
+                        null);
             }
         }
 

@@ -11,6 +11,7 @@ import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
 import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
 import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.PaymentStatus;
+import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.response.PaginationDataRes;
@@ -437,7 +438,7 @@ public class HostelService {
 
             customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                     CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.AMENITY_REQUEST,
-                    String.valueOf(actualId));
+                    String.valueOf(actualId), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         } else if (prefix == 'B') {
 
@@ -451,7 +452,7 @@ public class HostelService {
 
             customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
                     CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
-                    String.valueOf(actualId));
+                    String.valueOf(actualId), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         } else {
             return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);

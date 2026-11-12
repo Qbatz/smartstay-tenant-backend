@@ -1,14 +1,13 @@
 package com.smartstay.tenant.dao;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.smartstay.tenant.handlers.StringListConverter;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,10 +19,18 @@ public class CustomerActivities {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long activityId;
     private String customerId;
+    private String hostelId;
+    // from customer activity type enum
     private String activityType;
     private String description;
+    // from customer activity source enum
     private String source;
     private String sourceId;
+    // from user type enum
+    private String userType;
     private Date createdAt;
-    private String tenantPlatform;
+    private String platform;
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> sourceIds;
 }
