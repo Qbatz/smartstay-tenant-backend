@@ -3,15 +3,15 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.Utils.Constants;
 import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
-import com.smartstay.tenant.dao.AmenityRequest;
-import com.smartstay.tenant.dao.BedChangeRequest;
-import com.smartstay.tenant.dao.BillingRules;
-import com.smartstay.tenant.dao.HostelV1;
+import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.BedChangeRequestResponse;
 import com.smartstay.tenant.dto.BillingDates;
 import com.smartstay.tenant.dto.ComplaintDTO;
 import com.smartstay.tenant.dto.complaint.ComplaintDateResponse;
+import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
+import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.PaymentStatus;
+import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.mapper.complaint.ComplaintDateResponseMapper;
 import com.smartstay.tenant.repository.HostelRepository;
 import com.smartstay.tenant.response.PaginationDataRes;
@@ -54,6 +54,10 @@ public class HostelService {
     private AmenityRequestService amenityRequestService;
     @Autowired
     private BedChangeRequestService bedChangeRequestService;
+    @Autowired
+    private AmenitiesService amenitiesService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> getHostels(int page, int size) {
 
@@ -342,13 +346,34 @@ public class HostelService {
 
         if (prefix == 'A') {
 
-            AmenityRequestResponse amenityRequest =
-                    amenityRequestService.getRequestById(customerId, hostelId, actualId);
+            AmenityRequest amenityRequest = amenityRequestService.getAmenityRequestById(actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Utils.NO_RECORDS_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            return new ResponseEntity<>(amenityRequest, HttpStatus.OK);
+            AmenitiesV1 amenity = amenitiesService.getAmenityByAmenityId(amenityRequest.getAmenityId());
+
+            String amenityName = null;
+            if (amenity != null) {
+                amenityName = amenity.getAmenityName();
+            }
+
+            String requestedDate = null;
+            String startsFrom = null;
+            if (amenityRequest.getRequestedDate() != null) {
+                requestedDate = Utils.dateToString(amenityRequest.getRequestedDate());
+            }
+            if (amenityRequest.getStartFrom() != null) {
+                startsFrom = Utils.dateToString(amenityRequest.getStartFrom());
+            }
+
+            AmenityRequestResponse amenityRequestResponse = new AmenityRequestResponse(
+                    amenityRequest.getAmenityRequestId(), amenityRequest.getHostelId(), amenityRequest.getCustomerId(),
+                    amenityRequest.getAmenityId(), amenityName, requestedDate, startsFrom, amenityRequest.getCurrentStatus(),
+                    amenityRequest.getDescription()
+            );
+
+            return new ResponseEntity<>(amenityRequestResponse, HttpStatus.OK);
 
         } else if (prefix == 'B') {
 
@@ -376,6 +401,12 @@ public class HostelService {
         }
 
         String customerId = authentication.getName();
+        String tenantPlatform = authentication.getPlatform();
+
+        Customers customer = customerService.getCustomerInformation(customerId);
+        if (customer == null){
+            return new ResponseEntity<>(Utils.CUSTOMER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
 
         if (!customerService.existsByCustomerIdAndHostelId(customerId, hostelId)) {
             return new ResponseEntity<>(Utils.HOSTEL_NOT_FOUND, HttpStatus.BAD_REQUEST);
@@ -396,19 +427,33 @@ public class HostelService {
         }
 
         if (prefix == 'A') {
+
             AmenityRequest amenityRequest = amenityRequestService
                     .getAmenityRequestById(actualId);
             if (amenityRequest == null) {
                 return new ResponseEntity<>(Constants.AMENITY_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             amenityRequestService.delete(amenityRequest);
+
+            customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                    CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.AMENITY_REQUEST,
+                    String.valueOf(actualId), UserType.ALL_EXCEPT_TENANT.name(), null);
+
         } else if (prefix == 'B') {
+
             BedChangeRequest bedChangeRequest = bedChangeRequestService
                     .getBedChangeRequestById(actualId);
             if (bedChangeRequest == null) {
                 return new ResponseEntity<>(Constants.BED_CHANGE_REQUEST_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
+
             bedChangeRequestService.delete(bedChangeRequest);
+
+            customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                    CustomerActivityTypeEnum.DELETE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
+                    String.valueOf(actualId), UserType.ALL_EXCEPT_TENANT.name(), null);
+
         } else {
             return new ResponseEntity<>("Unknown request type prefix.", HttpStatus.BAD_REQUEST);
         }

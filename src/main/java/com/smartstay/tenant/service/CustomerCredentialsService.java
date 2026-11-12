@@ -23,8 +23,8 @@ public class CustomerCredentialsService {
         return repository.findByXuid(xUuid);
     }
 
-    public void saveCustomerCredentials(CustomerCredentials credentials) {
-        repository.save(credentials);
+    public CustomerCredentials saveCustomerCredentials(CustomerCredentials credentials) {
+        return repository.save(credentials);
     }
 
     public CustomerCredentials save(CustomerCredentials customerCredentials) {

@@ -8,8 +8,7 @@ import com.smartstay.tenant.dao.*;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycRequest;
 import com.smartstay.tenant.dto.kyc.DigioInitiateKycResponse;
 import com.smartstay.tenant.dto.kyc.DigioKycResponse;
-import com.smartstay.tenant.ennum.CustomerStatus;
-import com.smartstay.tenant.ennum.KycStatus;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.repository.KycDetailsRepository;
 import com.smartstay.tenant.response.kyc.NotificationKycInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,8 @@ public class KycService {
     private KycConfigService kycConfigService;
     @Autowired
     private KycHistoryService kycHistoryService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> verifyKycStatus() {
 
@@ -195,6 +196,11 @@ public class KycService {
 
         kycDetailsRepository.save(kycDetails);
         kycUsageService.save(kycUsage);
+
+        customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.KYC_DETAILS,
+                String.valueOf(kycDetails.getId()), UserType.ALL_EXCEPT_TENANT.name(),
+                null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Utils.SUCCESS);
     }
@@ -398,6 +404,11 @@ public class KycService {
                 NotificationKycInfo notificationKycInfo = new NotificationKycInfo(
                         kycDetails.getEntityId(), kycDetails.getAccessTokenId(), customer.getMobile()
                 );
+
+                customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                        CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.KYC_DETAILS,
+                        String.valueOf(kycDetails.getId()), UserType.ALL_EXCEPT_TENANT.name(),
+                        null);
 
                 return ResponseEntity.status(HttpStatus.OK).body(notificationKycInfo);
             }  else {

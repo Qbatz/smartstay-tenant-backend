@@ -3,11 +3,11 @@ package com.smartstay.tenant.service;
 import com.smartstay.tenant.dao.AmenitiesV1;
 import com.smartstay.tenant.dao.AmenityRequest;
 import com.smartstay.tenant.dto.BillingDates;
+import com.smartstay.tenant.ennum.ActionTypeEnum;
 import com.smartstay.tenant.ennum.RequestStatus;
 import com.smartstay.tenant.mapper.amenities.AmenityRequestMapper;
 import com.smartstay.tenant.payload.amenity.RequestAmenity;
 import com.smartstay.tenant.repository.AmenityRequestRepository;
-import com.smartstay.tenant.response.amenity.AmenityRequestResponse;
 import com.smartstay.tenant.response.hostel.RequestItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -33,8 +33,8 @@ public class AmenityRequestService {
         this.amenitiesService = amenitiesService;
     }
 
-    public void createAmenityEntry(String customerId, String hostelId, String amenityId,
-                                   RequestAmenity request, String tenantPlatform) {
+    public AmenityRequest createAmenityEntry(String customerId, String hostelId, String amenityId,
+                                             RequestAmenity request, String tenantPlatform) {
 
         AmenityRequest amenityRequest = new AmenityRequest();
 
@@ -54,8 +54,9 @@ public class AmenityRequestService {
         amenityRequest.setUpdatedAt(new Date());
         amenityRequest.setUpdatedBy(customerId);
         amenityRequest.setTenantPlatform(tenantPlatform);
+        amenityRequest.setActionType(ActionTypeEnum.ACTIVATION.name());
 
-        amenityRequestRepository.save(amenityRequest);
+        return amenityRequestRepository.save(amenityRequest);
     }
 
     public BillingDates getLatestBillRuleByHostelIdAndStartDate(String hostelId, Date date) {
@@ -77,7 +78,7 @@ public class AmenityRequestService {
     public List<RequestItemResponse> getRequests(String customerId, String hostelId) {
 
         List<AmenityRequest> listAmenitiesRequests = amenityRequestRepository
-                .findByHostelIdAndCustomerId(hostelId, customerId);
+                .findAllByHostelIdAndCustomerIdAndIsActiveTrueOrderByAmenityRequestIdDesc(hostelId, customerId);
 
         List<String> listAmenitiesId = listAmenitiesRequests.stream()
                 .map(AmenityRequest::getAmenityId)
@@ -88,10 +89,6 @@ public class AmenityRequestService {
         return listAmenitiesRequests.stream()
                 .map(i -> new AmenityRequestMapper(listAmenities).apply(i))
                 .toList();
-    }
-
-    public AmenityRequestResponse getRequestById(String customerId, String hostelId, Long requestId) {
-        return amenityRequestRepository.findRequestsForCustomerById(customerId, hostelId, requestId);
     }
 
     public AmenityRequest getAmenityRequestById(long requestId) {
@@ -108,6 +105,31 @@ public class AmenityRequestService {
 
     public Page<AmenityRequest> getPagedAmenityRequestsByCustomerIdAndHostelId(String customerId, String hostelId,
                                                                                Pageable pageable) {
-        return amenityRequestRepository.findAllByHostelIdAndCustomerId(hostelId, customerId, pageable);
+        return amenityRequestRepository
+                .findAllByHostelIdAndCustomerIdAndIsActiveTrueOrderByAmenityRequestIdDesc(hostelId, customerId, pageable);
+    }
+
+    public AmenityRequest createDeactivationAmenityRequest(String customerId, String hostelId,
+                                                           String amenityId, String tenantPlatform) {
+
+        Date today = new Date();
+
+        AmenityRequest amenityRequest = new AmenityRequest();
+
+        amenityRequest.setCustomerId(customerId);
+        amenityRequest.setHostelId(hostelId);
+        amenityRequest.setAmenityId(amenityId);
+        amenityRequest.setRequestedDate(today);
+        amenityRequest.setDescription(null);
+        amenityRequest.setStartFrom(null);
+        amenityRequest.setCurrentStatus(RequestStatus.OPEN.name());
+        amenityRequest.setIsActive(true);
+        amenityRequest.setCreatedAt(today);
+        amenityRequest.setUpdatedAt(today);
+        amenityRequest.setUpdatedBy(customerId);
+        amenityRequest.setTenantPlatform(tenantPlatform);
+        amenityRequest.setActionType(ActionTypeEnum.DEACTIVATION.name());
+
+        return amenityRequestRepository.save(amenityRequest);
     }
 }

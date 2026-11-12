@@ -23,7 +23,6 @@ public class SecurityConfig {
 
     @Autowired
     UserDetailsService userDetailsService;
-
     @Autowired
     JWTFilter jwtFilter;
 
@@ -45,7 +44,6 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-
     @Bean
     public AuthenticationProvider authProvider() {
         DaoAuthenticationProvider daoAuthProvider = new DaoAuthenticationProvider();
@@ -59,5 +57,4 @@ public class SecurityConfig {
     public AuthenticationManager getAuthenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }
