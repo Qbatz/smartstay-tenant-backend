@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BankingV2Repository extends JpaRepository<BankingV2, String> {
 
-    BankingV2 findByBankIdAndIsActiveTrueAndIsDeletedFalse(String bankId);
+    BankingV2 findByBankIdAndIsDeletedFalse(String bankId);
 }
