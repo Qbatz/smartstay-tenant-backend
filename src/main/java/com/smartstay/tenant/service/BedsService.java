@@ -6,8 +6,7 @@ import com.smartstay.tenant.dao.BedChangeRequest;
 import com.smartstay.tenant.dao.Beds;
 import com.smartstay.tenant.dao.Customers;
 import com.smartstay.tenant.dto.BedDetails;
-import com.smartstay.tenant.ennum.BedChangeUrgencyEnum;
-import com.smartstay.tenant.ennum.CustomerStatus;
+import com.smartstay.tenant.ennum.*;
 import com.smartstay.tenant.mapper.bed.BedChangeRequestMapper;
 import com.smartstay.tenant.payload.bedChange.BedChangePayload;
 import com.smartstay.tenant.repository.BedsRepository;
@@ -42,6 +41,8 @@ public class BedsService {
     private NotificationService notificationService;
     @Autowired
     private FCMNotificationService fcmNotificationService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> requestBedChange(String hostelId, BedChangePayload request) {
 
@@ -76,9 +77,14 @@ public class BedsService {
             return new ResponseEntity<>(Utils.PENDING_REQUEST_EXISTS, HttpStatus.BAD_REQUEST);
         }
 
-        bedChangeRequestService.saveBedChangeRequest(hostelId, customerId, request, tenantPlatform);
+        BedChangeRequest bedChangeRequest = bedChangeRequestService
+                .saveBedChangeRequest(hostelId, customerId, request, tenantPlatform);
         notificationService.createNotificationForBedChange(customerId, hostelId, request);
         fcmNotificationService.sendNotificationBedChangeRequest(hostelId);
+
+        customerActivitiesService.createCustomerActivity(customers, tenantPlatform,
+                CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.BED_CHANGE_REQUEST,
+                String.valueOf(bedChangeRequest.getId()), UserType.ALL_EXCEPT_TENANT.name(), null);
 
         return new ResponseEntity<>(Utils.REQUEST_SENT_SUCCESSFULLY, HttpStatus.OK);
     }

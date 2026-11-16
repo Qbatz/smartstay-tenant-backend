@@ -31,5 +31,8 @@ public class AmenityRequest {
     String description;
     Date createdAt;
     Date updatedAt;
+    //from tenant platform enum
     String tenantPlatform;
+    //from action type enum
+    String actionType;
 }

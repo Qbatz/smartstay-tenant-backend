@@ -27,6 +27,7 @@ public class FinalSettlementDetails {
     private Double deductionAmount;
     private String status;
     private String paymentStatus;
+    private String totalAmountLabelText;
     private Double gst;
     private Double cgst;
     private Double sgst;

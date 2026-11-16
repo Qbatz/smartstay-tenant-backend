@@ -30,6 +30,7 @@ public class RequestItemResponse implements Comparable<RequestItemResponse> {
     private String preferredBedType;
     private String bedChangeUrgency;
     private String bedChangeStartsFrom;
+    private String amenityActionType;
 
     @Override
     public int compareTo(RequestItemResponse o) {

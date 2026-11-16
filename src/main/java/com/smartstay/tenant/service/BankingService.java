@@ -20,6 +20,6 @@ public class BankingService {
     }
 
     public BankingV2 getV2BankDetails(String bankId) {
-        return bankingV2Repository.findByBankIdAndIsActiveTrueAndIsDeletedFalse(bankId);
+        return bankingV2Repository.findByBankIdAndIsDeletedFalse(bankId);
     }
 }

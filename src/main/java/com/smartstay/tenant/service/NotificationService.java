@@ -219,6 +219,7 @@ public class NotificationService {
     public void createNotificationForBedChange(String userId, String hostelId, BedChangePayload request) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.CHANGE_BED.name());
         if (request.title() != null && !request.title().isEmpty()) {
@@ -242,6 +243,7 @@ public class NotificationService {
         if (request.bedId() != null) {
             notification.setSourceId(String.valueOf(request.bedId()));
         }
+
         notificationService.saveAdminNotification(notification);
     }
 
@@ -268,9 +270,11 @@ public class NotificationService {
         notificationService.saveAdminNotification(adminNotification);
     }
 
-    public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description, String customerId, String hostelId) {
+    public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description,
+                                                       String customerId, String hostelId) {
 
         CustomerNotifications notification = new CustomerNotifications();
+
         notification.setUserId(customerId);
         notification.setNotificationType(RequestType.INVOICE_GENERATION.name());
         notification.setTitle(title);
@@ -283,6 +287,7 @@ public class NotificationService {
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
         notification.setSourceId(invoiceId);
+
         notificationService.saveCustomerNotification(notification);
     }
 
@@ -315,15 +320,38 @@ public class NotificationService {
         notificationService.saveAdminNotification(notification);
     }
 
+    public void createNotificationForDeactivatingAmenity(String userId, String hostelId, String amenityId) {
+
+        AdminNotifications notification = new AdminNotifications();
+
+        notification.setUserId(userId);
+        notification.setNotificationType(RequestType.AMENITY_REQUEST.name());
+        notification.setTitle("Amenity Request");
+        notification.setDescription("Deactivate amenity request submitted by customer.");
+        notification.setUserType(UserType.TENANT.name());
+        notification.setHostelId(hostelId);
+        notification.setCreatedBy(userId);
+        notification.setSourceId(amenityId);
+        notification.setActive(true);
+        notification.setRead(false);
+        notification.setDeleted(false);
+        notification.setCreatedAt(new Date());
+        notification.setUpdatedAt(new Date());
+
+        notificationService.saveAdminNotification(notification);
+    }
+
     public String markAsRead(List<Long> notificationIds, String hostelId) {
         int updatedCount = notificationService
                 .markNotificationsAsRead(notificationIds, hostelId);
         return updatedCount > 0 ? "Notifications marked as read" : "No notifications updated";
     }
 
-    public void createNotificationForComplaint(String userId, String hostelId, String complaintId, String complaintTitle, String complaintDescription) {
+    public void createNotificationForComplaint(String userId, String hostelId, String complaintId,
+                                               String complaintTitle, String complaintDescription) {
 
         AdminNotifications notification = new AdminNotifications();
+
         notification.setUserId(userId);
         notification.setNotificationType(RequestType.COMPLAINT.name());
         notification.setTitle(complaintTitle);
@@ -337,12 +365,37 @@ public class NotificationService {
         notification.setDeleted(false);
         notification.setCreatedAt(new Date());
         notification.setUpdatedAt(new Date());
+
         notificationService.saveAdminNotification(notification);
+
         fcmNotificationService.sendCreateComplaintNotification(hostelId, complaintTitle, complaintDescription);
     }
 
-    public void sendPushNotification(String assigneeId, String complaintType) {
-        fcmNotificationService.sendCommentNotification(assigneeId, complaintType);
+    public void createComplaintCommentsNotification(String customerId, String hostelId, Integer complaintId) {
+
+        Date today = new Date();
+
+        AdminNotifications adminNotification = new AdminNotifications();
+
+        adminNotification.setUserId(customerId);
+        adminNotification.setNotificationType(RequestType.COMPLAINT_COMMENTS.name());
+        adminNotification.setTitle("New comment added for a complaint");
+        adminNotification.setDescription("New comment added by customer for a complaint");
+        adminNotification.setUserType(UserType.TENANT.name());
+        adminNotification.setHostelId(hostelId);
+        adminNotification.setCreatedBy(customerId);
+        adminNotification.setActive(true);
+        adminNotification.setRead(false);
+        adminNotification.setDeleted(false);
+        adminNotification.setCreatedAt(today);
+        adminNotification.setUpdatedAt(today);
+        adminNotification.setSourceId(String.valueOf(complaintId));
+
+        notificationService.saveAdminNotification(adminNotification);
+    }
+
+    public void sendPushNotification(String assigneeId, String complaintType, String hostelId) {
+        fcmNotificationService.sendCommentNotification(assigneeId, complaintType, hostelId);
     }
 
     public void findAndUpdateComplaints(ComplaintsV1 complaint, String title) {

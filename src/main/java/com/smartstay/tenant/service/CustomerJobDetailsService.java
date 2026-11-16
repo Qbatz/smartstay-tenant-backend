@@ -5,6 +5,8 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.CustomerJobDetails;
 import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
+import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.customer.CustomerJobDetailsIdPayload;
 import com.smartstay.tenant.payload.customer.CustomerJobDetailsPayload;
@@ -29,6 +31,8 @@ public class CustomerJobDetailsService {
     @Autowired
     @Lazy
     private CustomerService customerService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public ResponseEntity<?> createOrUpdateCustomerJobDetails(List<CustomerJobDetailsPayload> payloads) {
 
@@ -50,6 +54,7 @@ public class CustomerJobDetailsService {
         Date today = new Date();
 
         List<CustomerJobDetails> updatableCustomerJobDetails = new ArrayList<>();
+        Map<Long, Boolean> isNewMap = new HashMap<>();
 
         for (CustomerJobDetailsPayload payload : payloads) {
 
@@ -109,6 +114,8 @@ public class CustomerJobDetailsService {
                 customerJobDetails.setShiftEndTime(payload.shiftTo().trim());
             }
 
+            isNewMap.put(payload.jobId(), isNew);
+
             if (hasData) {
                 if (isNew) {
                     customerJobDetails.setCustomerId(customerId);
@@ -128,7 +135,25 @@ public class CustomerJobDetailsService {
         }
 
         if (!updatableCustomerJobDetails.isEmpty()) {
-            customerJobDetailsRepository.saveAll(updatableCustomerJobDetails);
+
+            updatableCustomerJobDetails = customerJobDetailsRepository.saveAll(updatableCustomerJobDetails);
+
+            for (CustomerJobDetails customerJobDetails : updatableCustomerJobDetails) {
+
+                boolean isNew = isNewMap.getOrDefault(customerJobDetails.getJobId(), false);
+
+                if (isNew){
+                    customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                            CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_JOB_DETAILS,
+                            String.valueOf(customerJobDetails.getJobId()), UserType.ALL_EXCEPT_TENANT.name(),
+                            null);
+                } else {
+                    customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                            CustomerActivityTypeEnum.UPDATE, CustomerActivitySourceEnum.CUSTOMER_JOB_DETAILS,
+                            String.valueOf(customerJobDetails.getJobId()), UserType.ALL_EXCEPT_TENANT.name(),
+                            null);
+                }
+            }
         }
 
         return ResponseEntity.ok(Utils.SUCCESS);

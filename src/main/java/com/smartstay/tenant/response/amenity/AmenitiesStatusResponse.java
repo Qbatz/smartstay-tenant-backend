@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AmenitiesStatusResponse {
-    private List<AmenityInfoProjection> assignedAmenities;
-    private List<AmenityInfoProjection> unassignedAmenities;
+    private List<AmenityInfoResponse> assignedAmenities;
+    private List<AmenityInfoResponse> unassignedAmenities;
 }
 
