@@ -270,7 +270,8 @@ public class NotificationService {
         notificationService.saveAdminNotification(adminNotification);
     }
 
-    public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description, String customerId, String hostelId) {
+    public void createNotificationForInvoiceGeneration(String invoiceId, String title, String description,
+                                                       String customerId, String hostelId) {
 
         CustomerNotifications notification = new CustomerNotifications();
 

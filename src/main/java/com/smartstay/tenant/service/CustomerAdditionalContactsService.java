@@ -4,6 +4,8 @@ import com.smartstay.tenant.Utils.Utils;
 import com.smartstay.tenant.config.Authentication;
 import com.smartstay.tenant.dao.CustomerAdditionalContacts;
 import com.smartstay.tenant.dao.Customers;
+import com.smartstay.tenant.ennum.CustomerActivitySourceEnum;
+import com.smartstay.tenant.ennum.CustomerActivityTypeEnum;
 import com.smartstay.tenant.ennum.UserType;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsIdPayload;
 import com.smartstay.tenant.payload.customer.CustomerAdditionalContactsPayload;
@@ -28,6 +30,8 @@ public class CustomerAdditionalContactsService {
     private CustomerAdditionalContactsRepository customerAdditionalContactsRepository;
     @Autowired
     private CustomerDuplicateService customerService;
+    @Autowired
+    private CustomerActivitiesService customerActivitiesService;
 
     public List<CustomerAdditionalContacts> getAdditionalContactsByCustomerId(String customerId) {
         return customerAdditionalContactsRepository
@@ -85,7 +89,13 @@ public class CustomerAdditionalContactsService {
             additionalContacts.add(additionalContact);
         }
 
-        customerAdditionalContactsRepository.saveAll(additionalContacts);
+        additionalContacts = customerAdditionalContactsRepository.saveAll(additionalContacts);
+
+        for (CustomerAdditionalContacts additionalContact : additionalContacts) {
+            customerActivitiesService.createCustomerActivity(customer, tenantPlatform,
+                    CustomerActivityTypeEnum.CREATE, CustomerActivitySourceEnum.CUSTOMER_ADDITIONAL_CONTACTS,
+                    String.valueOf(additionalContact.getContactId()), UserType.ALL_EXCEPT_TENANT.name(), null);
+        }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

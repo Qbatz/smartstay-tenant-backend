@@ -33,8 +33,8 @@ public class AmenityRequestService {
         this.amenitiesService = amenitiesService;
     }
 
-    public void createAmenityEntry(String customerId, String hostelId, String amenityId,
-                                   RequestAmenity request, String tenantPlatform) {
+    public AmenityRequest createAmenityEntry(String customerId, String hostelId, String amenityId,
+                                             RequestAmenity request, String tenantPlatform) {
 
         AmenityRequest amenityRequest = new AmenityRequest();
 
@@ -56,7 +56,7 @@ public class AmenityRequestService {
         amenityRequest.setTenantPlatform(tenantPlatform);
         amenityRequest.setActionType(ActionTypeEnum.ACTIVATION.name());
 
-        amenityRequestRepository.save(amenityRequest);
+        return amenityRequestRepository.save(amenityRequest);
     }
 
     public BillingDates getLatestBillRuleByHostelIdAndStartDate(String hostelId, Date date) {
@@ -109,8 +109,8 @@ public class AmenityRequestService {
                 .findAllByHostelIdAndCustomerIdAndIsActiveTrueOrderByAmenityRequestIdDesc(hostelId, customerId, pageable);
     }
 
-    public void createDeactivationAmenityRequest(String customerId, String hostelId,
-                                                 String amenityId, String tenantPlatform) {
+    public AmenityRequest createDeactivationAmenityRequest(String customerId, String hostelId,
+                                                           String amenityId, String tenantPlatform) {
 
         Date today = new Date();
 
@@ -130,6 +130,6 @@ public class AmenityRequestService {
         amenityRequest.setTenantPlatform(tenantPlatform);
         amenityRequest.setActionType(ActionTypeEnum.DEACTIVATION.name());
 
-        amenityRequestRepository.save(amenityRequest);
+        return amenityRequestRepository.save(amenityRequest);
     }
 }
